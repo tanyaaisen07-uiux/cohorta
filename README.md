@@ -5,6 +5,12 @@ A role-based LMS for cohort-based online schools. Self-initiated UX/UI case stud
 **Live demo:** https://tanyaaisen07-uiux.github.io/cohorta
 **Figma:** https://www.figma.com/design/J4J6upc1wrEXRMm6xLjisE
 
+## Case study
+
+![Cohorta cover](case/cohorta-01.png)
+
+All 12 case images are in [`/case`](case).
+
 ## The problem
 
 Online schools run the same course for several cohorts at once. Students, instructors, teaching assistants and admins all work in one product, but each role needs a different home, different permissions and a different idea of "what to do next".
