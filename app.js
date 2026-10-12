@@ -80,8 +80,8 @@
   }
   function demoBar() {
     const seg = (key, opts) => `<div class="seg" role="group">${opts.map(([v, l]) => `<button type="button" data-act="${key}" data-v="${v}" aria-pressed="${S[key] === v}">${l}</button>`).join('')}</div>`;
-    return `<div class="demo" role="region" aria-label="Demo controls"><b>Cohorta demo</b><span class="hide-m">View as</span>${seg('role', [['student', 'Student'], ['instructor', 'Instructor'], ['admin', 'Admin']])}
-      <span class="hide-m">State</span>${seg('demo', [['normal', 'Normal'], ['empty', 'Empty'], ['loading', 'Loading'], ['error', 'Error'], ['denied', 'No access']])}
+    return `<div class="demo" role="region" aria-label="Demo controls"><b>Cohorta demo</b><span class="show-m dhint">Demo controls · sample data</span><span class="dgrp"><span class="dlab">View as</span>${seg('role', [['student', 'Student'], ['instructor', 'Instructor'], ['admin', 'Admin']])}</span>
+      <span class="dgrp"><span class="dlab">State</span>${seg('demo', [['normal', 'Normal'], ['empty', 'Empty'], ['loading', 'Loading'], ['error', 'Error'], ['denied', 'No access']])}</span>
       <span class="spacer"></span><span class="hide-m">Self-initiated case study by Tania Aisen · sample data</span></div>`;
   }
 
