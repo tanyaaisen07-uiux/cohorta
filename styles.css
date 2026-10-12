@@ -10,7 +10,7 @@
   --font-ui:'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; --font-brand:'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; --font-mono:'Geist Mono',ui-monospace,monospace;
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-ui);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-ui);font-size:14px;line-height:1.43;-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
 a{color:var(--cobalt);text-decoration:none}
 a:hover{color:var(--cobalt-hover)}
@@ -299,6 +299,7 @@ tbody tr td{transition:background-color .15s ease}
   .bulkbar .btn,.bulkbar .lockwrap{flex:1 1 auto}
   .bulkbar .lockwrap .btn{width:100%}
   .bulkbar .iconbtn{position:absolute;top:6px;right:6px}
+  .main:has(.bulkbar){padding-bottom:200px}
 }
 @media (max-width:720px){.rtable td.c-ai[data-label="Progress"] .bar{display:none}.rtable td.c-ai[data-label="Progress"]::before{content:"Progress"}}
 
