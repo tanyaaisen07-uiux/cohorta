@@ -1,6 +1,6 @@
 # Cohorta
 
-A role-based LMS for cohort-based online schools. Client project (Belgium), UX/UI and front-end by **Tania Aisen**. The live demo uses sample data.
+A role-based LMS for cohort-based online schools. UX/UI and front-end by **Tania Aisen**. Based on a client project (Belgium). Brand name and data changed for confidentiality.
 
 **Live demo:** https://tanyaaisen07-uiux.github.io/cohorta
 **Figma:** https://www.figma.com/design/J4J6upc1wrEXRMm6xLjisE
