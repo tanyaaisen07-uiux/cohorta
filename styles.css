@@ -14,7 +14,8 @@ html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--fo
 button,input,select,textarea{font:inherit;color:inherit}
 a{color:var(--cobalt);text-decoration:none}
 a:hover{color:var(--cobalt-hover)}
-:focus-visible{outline:2px solid var(--cobalt);outline-offset:2px;border-radius:6px}
+:focus-visible{outline:2px solid var(--cobalt);outline-offset:2px}
+a:focus-visible,.linkbtn:focus-visible{border-radius:6px}
 .num{font-variant-numeric:tabular-nums}
 .mono{font-family:var(--font-mono);font-size:12px}
 .muted{color:var(--text-3)}
@@ -367,3 +368,15 @@ tbody tr.flash{animation:rowFlash var(--motion-row) var(--ease-out)}
 @keyframes spin{to{transform:rotate(360deg)}}
 /* 5. Loading: calm skeleton, only while data loads */
 .skel{background:linear-gradient(90deg,#EFEEE9 0,#F5F4F0 50%,#EFEEE9 100%);background-size:200% 100%;animation:sk 1.6s ease-in-out infinite}
+
+/* Button states, matching the Button component in Figma (Type × Size × State).
+   Hover and Pressed change colour only; Focus is the global 2 px Cobalt ring;
+   Disabled wins over hover and press; Loading keeps the width and shows a spinner. */
+.btn.ghost:hover{background:var(--subtle)}
+.btn.ghost:active{background:var(--line-2)}
+.btn[disabled]:hover,.btn[disabled]:active,.btn[aria-disabled="true"]:hover,.btn[aria-disabled="true"]:active,
+.btn.primary[aria-disabled="true"],.btn.primary[aria-disabled="true"]:hover{background:var(--s-draft);border-color:var(--s-draft);color:#62656F}
+.btn.ghost[aria-disabled="true"],.btn.ghost[aria-disabled="true"]:hover{border-color:transparent}
+/* On dark (bulk bar): a disabled button stays dark and quiet, so it never reads as the light active one */
+.bulkbar .btn[aria-disabled="true"],.bulkbar .btn[aria-disabled="true"]:hover,.bulkbar .btn[aria-disabled="true"]:active{background:transparent;border-color:#2A2D3A;color:#8E91A3}
+.bulkbar .btn.is-loading{--spin:var(--paper)}
