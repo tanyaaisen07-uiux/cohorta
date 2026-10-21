@@ -60,7 +60,7 @@
 
   const tagClass = s => ({ 'Draft': 't-draft', 'In review': 't-review', 'Published': 't-published', 'Archived': 't-archived', 'Running': 't-running', 'Scheduled': 't-scheduled',
     'Completed': 't-completed', 'Active': 't-active', 'Invited': 't-invited', 'Paused': 't-paused', 'Dropped': 't-dropped', 'Graded': 't-graded', 'Submitted': 't-submitted',
-    'Returned': 't-returned', 'Late': 't-late', 'AI draft ready': 't-ai', 'Locked': 't-locked', 'Not started': 't-draft', 'Error': 't-error' }[s] || 't-draft');
+    'Returned': 't-returned', 'Late': 't-late', 'AI draft ready': 't-ai', 'Locked': 't-locked', 'Not started': 't-draft', 'In progress': 't-invited', 'Error': 't-error' }[s] || 't-draft');
   const tag = s => `<span class="tag ${tagClass(s)}">${esc(s)}</span>`;
   const subLabel = s => ({ ai: 'AI draft ready', submitted: 'Submitted', late: 'Late', graded: 'Graded', returned: 'Returned' }[s]);
   const av = (i, n) => `<span class="avatar" aria-hidden="true">${esc(i)}</span>`;
@@ -406,7 +406,7 @@
       <div class="grid g-main">
         <div class="card"><h2>UX Design Fundamentals</h2><div class="muted" style="margin:-6px 0 12px">Spring 2026 · ends Nov 28</div>
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">${bar(58, 'cobalt')}<span class="num" style="font-weight:600">58%</span></div>
-          ${D.course.modules.map((m, i) => `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)"><span class="mono muted">0${i + 1}</span><span style="flex:1;font-weight:500">${m.title}</span>${[tag('Completed'), tag('Completed'), '<span class="tag t-submitted">In progress</span>', tag('Locked')][i]}</div>`).join('')}</div>
+          ${D.course.modules.map((m, i) => `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)"><span class="mono muted">0${i + 1}</span><span style="flex:1;font-weight:500">${m.title}</span>${[tag('Completed'), tag('Completed'), tag('In progress'), tag('Locked')][i]}</div>`).join('')}</div>
         <div class="grid" style="align-content:start">
           <div class="card"><h2>Due next</h2><div class="list"><div class="row"><div style="flex:1"><b>Usability test report</b><div class="muted" style="font-size:13px">Module 3</div></div><span class="num">Oct 14</span></div>
             <div class="row"><div style="flex:1"><b>Final case study</b><div class="muted" style="font-size:13px">Opens after Module 3</div></div><span class="num">Nov 4</span></div></div></div>
