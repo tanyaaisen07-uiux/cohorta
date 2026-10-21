@@ -48,6 +48,10 @@ Use the bar at the top to switch role and page state: normal, empty, loading, er
 
 Motion appears only where it explains an action or a state: the review panel slides in once and only fades its content when you move to the next submission; toasts fade in and out and update in place; the bulk bar rises with the first selected row and the rows an action changed get a short highlight; buttons change colour on hover and press and show a spinner while an action runs; skeletons appear only while data loads. Micro transitions take 150 ms, panels 200 ms. Nothing pulses, bounces or animates between pages, and `prefers-reduced-motion` turns every movement into an instant change.
 
+## Visual layer
+
+A brand sidebar in deep cobalt, content on a rounded canvas, and white cards with a barely visible shadow. People are drawn as illustrated, faceless avatars generated from their names, so long-data names get a stable drawing too. On screens 1400 px and wider the quick review is a column next to the grading queue: any row opens in one click and the queue is never dimmed. Below 1400 px it slides over the queue, and on a phone review is a separate step.
+
 ## Long content
 
 The **Long data** state swaps the sample data for a stress set: 200 enrolments and 198 submissions, 30 to 40 character names with diacritics, long emails, course and cohort titles, scopes and feedback. Rules it checks:

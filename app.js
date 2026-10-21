@@ -72,7 +72,34 @@
     'Returned': 't-returned', 'Late': 't-late', 'AI draft ready': 't-ai', 'Locked': 't-locked', 'Not started': 't-draft', 'In progress': 't-invited', 'Error': 't-error' }[s] || 't-draft');
   const tag = s => `<span class="tag ${tagClass(s)}">${esc(s)}</span>`;
   const subLabel = s => ({ ai: 'AI draft ready', submitted: 'Submitted', late: 'Late', graded: 'Graded', returned: 'Returned' }[s]);
-  const av = (i, n) => `<span class="avatar" aria-hidden="true">${esc(i)}</span>`;
+  /* Illustrated, faceless avatars. The same drawing function builds the Avatar/<name> components in Figma. */
+  const AV_PEOPLE = {
+    'Hannah Cole': ['#C9CDFF', 'a', 'bun', '#7A4B2A', '#2A3BFF'], 'Leo Rossi': ['#FFE2C2', 'b', 'short', '#2B2118', '#0B0D17'], 'Mia Novak': ['#E3F2E8', 'a', 'long', '#C9A06A', '#FF6B3D'],
+    'Jonas Weber': ['#FDE3E1', 'a', 'side', '#B58B57', '#3A3D4A'], 'Tom Walsh': ['#FFF1C2', 'b', 'buzz', '#5B3A22', '#2A3BFF'], 'Chloé Martin': ['#E6E8FF', 'a', 'bob', '#2B2118', '#0B0D17'],
+    'Yuki Tanaka': ['#E3F2E8', 'b', 'bob', '#111111', '#FF6B3D'], 'Noah Becker': ['#C9CDFF', 'c', 'curly', '#2B2118', '#0B0D17'], 'Lucía Fernández': ['#FFE2C2', 'c', 'long', '#2B2118', '#2A3BFF'],
+    'Omar Haddad': ['#E6E8FF', 'c', 'short', '#111111', '#3A3D4A'], 'Maria Lopez': ['#FDE3E1', 'b', 'long', '#4A2C1C', '#0B0D17'], 'Sofia Rossi': ['#FFE2C2', 'a', 'bob', '#A0522D', '#FF6B3D'],
+    'Amira Bensaid': ['#E3F2E8', 'c', 'long', '#111111', '#0B0D17'], 'Priya Nair': ['#FFF1C2', 'd', 'long', '#111111', '#2A3BFF'], 'Alex Morgan': ['#C9CDFF', 'b', 'side', '#2B2118', '#0B0D17'],
+    'Nadia Kowalski': ['#FDE3E1', 'a', 'bun', '#C9A06A', '#3A3D4A'], 'Kofi Mensah': ['#FFF1C2', 'e', 'buzz', '#111111', '#2A3BFF'], 'Pablo Ruiz': ['#E6E8FF', 'b', 'curly', '#3B2416', '#FF6B3D'],
+  };
+  const AV_BG = ['#C9CDFF', '#FFE2C2', '#E3F2E8', '#FDE3E1', '#FFF1C2', '#E6E8FF'], AV_HAIR = ['short', 'side', 'bob', 'long', 'bun', 'curly', 'buzz'], AV_HC = ['#111111', '#2B2118', '#4A2C1C', '#7A4B2A', '#B58B57', '#C9A06A', '#A0522D'], AV_SHIRT = ['#2A3BFF', '#0B0D17', '#FF6B3D', '#3A3D4A'];
+  const hashOf = t => { let h = 2166136261; for (const ch of String(t)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
+  const avParams = name => AV_PEOPLE[name] || (h => [AV_BG[h % 6], 'abcde'[(h >> 3) % 5], AV_HAIR[(h >> 6) % 7], AV_HC[(h >> 9) % 7], AV_SHIRT[(h >> 12) % 4]])(hashOf(name));
+  function avatarSVG(name) {
+    const [bg, sk, hair, hc, shirt] = avParams(name);
+    const skin = { a: '#F3D2B8', b: '#E3B08E', c: '#C98B62', d: '#8D5A3B', e: '#5E3A26' }[sk];
+    const top = 'M21.5 29c-1-9 4.5-14 11-14s11.5 4.6 10.5 12.5c-2.5-3.6-6.8-5.6-11.5-5-4.3.6-7.7 2.9-10 6.5z';
+    const H = { short: `<path d="${top}" fill="${hc}"/>`, side: `<path d="M21 30c-1.5-10 4.5-15.5 11.5-15.5 7.2 0 12 5 11 13-4-1.5-9-4.6-12-8.6-2 4.4-6 8.2-10.5 11.1z" fill="${hc}"/>`,
+      bob: `<path d="M19.5 33c-1.6-11.5 4-18.5 12.7-18.5 8.7 0 14.1 7 12.3 18.5l.5 5.5c-2.6.5-4.3-1.6-4.3-4.5v-6c-4.5-3-12.5-3.6-16.5-.6v6.6c0 2.9-1.8 5-4.4 4.5z" fill="${hc}"/>`,
+      long: `<path d="M19 31c-1-11 4.7-16.5 13-16.5S46 20 45 31l.8 15.5c-2.8 1-5.6-.6-5.6-4.6V28.5c-4.4-3.5-11.6-3.8-16.4-.5v13.9c0 4-2.8 5.6-5.6 4.6z" fill="${hc}"/>`,
+      bun: `<circle cx="32" cy="12.5" r="5.2" fill="${hc}"/><path d="${top}" fill="${hc}"/>`,
+      curly: `<g fill="${hc}"><circle cx="24" cy="22" r="4.6"/><circle cx="29" cy="17.5" r="4.8"/><circle cx="35.5" cy="17" r="4.8"/><circle cx="40.5" cy="21.5" r="4.6"/><circle cx="22.2" cy="27.5" r="3.6"/><circle cx="42" cy="27.5" r="3.6"/></g>`,
+      buzz: `<path d="M22 27.5c0-7.5 4.6-11.5 10.5-11.5S43 20 43 27.5c-3-3.2-6.6-4.6-10.5-4.6s-7.6 1.4-10.5 4.6z" fill="${hc}"/>` }[hair];
+    const back = hair === 'long' || hair === 'bob';
+    return `<svg viewBox="5 6 54 54" width="100%" height="100%" aria-hidden="true"><rect x="5" y="6" width="54" height="54" fill="${bg}"/>${back ? H : ''}<path d="M9 66c0-12.5 9.5-20.5 23-20.5S55 53.5 55 66z" fill="${shirt}"/><path d="M27.5 37h9v7.5c0 2.6-2 4.5-4.5 4.5s-4.5-1.9-4.5-4.5z" fill="${skin}"/><path d="M27.5 41.5c2.8 1.4 6.2 1.4 9 0V39h-9z" opacity=".08"/><ellipse cx="32.3" cy="29" rx="10" ry="11.4" fill="${skin}"/>${back ? '' : H}</svg>`;
+  }
+  // Initials alone are ambiguous, so callers pass the full name where they have it; known initials map to people in the sample school.
+  const nameFor = i => { const all = [...Object.values(D.people), ...D.subs.map(s => ({ name: s.student, initials: s.initials })), ...D.enrolments.map(e => ({ name: e.student, initials: e.initials })), ...D.staff]; const f = all.find(p => p.initials === i); return f ? f.name : i; };
+  const av = (i, n) => `<span class="avatar ill" aria-hidden="true" title="${esc(n || nameFor(i))}">${avatarSVG(n || nameFor(i))}</span>`;
   const bar = (p, c = '') => `<div class="bar ${c}" role="progressbar" aria-valuenow="${p}" aria-valuemin="0" aria-valuemax="100"><span style="width:${p}%"></span></div>`;
 
   /* ---------- navigation ---------- */
@@ -116,13 +143,13 @@
       const count = ['instructor', 'ta'].includes(S.role) && p === 'queue' ? `<span class="count">${toReview()}</span>` : S.role === 'admin' && p === 'catalogue' && inReview().length ? `<span class="count">${inReview().length}</span>` : '';
       return `<a href="#/${S.role}/${p}" ${S.page === p || (p === 'queue' && S.page === 'grade') || (p === 'builder' && S.page === 'lesson') ? 'aria-current="page"' : ''} title="${l}">${ic(i)}<span class="lbl">${l}</span>${count}</a>`;
     }).join('');
-    const ctx = S.role === 'student' ? 'UX Design Fundamentals · Spring 2026' : S.role === 'instructor' ? 'UXF · Spring 2026' : S.role === 'ta' ? `UXF · Spring 2026 · ${myGroup()}` : 'Cohorta School';
+    const ctx = S.role === 'student' ? 'UXF · Spring 2026' : S.role === 'instructor' ? 'UXF · Spring 2026' : S.role === 'ta' ? `UXF · Spring 2026 · ${myGroup()}` : 'Cohorta School';
     return `<aside class="side" aria-label="Main">${lockup()}<div><div class="nav-label">${esc(ctx)}</div><nav class="nav">${items}</nav></div>
-      <div class="me" title="${esc(me.name)} · ${me.role}">${av(me.initials)}<div class="me-txt"><div style="font-weight:600">${esc(me.name)}</div><div class="muted" style="font-size:12px">${me.role}</div></div></div></aside>`;
+      <div class="me" title="${esc(me.name)} · ${me.role}">${av(me.initials, me.name)}<div class="me-txt"><div style="font-weight:600">${esc(me.name)}</div><div class="muted" style="font-size:12px">${me.role}</div></div></div></aside>`;
   }
   function mobileChrome() {
     const items = NAV[S.role].slice(0, 4).map(([p, l, i]) => `<a href="#/${S.role}/${p}" ${S.page === p || (p === 'builder' && S.page === 'lesson') ? 'aria-current="page"' : ''}>${ic(i, 20)}<span>${l.split(' ')[0]}</span></a>`).join('');
-    return { top: `<div class="mtop">${symbol(20)}${wordmark(16)}<span class="grow"></span>${av(D.people[S.role].initials)}</div>`, bottom: `<nav class="mnav" aria-label="Main">${items}</nav>` };
+    return { top: `<div class="mtop">${symbol(20)}${wordmark(16)}<span class="grow"></span>${av(D.people[S.role].initials, D.people[S.role].name)}</div>`, bottom: `<nav class="mnav" aria-label="Main">${items}</nav>` };
   }
   function demoBar() {
     const seg = (key, opts) => `<div class="seg" role="group">${opts.map(([v, l]) => `<button type="button" data-act="${key}" data-v="${v}" aria-pressed="${S[key] === v}">${l}</button>`).join('')}</div>`;
@@ -165,7 +192,7 @@
       <div class="grid g-main">
         <div class="card"><h2>Students at risk</h2><div class="list">
           ${[['Mateo Silva', 'MS', 'No activity for 15 days', 'Paused'], ['Amira Bensaid', 'AB', '2 assignments late', 'Late'], ['Tom Walsh', 'TW', 'Stuck on Module 2 for 11 days', 'Late'], ['Elena Popescu', 'EP', 'Last login Sep 24', 'Paused'], ['Noah Becker', 'NB', 'Wireframe review returned twice', 'Returned']]
-            .map(([nm, i, why, t]) => `<div class="row">${av(i)}<div style="flex:1"><div style="font-weight:600">${nm}</div><div class="muted" style="font-size:13px">${why}</div></div>${tag(t)}<a class="btn sm" href="#/instructor/roster">Open</a></div>`).join('')}
+            .map(([nm, i, why, t]) => `<div class="row">${av(i, nm)}<div style="flex:1"><div style="font-weight:600">${nm}</div><div class="muted" style="font-size:13px">${why}</div></div>${tag(t)}<a class="btn sm" href="#/instructor/roster">Open</a></div>`).join('')}
           </div></div>
         <div class="grid">
           <div class="card"><h2>Upcoming deadlines</h2><div class="list">
@@ -198,8 +225,11 @@
         .map(([v, l]) => `<button class="chip" data-act="qStatus" data-v="${v}" aria-pressed="${S.qStatus === v}">${l}</button>`).join('');
       const allSel = rows.length && rows.every(r => S.sel.has(r.id));
       const pad = S.dense ? 'style="padding-top:5px;padding-bottom:5px"' : '';
-      const body = rows.map(r => `<tr class="${S.sel.has(r.id) ? 'sel' : ''}${S.flash.has(r.id) ? ' flash' : ''}"><td class="check c-check" ${pad}><label class="hit"><input type="checkbox" aria-label="Select ${esc(r.student)}" data-act="sel" data-v="${r.id}" ${S.sel.has(r.id) ? 'checked' : ''}></label></td>
-        <td class="c-student" ${pad}><div class="who">${av(r.initials)}<div style="min-width:0"><button class="linkbtn" data-act="panel" data-v="grade:${r.id}" title="${esc(r.student)}">${esc(r.student)}</button><div class="meta-2nd">${esc(r.assignment)} · ${r.group} · ${r.submitted}</div></div></div></td>
+      const dock = dockOn();
+      if (dock && !S.panel && !S.dockClosed && rows.length) S.panel = 'grade:' + (rows.find(r => ['ai', 'late', 'submitted'].includes(r.status)) || rows[0]).id;
+      const cur = S.panel && S.panel.startsWith('grade:') ? S.panel.slice(6) : null;
+      const body = rows.map(r => `<tr class="${S.sel.has(r.id) ? 'sel' : ''}${S.flash.has(r.id) ? ' flash' : ''}${cur === r.id ? ' cur' : ''}"><td class="check c-check" ${pad}><label class="hit"><input type="checkbox" aria-label="Select ${esc(r.student)}" data-act="sel" data-v="${r.id}" ${S.sel.has(r.id) ? 'checked' : ''}></label></td>
+        <td class="c-student" ${pad}><div class="who">${av(r.initials, r.student)}<div style="min-width:0"><button class="linkbtn" data-act="panel" data-v="grade:${r.id}" title="${esc(r.student)}">${esc(r.student)}</button><div class="meta-2nd">${r.group} · ${r.submitted} · ${esc(r.assignment)}</div></div></div></td>
         <td class="c-2nd" ${pad}>${trunc(r.assignment, 260)}</td><td ${pad} class="muted c-2nd">${r.group}</td><td ${pad} class="num c-2nd">${r.submitted}</td><td class="c-status" ${pad}>${tag(subLabel(r.status))}</td>
         <td ${pad} class="num c-ai" data-label="AI">${r.ai != null ? `<span class="mono" style="background:#F1F2FF;padding:2px 6px;border-radius:6px">${r.ai}</span>` : '<span class="muted">—</span>'}</td>
         <td ${pad} class="num c-final" data-label="Final" style="font-weight:600">${r.final != null ? r.final : '<span class="muted" style="font-weight:400">—</span>'}</td>
@@ -211,15 +241,18 @@
         ${myGroup() ? '' : '<button class="btn sm" data-act="bulk" data-v="assign">Assign to TA</button>'}<button class="btn sm" data-act="bulk" data-v="return">Return for revision</button>
         ${canRelease ? '<button class="btn sm primary" data-act="bulk" data-v="release">Release grades</button>' : lockBtn('Release grades', 'Release only work you have reviewed. Open each AI draft and check the score first.', 'btn sm')}
         <button class="iconbtn" style="color:#C9CBD6" aria-label="Clear selection" data-act="clearSel">${ic('x')}</button></div>` : '';
-      return `${head('Grading queue', `UX Design Fundamentals · Spring 2026${myGroup() ? ' · ' + myGroup() : ''} · Wireframe review is due Oct 2`, '<button class="btn" data-act="dense">' + (S.dense ? 'Comfortable rows' : 'Compact rows') + '</button>')}
+      const statCard = (icon, cls, label, val, hint) => `<div class="card qstat"><span class="qchip ${cls}">${ic(icon, 20)}</span><div><div class="label">${label}</div><div class="val num">${val}</div><div class="hint">${hint}</div></div></div>`;
+      const stats = `<div class="qstats">${statCard('inbox', 'qc-haze', 'To review', toReview(), 'Wireframe review is due Oct 2')}${statCard('sparkle', 'qc-ai', 'AI drafts ready', counts('ai'), 'Waiting for a person to decide')}${statCard('clock', 'qc-late', 'Late', counts('late'), 'Submitted after the due date')}</div>`;
+      const docked = dock && cur;
+      return `${head('Grading queue', `UX Design Fundamentals · Spring 2026${myGroup() ? ' · ' + myGroup() : ''}`, '<button class="btn" data-act="dense">' + (S.dense ? 'Comfortable rows' : 'Compact rows') + '</button>')}${stats}
         ${myGroup() ? `<div class="banner info">${ic('users', 18)}<div class="grow"><b>You review ${myGroup()} only.</b>Group B belongs to Ben Okafor. Released grades can be changed by the instructor, Maria Lopez.</div></div>` : ''}
-        <div class="toolbar"><label class="search">${ic('search', 16)}<span class="sr">Search students</span><input data-act="q" value="${esc(S.q)}" placeholder="Search students"></label>
+        <div class="qwrap${docked ? ' docked' : ''}"><div class="qmain"><div class="toolbar"><label class="search">${ic('search', 16)}<span class="sr">Search students</span><input data-act="q" value="${esc(S.q)}" placeholder="Search students"></label>
           <select class="select" aria-label="Cohort"><option>Spring 2026</option><option>Autumn 2026</option></select>
           <select class="select" aria-label="Assignment"><option>All assignments</option><option>Wireframe review</option><option>User interview plan</option></select></div>
         <div class="toolbar" role="group" aria-label="Filter by status">${chips}</div>
         <div class="tablebox"><table class="rtable"><thead><tr><th class="check"><label class="hit"><input type="checkbox" aria-label="Select all" data-act="selAll" ${allSel ? 'checked' : ''}></label></th><th>Student</th><th class="c-2nd">Assignment</th><th class="c-2nd">Group</th>
           <th class="sortable c-2nd" data-act="sort" aria-sort="${S.sortDir === 'desc' ? 'descending' : 'ascending'}">Submitted ${S.sortDir === 'desc' ? '↓' : '↑'}</th><th>Status</th><th>AI score</th><th>Final score</th><th></th></tr></thead>
-          <tbody>${body || `<tr><td colspan="9"><div class="empty" style="padding:32px"><h3>No matches</h3><p>No submissions with this status. Clear the filter to see all ${mySubs().length}.</p><button class="btn sm" data-act="qStatus" data-v="all">Clear filter</button></div></td></tr>`}</tbody></table></div>${bulk}`;
+          <tbody>${body || `<tr><td colspan="9"><div class="empty" style="padding:32px"><h3>No matches</h3><p>No submissions with this status. Clear the filter to see all ${mySubs().length}.</p><button class="btn sm" data-act="qStatus" data-v="all">Clear filter</button></div></td></tr>`}</tbody></table></div>${bulk}</div>${docked ? `<aside class="panel docked qr" aria-label="Quick review">${gradeBody(cur)}</aside>` : ''}</div>`;
     });
   }
 
@@ -489,7 +522,7 @@
         <span class="kind${it.kind === 'assignment' ? ' as' : ''}">${ic(it.kind === 'lesson' ? 'play' : 'file', 13)}</span><span class="txt"><b data-ctitle="${it.id}">${esc(it.title)}</b><span>${c ? 'Opens too early' : it.kind === 'lesson' ? 'Lesson · ' + esc(it.len) : 'Assignment · due ' + esc(it.due)}</span></span></button>`; }).join('');
     const boxes = L.boxes.map(b => `<div class="mbox" style="left:${b.x}px;top:${b.y}px;width:${MAPK.mw}px;height:${b.h}px"><div class="mbox-h"><b>Module ${b.mi + 1} · ${esc(b.m.title)}</b><span>${pl(b.m.items.length, 'item', 'items')}</span></div></div>`).join('');
     if (!st.notes) { const b3 = L.boxes[2] || L.boxes[0]; st.notes = [{ id: 'n1', x: b3.x, y: b3.y + b3.h + 46, who: 'Sofia Rossi', initials: 'SR', when: '2 min ago', text: 'Should the usability test open before Module 3 ends? Students asked for more time.' }]; }
-    const notes = st.notes.map(n => `<div class="mnote${st.selNote === n.id ? ' sel' : ''}" style="left:${n.x}px;top:${n.y}px" data-note="${n.id}"><div class="mnote-h" data-notedrag="${n.id}"><span class="avatar${n.initials === 'SR' ? ' av-sofia' : ''}">${n.initials}</span><b>${esc(n.who)}</b><span>${n.when}</span></div><div class="mnote-t" contenteditable="true" data-notetext="${n.id}">${esc(n.text)}</div></div>`).join('');
+    const notes = st.notes.map(n => `<div class="mnote${st.selNote === n.id ? ' sel' : ''}" style="left:${n.x}px;top:${n.y}px" data-note="${n.id}"><div class="mnote-h" data-notedrag="${n.id}">${av(n.initials, n.who)}<b>${esc(n.who)}</b><span>${n.when}</span></div><div class="mnote-t" contenteditable="true" data-notetext="${n.id}">${esc(n.text)}</div></div>`).join('');
     const sofia = st.notes[0] ? `<span class="cursor-tag" style="left:${st.notes[0].x + 200}px;top:${st.notes[0].y + 128}px" aria-hidden="true">${ic('cursor', 12)}<span>Sofia</span></span>` : '';
     const hint = st.pick ? `Pick the item that has to come first for “${esc(findItem(st.pick).it.title)}”` : st.tool === 'connect' ? (st.from ? `Now pick what opens after “${esc(findItem(st.from).it.title)}”` : 'Pick the item that comes first, then the one it opens') : st.tool === 'note' ? 'Click anywhere on the map to leave a note' : '';
     const tools = [['select', 'cursor', 'Select (V)'], ['hand', 'hand', 'Pan (H)'], ['connect', 'connect', 'Link two items (C)'], ['note', 'note', 'Add a note (N)']];
@@ -528,7 +561,7 @@
     return `<div class="msheet"><span class="sheet-grab"></span><div class="who"><span class="kind">${ic(it.kind === 'lesson' ? 'play' : 'file', 15)}</span><div style="min-width:0"><b>${esc(it.title)}</b><div class="muted small">${names.length ? 'Opens after ' + esc(names.join(' and ')) : 'Opens with the module'}</div></div></div>
       <div class="row-btns"><button class="btn" data-act="mapPick" data-v="${it.id}">${ic('connect', 15)}Edit links</button><a class="btn primary" href="${it.kind === 'lesson' ? '#/instructor/lesson/' + it.id : '#/instructor/editor'}">${ic('edit', 15)}Open</a></div></div>`;
   }
-  const presence = () => `<span class="presence hide-m">${av('ML')}<span class="avatar av-sofia">SR</span><span class="muted small">Sofia is viewing</span></span>`;
+  const presence = () => `<span class="presence hide-m">${av('ML', 'Maria Lopez')}${av('SR', 'Sofia Rossi')}<span class="muted small">Sofia is viewing</span></span>`;
   const viewSeg = () => `<div class="vseg" role="group" aria-label="View"><a href="#/instructor/builder" aria-current="${S.param !== 'map'}">${ic('list', 15)}List</a><a href="#/instructor/builder/map" aria-current="${S.param === 'map'}">${ic('map', 15)}Map</a></div>`;
   function iMap() {
     return guard({ title: 'UX Design Fundamentals', errWhat: 'the course map', deniedWhat: 'this course', deniedWho: 'Only the course owner and admins can edit it. The owner is Maria Lopez.',
@@ -588,7 +621,7 @@
       <div class="grid g-4" style="margin-bottom:16px"><div class="card stat"><div class="label">Average progress</div><div class="val num">${statAvg}</div></div><div class="card stat"><div class="label">On track</div><div class="val num">${statOn}</div></div>
         <div class="card stat alert"><div class="label">Behind</div><div class="val num">${statBehind}</div></div><div class="card stat"><div class="label">Completed</div><div class="val num">0</div><div class="hint">Course ends Nov 28</div></div></div>
       <div class="tablebox"><table><thead><tr><th>Student</th><th>Group</th><th>Progress</th><th>Assignments</th><th>Last active</th><th>Status</th></tr></thead><tbody>
-        ${rows.map((r, i) => `<tr><td><div class="who">${av(r.initials)}<b style="font-weight:600" title="${esc(r.student)}">${esc(r.student)}</b></div></td><td class="muted">${r.group}</td>
+        ${rows.map((r, i) => `<tr><td><div class="who">${av(r.initials, r.student)}<b style="font-weight:600" title="${esc(r.student)}">${esc(r.student)}</b></div></td><td class="muted">${r.group}</td>
           <td><div style="display:flex;align-items:center;gap:10px">${bar(r.progress)}<span class="num muted" style="width:36px">${r.progress}%</span></div></td><td class="num">${r.done} / 4</td><td class="num">${r.last}</td>
           <td>${r.risk ? tag(r.state === 'Active' ? 'Late' : r.state) : tag(r.state)}</td></tr>`).join('')}</tbody></table></div>`);
   }
@@ -643,7 +676,7 @@
       <div class="toolbar"><label class="search">${ic('search', 16)}<span class="sr">Search</span><input placeholder="Search name or email"></label><select class="select" aria-label="Cohort"><option>All cohorts</option><option>UXF · Spring 2026</option><option>Service Design · Spring 2026</option></select></div>
       <div class="toolbar">${chips}</div>
       <div class="tablebox"><table class="rtable"><thead><tr><th class="check"><label class="hit"><input type="checkbox" aria-label="Select all" data-act="eSelAll" ${allSel ? 'checked' : ''}></label></th><th>Student</th><th class="c-2nd">Email</th><th class="c-2nd">Cohort</th><th>Status</th><th>Progress</th><th>Last active</th></tr></thead><tbody>
-        ${rows.map(r => `<tr class="${S.eSel.has(r.id) ? 'sel' : ''}${S.flash.has(r.id) ? ' flash' : ''}"><td class="check c-check"><label class="hit"><input type="checkbox" aria-label="Select ${esc(r.student)}" data-act="eSel" data-v="${r.id}" ${S.eSel.has(r.id) ? 'checked' : ''}></label></td><td class="c-student"><div class="who">${av(r.initials)}<div style="min-width:0"><b style="font-weight:600" title="${esc(r.student)}">${esc(r.student)}</b><div class="meta-2nd">${esc(r.email)} · ${esc(r.cohort)}</div></div></div></td>
+        ${rows.map(r => `<tr class="${S.eSel.has(r.id) ? 'sel' : ''}${S.flash.has(r.id) ? ' flash' : ''}"><td class="check c-check"><label class="hit"><input type="checkbox" aria-label="Select ${esc(r.student)}" data-act="eSel" data-v="${r.id}" ${S.eSel.has(r.id) ? 'checked' : ''}></label></td><td class="c-student"><div class="who">${av(r.initials, r.student)}<div style="min-width:0"><b style="font-weight:600" title="${esc(r.student)}">${esc(r.student)}</b><div class="meta-2nd">${esc(r.email)} · ${esc(r.cohort)}</div></div></div></td>
           <td class="muted c-2nd">${trunc(r.email, 210)}</td><td class="c-2nd">${trunc(r.cohort, 190)}</td><td class="c-status">${tag(r.state)}</td><td class="c-ai" data-label="Progress"><div style="display:flex;align-items:center;gap:10px">${bar(r.progress)}<span class="num muted" style="width:36px">${r.progress}%</span></div></td><td class="num c-final" data-label="Last active">${r.last}</td></tr>`).join('')}</tbody></table></div>${bulk}`);
   }
 
@@ -653,7 +686,7 @@
       ${head('Users and roles', 'Role sets the action · scope sets the reach · state can lock it', '<button class="btn primary" data-act="modal" data-v="invite">' + ic('plus', 16) + 'Invite people</button>')}
       <div class="grid g-main">
         <div class="tablebox"><table class="utable"><thead><tr><th>Person</th><th>Role</th><th>Scope</th><th>Last active</th><th></th></tr></thead><tbody>
-          ${D.staff.map((u, i) => `<tr><td class="u-who"><div class="who">${av(u.initials)}<div><b style="font-weight:600" title="${esc(u.name)}">${esc(u.name)}</b><div class="muted" style="font-size:12px">${trunc(u.email, 220)}</div></div></div></td><td class="u-role" data-last="${esc(u.last)}">${esc(u.role)}</td><td class="muted u-scope" style="white-space:normal;max-width:220px">${esc(u.scope)}</td><td class="num u-last">${u.last}</td>
+          ${D.staff.map((u, i) => `<tr><td class="u-who"><div class="who">${av(u.initials, u.name)}<div><b style="font-weight:600" title="${esc(u.name)}">${esc(u.name)}</b><div class="muted" style="font-size:12px">${trunc(u.email, 220)}</div></div></div></td><td class="u-role" data-last="${esc(u.last)}">${esc(u.role)}</td><td class="muted u-scope" style="white-space:normal;max-width:220px">${esc(u.scope)}</td><td class="num u-last">${u.last}</td>
             <td class="u-act" style="text-align:right"><button class="btn sm" data-act="panel" data-v="user:${i}">Open</button></td></tr>`).join('')}</tbody></table></div>
         <div class="card" style="align-self:start"><h2>Audit log</h2><div class="list" style="font-size:13px">${D.audit.map(a => `<div class="row" style="align-items:flex-start;flex-direction:column;gap:2px"><span>${esc(a.what)}</span><span class="muted">${esc(a.who)} · ${a.when}</span></div>`).join('')}</div></div></div>`);
   }
@@ -667,16 +700,23 @@
   function sHome() {
     return guard({ title: 'Hi, Lucía', errWhat: 'your courses', deniedWhat: 'this course', deniedWho: 'Your enrolment in Spring 2026 is paused. Contact your school to continue.',
       empty: head('Hi, Lucía', 'You are not enrolled in a course yet') + emptyState('No courses yet', 'When your school enrols you in a cohort, it will appear here with its start date.', '', 'book') }, () => `
-      ${head('Hi, Lucía', "You're 2 lessons from finishing Module 3.")}
-      <div class="card cta-card" style="margin-bottom:16px"><div style="flex:1"><div class="muted" style="font-size:13px">Continue · Module 3 · Interface</div><div class="big">Working with components</div><div class="muted">17 min · lesson 2 of 3</div></div><a class="btn primary" href="#/student/lesson">${ic('play', 16)}Continue</a></div>
-      <div class="grid g-main">
-        <div class="card"><h2>UX Design Fundamentals</h2><div class="muted" style="margin:-6px 0 12px">Spring 2026 · ends Nov 28</div>
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">${bar(58, 'cobalt')}<span class="num" style="font-weight:600">58%</span></div>
-          ${D.course.modules.map((m, i) => `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)"><span class="mono muted">0${i + 1}</span><span style="flex:1;font-weight:500">${m.title}</span>${[tag('Completed'), tag('Completed'), tag('In progress'), tag('Locked')][i]}</div>`).join('')}</div>
+      ${head('Hi, Lucía', 'UX Design Fundamentals · Spring 2026 · ends Nov 28', `<span class="pchip">${ic('chart', 16)}2 lessons left in Module 3</span>`)}
+      <div class="card cta-card hero"><span class="hero-play">${ic('play', 24)}</span><div style="flex:1;min-width:0"><div class="muted" style="font-size:12px">Continue · Module 3 · Interface</div><div class="big">Working with components</div><div class="muted" style="font-size:13px">17 min · lesson 2 of 3</div></div><a class="btn primary" href="#/student/lesson">Continue lesson</a></div>
+      <div class="grid g-main home-grid">
+        <div class="card"><div class="prog-head"><div><h2 style="margin:0">UX Design Fundamentals</h2><div class="muted small">4 modules · 12 items</div></div><span class="prog-val num">58%</span></div>
+          <div class="prog-bar">${bar(58, 'cobalt')}</div>
+          ${D.course.modules.map((m, i) => { const st = ['Completed', 'Completed', 'In progress', 'Locked'][i]; const sub = ['3 of 3 done', '3 of 3 done', '1 of 3 done · Working with components is next', 'Opens after Module 3'][i];
+            const mark = st === 'Completed' ? ic('check', 16) : st === 'Locked' ? ic('lock', 16) : `<span class="mono">0${i + 1}</span>`;
+            const lessons = st === 'In progress' ? `<div class="mod-lessons">${[['check', 'Layout and hierarchy', '20 min', ''], ['play', 'Working with components', '17 min · next', 'next'], ['lock', 'States nobody designs', '15 min · opens after the previous lesson', 'locked'], ['file', 'Usability test report', 'due Oct 14', '']].map(([icn, n, meta, k]) => `<a class="mod-lesson ${k}" href="${k === 'locked' ? '#/student/lesson/locked' : k === 'next' ? '#/student/lesson' : '#/student/' + (icn === 'file' ? 'assignment' : 'home')}">${ic(icn, 16)}<span class="grow">${n}</span><span class="muted small">${meta}</span></a>`).join('')}</div>` : '';
+            return `<div class="mod-row"><span class="mod-mark${st === 'In progress' ? ' now' : ''}">${mark}</span><div style="flex:1;min-width:0"><b>${m.title}</b><div class="muted small">${sub}</div></div>${tag(st)}</div>${lessons}`; }).join('')}</div>
         <div class="grid" style="align-content:start">
-          <div class="card"><h2>Due next</h2><div class="list"><div class="row"><div style="flex:1"><b>Usability test report</b><div class="muted" style="font-size:13px">Module 3</div></div><span class="num">Oct 14</span></div>
-            <div class="row"><div style="flex:1"><b>Final case study</b><div class="muted" style="font-size:13px">Opens after Module 3</div></div><span class="num">Nov 4</span></div></div></div>
-          <div class="card"><h2>Latest feedback</h2><div class="feedback">Clear goals and a good mix of open questions. Next time, add how you will recruit participants.</div><div class="muted" style="font-size:12px;margin-top:8px">User interview plan · 88 / 100 · Maria Lopez</div></div></div></div>`);
+          <div class="card"><h2>Due next</h2><div class="list">
+            <div class="row"><span class="qchip qc-review">${ic('file', 18)}</span><div style="flex:1"><b>Usability test report</b><div class="muted small">Module 3 · Assignment</div></div><span class="num" style="font-weight:500">Oct 14</span></div>
+            <div class="row"><span class="qchip qc-sub">${ic('lock', 18)}</span><div style="flex:1"><b>Final case study</b><div class="muted small">Opens after Module 3</div></div><span class="num" style="font-weight:500">Nov 4</span></div></div></div>
+          <div class="card"><h2>Latest feedback</h2><div class="who" style="margin-bottom:12px">${av('ML', 'Maria Lopez')}<div style="flex:1"><b>Maria Lopez</b><div class="muted small">User interview plan</div></div><span class="qr-big num">88<small> / 100</small></span></div><div class="feedback-box">Clear goals and a good mix of open questions. Next time, add how you will recruit participants.</div></div>
+          <div class="card"><div style="display:flex;align-items:baseline;gap:8px;margin-bottom:12px"><h2 style="margin:0;flex:1">Your group</h2><span class="muted small">Spring 2026 · Group A · 8 students</span></div>
+            <div class="classmates">${['Hannah Cole', 'Jonas Weber', 'Amira Bensaid', 'Noah Becker', 'Pablo Ruiz'].map(n => av('', n)).join('')}<span class="avatar more">+2</span></div>
+            <div class="who" style="margin-top:12px">${av('ML', 'Maria Lopez')}${av('NK', 'Nadia Kowalski')}<span class="muted small">Maria Lopez teaches · Nadia Kowalski reviews</span></div></div></div></div>`);
   }
   function sLesson() {
     const locked = S.param === 'locked';
@@ -716,9 +756,31 @@
   }
 
   /* ---------- overlays ---------- */
+
+  /* Quick review. On wide screens (≥1400 px) it is a column next to the queue; below that it slides over the queue. */
+  const dockOn = () => S.page === 'queue' && innerWidth >= 1400 && (S.demo === 'normal' || S.demo === 'long');
+  const rubricList = st => `<div class="qr-rubric">${[['Problem framing', 25], ['Flow and structure', 25], ['States and edge cases', 25], ['Clarity of handoff', 25]].map(([n, max], i) => { const v = +st.crit[i] || 0; return `<div class="r"><span>${n}</span><span class="bar"><span style="width:${Math.round(100 * v / max)}%"></span></span><span class="mono">${st.crit[i] === '' ? '—' : v} / ${max}</span></div>`; }).join('')}</div>`;
+  function gradeBody(id) {
+    const s = D.subs.find(x => x.id === id); const st = aiState(s); const L = mySubs(); const i = L.indexOf(s);
+    const p2 = L[(i - 1 + L.length) % L.length].id, n2 = L[(i + 1) % L.length].id; const done = stOf(s) === 'graded'; const first = esc(s.student.split(' ')[0]);
+    const nav = `<div class="qr-nav"><button class="iconbtn sm" data-act="panel" data-v="grade:${p2}" aria-label="Previous submission">${ic('up', 16)}</button><button class="iconbtn sm" data-act="panel" data-v="grade:${n2}" aria-label="Next submission">${ic('down', 16)}</button><button class="iconbtn sm" data-act="closeAll" aria-label="Close">${ic('x', 16)}</button></div>`;
+    const headHtml = `<div class="qr-head">${av(s.initials, s.student)}<div class="qr-who"><h2 title="${esc(s.student)}">${esc(s.student)}</h2><div class="muted small">${s.group} · ${s.submitted} · ${esc(s.assignment)}</div></div>${nav}</div>
+      <div class="qr-meta"><span class="muted small">Quick review · ${i + 1} of ${L.length}</span>${tag(subLabel(stOf(s)))}</div>`;
+    const draft = !done && st.mode === 'draft';
+    const aiBlock = draft ? `<div class="ai qr-ai" aria-label="AI draft"><div class="head">${ic('sparkle', 16)}<b>AI draft</b>${tag('AI draft ready')}<span class="spacer" style="flex:1"></span><span class="qr-big num">${s.ai}<small> / 100</small></span></div>
+        <p class="qr-sum">${D.feedback || FB}</p>${rubricList(st)}
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm primary" data-act="ai" data-v="accept" data-id="${s.id}">Accept draft</button><button class="btn sm" data-act="ai" data-v="edit" data-id="${s.id}">Edit</button><button class="btn sm ghost" data-act="ai" data-v="discard" data-id="${s.id}">Discard</button></div>
+        <div class="muted small">Based on the rubric. Students see only what you release.</div></div>`
+      : done ? stateBanner(s) : st.mode === 'accept' ? `<div class="banner info qr-banner">${ic('check', 18)}<div class="grow"><b>AI draft accepted as a starting point</b>Score and feedback are filled in. Nothing is sent until you release.</div><button class="btn sm ghost" data-act="ai" data-v="restore" data-id="${s.id}">Undo</button></div>` : stateBanner(s) + aiCard(s, st);
+    const score = draft ? '' : `<div class="qr-score"><label for="qs">Final score</label><span class="spacer" style="flex:1"></span><input id="qs" class="score-input num" style="width:72px" inputmode="numeric" data-act="qscore" data-id="${s.id}" value="${scoreText(s)}" placeholder="—" ${done ? 'disabled' : ''}><span class="muted">/ 100</span></div>${st.crit.some(x => x !== '') ? rubricList(st) : ''}`;
+    const fb = `<div class="field"><label for="fb" class="${draft ? 'sr' : ''}">Feedback to ${first}</label><textarea id="fb" data-act="fbtext" data-id="${s.id}" placeholder="Feedback to ${first}: what to fix next" ${done ? 'disabled' : ''}>${esc(fbFor(st))}</textarea></div>`;
+    const preview = !done && !needsReview(s) ? `<div class="qr-preview">${ic('eye', 16)}<div><div class="muted small">${first} will see after release</div><b>${esc(s.assignment)} · ${scoreText(s)} / 100 · your feedback above</b></div></div>` : '';
+    const foot = done ? releasedRow() : releaseRow(s, 'releaseQ') + (needsReview(s) ? '' : `<p class="muted release-hint">${ic('clock', 14)} Sends the grade and feedback to ${first}. Undo for 6 seconds.</p>`);
+    return `${headHtml}${aiBlock}${score}${fb}${preview}<div class="qr-foot">${foot}<a class="linkbtn small" href="#/${S.role}/grade/${s.id}">Open full view</a></div>`;
+  }
   function overlays() {
     let out = '';
-    if (S.panel) {
+    if (S.panel && !(dockOn() && S.panel.startsWith('grade:'))) {
       const [k, v] = S.panel.split(':');
       let body = '';
       if (k === 'review') { const c = D.catalogue.find(x => x.id === v); body = `<div class="crumbs">Review course</div><h2 style="font-family:var(--font-brand);font-weight:600;letter-spacing:-.02em;margin:0">${esc(c.title)}</h2><div>${tag(c.state)} <span class="mono">${c.version}</span> · owner ${esc(c.owner)}</div>
@@ -730,20 +792,14 @@
           <div class="field"><label for="ci">Instructors</label><select id="ci"><option>${esc(c.owner)}</option></select></div><div class="field"><label for="ct">Teaching assistants</label><select id="ct"><option>Nadia Kowalski · Group A</option><option>Ben Okafor · Group B</option></select></div>
           <div class="grid g-2"><div class="field"><label for="cg">Groups</label><input id="cg" value="2" inputmode="numeric"></div><div class="field"><label for="cc">Capacity</label><input id="cc" value="48" inputmode="numeric"><span class="help">Max 24 per group</span></div></div>
           <button class="btn primary" data-load data-act="schedule" data-v="${c.id}">Schedule cohort</button>`; }
-      if (k === 'user') { const u = D.staff[+v]; const log = D.audit.filter(a => a.what.includes(u.name.split(' ')[0]) || a.who === u.name); body = `<div class="crumbs">User</div><div class="who" style="gap:12px">${av(u.initials)}<div><h2 style="font-family:var(--font-brand);font-weight:600;letter-spacing:-.02em;margin:0">${esc(u.name)}</h2><div class="muted">${esc(u.email)}</div></div></div>
+      if (k === 'user') { const u = D.staff[+v]; const log = D.audit.filter(a => a.what.includes(u.name.split(' ')[0]) || a.who === u.name); body = `<div class="crumbs">User</div><div class="who" style="gap:12px">${av(u.initials, u.name)}<div><h2 style="font-family:var(--font-brand);font-weight:600;letter-spacing:-.02em;margin:0">${esc(u.name)}</h2><div class="muted">${esc(u.email)}</div></div></div>
           <div class="field"><label for="ur">Role</label><select id="ur">${['Admin', 'Instructor', 'Admin + Instructor', 'Teaching assistant'].map(r => `<option ${r === u.role ? 'selected' : ''}>${r}</option>`).join('')}</select></div>
           <div class="field"><label for="us">Scope</label><input id="us" value="${esc(u.scope)}"><span class="help">Where the role applies: whole school, a course, a cohort or a group.</span></div>
           <button class="btn primary" data-load data-act="saveRole" data-v="${v}">Save changes</button>
           <div><h3 style="margin:8px 0">Activity</h3><div class="list" style="font-size:13px">${(log.length ? log : [{ what: 'Signed in', who: u.name, when: u.last }]).map(a => `<div class="row" style="flex-direction:column;align-items:flex-start;gap:2px"><span>${esc(a.what)}</span><span class="muted">${esc(a.who)} · ${esc(a.when)}</span></div>`).join('')}</div></div>`; }
-      if (k === 'grade') { const s = D.subs.find(x => x.id === v); const st = aiState(s); const L = mySubs(); const i = L.indexOf(s); const p2 = L[(i - 1 + L.length) % L.length].id, n2 = L[(i + 1) % L.length].id; const done = stOf(s) === 'graded';
-        body = `<div class="crumbs">Quick review · ${i + 1} of ${L.length}</div><div class="who" style="gap:12px">${av(s.initials)}<div style="flex:1;min-width:0"><h2 style="font-family:var(--font-brand);font-weight:600;letter-spacing:-.02em;margin:0">${esc(s.student)}</h2><div class="muted">${esc(s.assignment)} · ${s.group} · ${s.submitted}</div></div>${tag(subLabel(stOf(s)))}</div>
-          ${stateBanner(s)}${done ? '' : aiCard(s, st)}
-          <div class="field"><label for="qs">Final score</label><div style="display:flex;align-items:center;gap:8px"><input id="qs" class="score-input num" style="width:88px" inputmode="numeric" data-act="qscore" data-id="${s.id}" value="${scoreText(s)}" placeholder="—" ${done ? 'disabled' : ''}><span class="muted">/ 100</span></div></div>
-          <div class="field"><label for="fb">Feedback to ${esc(s.student.split(' ')[0])}</label><textarea id="fb" data-act="fbtext" data-id="${s.id}" placeholder="Write feedback the student can act on" ${done ? 'disabled' : ''}>${esc(fbFor(st))}</textarea><span class="help">Students see feedback only after you release it.</span></div>
-          ${done ? releasedRow() : `<div>${releaseRow(s, 'releaseQ')}</div>`}
-          <div style="display:flex;align-items:center;gap:8px;border-top:1px solid var(--line);padding-top:14px;margin-top:auto"><button class="btn sm" data-act="panel" data-v="grade:${p2}" aria-label="Previous submission">${ic('back', 14)}</button><button class="btn sm" data-act="panel" data-v="grade:${n2}" aria-label="Next submission">${ic('chev', 14)}</button><span style="flex:1"></span><a class="btn sm" href="#/${S.role}/grade/${s.id}">Open full view</a></div>`; }
+      if (k === 'grade') body = gradeBody(v);
       // First open slides the panel in; moving to another submission only fades the content.
-      out += `<div class="scrim panel-scrim${S.anim ? ' enter' : ''}" data-act="closeAll"></div><aside class="panel${S.anim ? ' enter' : S.swap ? ' swap' : ''}" role="dialog" aria-modal="true" aria-label="Details"><button class="iconbtn" style="align-self:flex-end" aria-label="Close" data-act="closeAll">${ic('x')}</button>${body}</aside>`;
+      out += `<div class="scrim panel-scrim${S.anim ? ' enter' : ''}" data-act="closeAll"></div><aside class="panel${S.anim ? ' enter' : S.swap ? ' swap' : ''}${k === 'grade' ? ' qr' : ''}" role="dialog" aria-modal="true" aria-label="Details">${k === 'grade' ? '' : `<button class="iconbtn" style="align-self:flex-end" aria-label="Close" data-act="closeAll">${ic('x')}</button>`}${body}</aside>`;
     }
     if (S.modal) {
       const M = {
@@ -792,6 +848,8 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
     if (S.scrollTo) { const el = document.querySelector(S.scrollTo); if (el && el.scrollIntoView) { const r = el.getBoundingClientRect(); if (r.top < 120 || r.bottom > innerHeight - 120) el.scrollIntoView({ block: 'center', behavior: reduceMotion() ? 'auto' : 'smooth' }); } S.scrollTo = null; }
     if (document.querySelector('[data-mapvp]')) { fitMap(false); if (S.mapCenter) { centerOn(S.mapCenter); S.mapCenter = null; } }
   }
+  // Crossing 1400 px switches the quick review between a column and an overlay.
+  let lastDock = null; window.addEventListener('resize', () => { const d = dockOn(); if (lastDock !== null && d !== lastDock) render(); lastDock = d; });
   let current = '#/instructor/home';
   function route(h, replace) {
     if (h) current = h;
@@ -966,9 +1024,9 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
         S.undo = () => { S.links = before; }; toast(`${findItem(q).it.title} no longer waits for ${findItem(p).it.title}`, true); break; }
       case 'itemMove': { const st = mapState(); const f = findItem(st.sel); const j = f.ii + (+v); if (j < 0 || j >= f.m.items.length) return; [f.m.items[f.ii], f.m.items[j]] = [f.m.items[j], f.m.items[f.ii]]; break; }
       case 'modal': S.modal = v; break;
-      case 'panel': S.anim = !S.panel; S.swap = !!S.panel && S.panel !== v; S.panel = v; break;
+      case 'panel': S.anim = !S.panel; S.swap = !!S.panel && S.panel !== v; S.panel = v; S.dockClosed = false; break;
       case 'gtab': S.gtab = v; window.scrollTo(0, 0); break;
-      case 'closeAll': if (t.dataset.toast) toast(t.dataset.toast); closeOverlays(); return;
+      case 'closeAll': if (t.dataset.toast) toast(t.dataset.toast); if (dockOn() && S.panel && S.panel.startsWith('grade:')) { S.dockClosed = true; S.panel = null; render(); return; } closeOverlays(); return;
       case 'scrim': S.modal = null; break;
       case 'toast': toast(v); break;
       case 'submit': S.studentSubmitted = true; toast('Submitted. You can replace the file until Oct 14.'); break;
