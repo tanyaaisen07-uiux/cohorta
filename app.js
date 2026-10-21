@@ -14,7 +14,8 @@
     eSel: new Set(), eFilter: 'all', cFilter: 'all',
     toast: null, modal: null, panel: null,
     ai: {}, done: new Set(), ret: new Set(), studentSubmitted: false, order: null, anim: false, focus: null,
-    swap: false, flash: new Set(), bulkShown: false, eBulkShown: false
+    swap: false, flash: new Set(), bulkShown: false, eBulkShown: false,
+    lessons: {}, links: null, map: null, sheet: false
   };
 
   /* ---------- motion: only where it explains an action or a state ---------- */
@@ -27,7 +28,7 @@
     S.longData = on;
     if (on) { DB_LONG = DB_LONG || window.makeLongDB(DB_BASE); Object.assign(D, DB_LONG); }
     else { Object.assign(D, DB_BASE); delete D.feedback; }
-    S.order = null; S.ai = {}; S.done = new Set(); S.ret = new Set(); S.sel.clear(); S.eSel.clear(); S.flash = new Set(); S.panel = null;
+    S.order = null; S.lessons = {}; S.links = null; S.map = null; S.ai = {}; S.done = new Set(); S.ret = new Set(); S.sel.clear(); S.eSel.clear(); S.flash = new Set(); S.panel = null;
   }
 
   /* ---------- icons (stroke, 18px) ---------- */
@@ -50,7 +51,15 @@
     alert: 'M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z',
     upload: 'M12 16V4M6 10l6-6 6 6M4 20h16', x: 'M6 6l12 12M18 6 6 18', chev: 'M9 6l6 6-6 6', back: 'M15 6l-6 6 6 6',
     clock: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2', grip: 'M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01',
-    chart: 'M4 20V10M10 20V4M16 20v-7M22 20H2'
+    chart: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
+    heading: 'M6 4v16M18 4v16M6 12h12', text: 'M4 6h16M4 12h16M4 18h10', image: 'M4 5h16v14H4zM4 16l5-5 4 4 3-3 4 4M15 9h.01',
+    callout: 'M4 5h16v11H9l-5 4zM8 9h8M8 12h5', quiz: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7M12 17h.01',
+    minus: 'M5 12h14', copy: 'M9 9h11v11H9zM5 15H4V4h11v1', trash: 'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3',
+    undo: 'M9 14 4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3', redo: 'M15 14l5-5-5-5M20 9H9a5 5 0 0 0 0 10h3',
+    eye: 'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6',
+    hand: 'M18 11V6a2 2 0 0 0-4 0v5M14 10V4a2 2 0 0 0-4 0v6M10 10.5V6a2 2 0 0 0-4 0v8a8 8 0 0 0 16 0v-3a2 2 0 0 0-4 0',
+    cursor: 'M5 3l14 7-6 2-2 6z', connect: 'M6 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM7.5 15.5l9-8',
+    note: 'M5 4h14v10l-6 6H5zM13 20v-6h6', fit: 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5', map: 'M9 4 3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14'
   };
   const ic = (n, s = 18, w = 1.8) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${P[n]}"/></svg>`;
 
@@ -105,14 +114,14 @@
     const me = D.people[S.role];
     const items = NAV[S.role].map(([p, l, i]) => {
       const count = ['instructor', 'ta'].includes(S.role) && p === 'queue' ? `<span class="count">${toReview()}</span>` : S.role === 'admin' && p === 'catalogue' && inReview().length ? `<span class="count">${inReview().length}</span>` : '';
-      return `<a href="#/${S.role}/${p}" ${S.page === p || (p === 'queue' && S.page === 'grade') ? 'aria-current="page"' : ''} title="${l}">${ic(i)}<span class="lbl">${l}</span>${count}</a>`;
+      return `<a href="#/${S.role}/${p}" ${S.page === p || (p === 'queue' && S.page === 'grade') || (p === 'builder' && S.page === 'lesson') ? 'aria-current="page"' : ''} title="${l}">${ic(i)}<span class="lbl">${l}</span>${count}</a>`;
     }).join('');
     const ctx = S.role === 'student' ? 'UX Design Fundamentals · Spring 2026' : S.role === 'instructor' ? 'UXF · Spring 2026' : S.role === 'ta' ? `UXF · Spring 2026 · ${myGroup()}` : 'Cohorta School';
     return `<aside class="side" aria-label="Main">${lockup()}<div><div class="nav-label">${esc(ctx)}</div><nav class="nav">${items}</nav></div>
       <div class="me" title="${esc(me.name)} · ${me.role}">${av(me.initials)}<div class="me-txt"><div style="font-weight:600">${esc(me.name)}</div><div class="muted" style="font-size:12px">${me.role}</div></div></div></aside>`;
   }
   function mobileChrome() {
-    const items = NAV[S.role].slice(0, 4).map(([p, l, i]) => `<a href="#/${S.role}/${p}" ${S.page === p ? 'aria-current="page"' : ''}>${ic(i, 20)}<span>${l.split(' ')[0]}</span></a>`).join('');
+    const items = NAV[S.role].slice(0, 4).map(([p, l, i]) => `<a href="#/${S.role}/${p}" ${S.page === p || (p === 'builder' && S.page === 'lesson') ? 'aria-current="page"' : ''}>${ic(i, 20)}<span>${l.split(' ')[0]}</span></a>`).join('');
     return { top: `<div class="mtop">${symbol(20)}${wordmark(16)}<span class="grow"></span>${av(D.people[S.role].initials)}</div>`, bottom: `<nav class="mnav" aria-label="Main">${items}</nav>` };
   }
   function demoBar() {
@@ -267,13 +276,13 @@
     const kindIc = k => k === 'lesson' ? ic('play', 14) : ic('file', 14);
     return guard({ title: 'UX Design Fundamentals', errWhat: 'the course', deniedWhat: 'this course', deniedWho: 'Only the course owner and admins can edit it. The owner is Maria Lopez.',
       empty: head('New course', 'Draft · not visible to students') + emptyState('Start with a module', 'A module groups lessons and assignments. Most courses have 3 to 6.', '<button class="btn primary" data-act="start" data-v="#/instructor/builder">' + ic('plus', 16) + 'Add first module</button>', 'book') }, () => `
-      ${head('UX Design Fundamentals', `${tag('Published')} <span class="mono" style="margin-left:6px">v2</span> · 4 modules · 15 items · owner Maria Lopez`, `<button class="btn" data-act="toast" data-v="Preview opened as a student">Preview as student</button><button class="btn primary" data-act="modal" data-v="publish">Send v3 for review</button>`, '<a href="#/instructor/home">Dashboard</a> / Course builder')}
+      ${head('UX Design Fundamentals', `${tag('Published')} <span class="mono" style="margin-left:6px">v2</span> · 4 modules · 15 items · owner Maria Lopez`, `${presence()}${viewSeg()}<button class="btn primary" data-act="modal" data-v="publish">Send v3 for review</button>`, '<a href="#/instructor/home">Dashboard</a> / Course builder')}
       <div class="banner warn">${ic('alert', 18)}<div class="grow"><b>You're editing a draft of v3.</b>Spring 2026 keeps v2 until an admin pushes the update, so students never see content change mid-lesson.</div></div>
       <div class="grid g-main">
         <div>${mods.map((m, mi) => `<section class="module"><div class="module-head"><span class="handle">${ic('grip', 16)}</span><b>Module ${mi + 1} · ${esc(m.title)}</b><span class="muted" style="font-size:13px">${m.items.length} items</span><span class="spacer" style="flex:1"></span>
             <button class="iconbtn" aria-label="Move module up" data-act="mv" data-v="${mi},-1" ${mi === 0 ? 'disabled' : ''}>${ic('up', 16)}</button><button class="iconbtn" aria-label="Move module down" data-act="mv" data-v="${mi},1" ${mi === mods.length - 1 ? 'disabled' : ''}>${ic('down', 16)}</button></div>
             ${m.items.map(it => `<div class="item"><span class="handle">${ic('grip', 16)}</span><span class="kind">${kindIc(it.kind)}</span><div class="grow"><div style="font-weight:500">${esc(it.title)}</div><div class="muted" style="font-size:12px">${it.kind === 'lesson' ? 'Lesson · ' + it.len : 'Assignment · due ' + it.due}</div></div>
-              ${it.kind === 'assignment' ? '<a class="btn sm" href="#/instructor/editor">Edit</a>' : '<button class="btn sm" data-act="toast" data-v="Lesson editor opens here in the full product">Edit</button>'}</div>`).join('')}
+              ${it.kind === 'assignment' ? '<a class="btn sm" href="#/instructor/editor">Edit</a>' : `<a class="btn sm" href="#/instructor/lesson/${it.id}">Edit</a>`}</div>`).join('')}
             ${m.items.length ? '' : '<div class="item muted" style="font-size:13px">No items yet. Add a lesson or an assignment to start this module.</div>'}
             <div class="add-row"><button class="btn sm add" data-act="addItem" data-v="${mi},lesson">${ic('plus', 14)}Add lesson</button><button class="btn sm add" data-act="addItem" data-v="${mi},assignment">${ic('plus', 14)}Add assignment</button></div></section>`).join('')}
           <button class="btn add add-module" data-act="addModule">${ic('plus', 16)}Add module</button></div>
@@ -309,6 +318,263 @@
           <div class="card"><h2>Used in</h2><div class="list" style="font-size:13px"><div class="row"><span style="flex:1">Spring 2026</span>${tag('Running')}</div><div class="row"><span style="flex:1">Autumn 2026</span>${tag('Scheduled')}</div></div>
             <p class="muted" style="font-size:12px;margin:10px 0 0">Changes apply to new submissions. Work already graded keeps its rubric.</p></div></div></div>`);
   }
+
+
+  /* ================= LESSON EDITOR ================= */
+  // Blocks live in a v3 draft. AI adds blocks as drafts; students never see a draft.
+  const mods = () => S.order || (S.order = D.course.modules.map(m => ({ ...m, items: [...m.items] })));
+  const flatItems = () => mods().flatMap((m, mi) => m.items.map((it, ii) => ({ it, m, mi, ii })));
+  const findItem = id => flatItems().find(x => x.it.id === id) || null;
+  const links = () => S.links || (S.links = D.course.links.map(l => [...l]));
+  const BT = { heading: ['Heading', 'heading'], text: ['Text', 'text'], video: ['Video', 'play'], image: ['Image', 'image'], callout: ['Callout', 'callout'], quiz: ['Quiz question', 'quiz'], divider: ['Divider', 'minus'] };
+  let bseq = 100;
+  const newBlock = o => ({ ...JSON.parse(JSON.stringify(o)), id: 'b' + (++bseq) });
+  function lessonState(id) {
+    if (S.lessons[id]) return S.lessons[id];
+    const f = findItem(id);
+    const src = D.lessons[id] || [{ type: 'heading', text: f ? f.it.title : 'New lesson' }, { type: 'text', text: 'Opening paragraph for this lesson. Edit it right here, or ask AI for a first draft from the title.' }];
+    return (S.lessons[id] = { blocks: src.map(newBlock), undo: [], redo: [], sel: null, tab: 'block', aiAct: id === 'l7' ? 'first' : 'quiz', prompt: '', aiNote: '', preview: false });
+  }
+  const curLesson = () => lessonState(S.param);
+  const snap = L => JSON.stringify(L.blocks);
+  function change(L, fn) { L.undo.push(snap(L)); if (L.undo.length > 60) L.undo.shift(); L.redo = []; fn(); }
+  function undoL(L) { if (!L.undo.length) return; L.redo.push(snap(L)); L.blocks = JSON.parse(L.undo.pop()); if (!L.blocks.some(b => b.id === L.sel)) L.sel = null; }
+  function redoL(L) { if (!L.redo.length) return; L.undo.push(snap(L)); L.blocks = JSON.parse(L.redo.pop()); if (!L.blocks.some(b => b.id === L.sel)) L.sel = null; }
+  const drafts = L => L.blocks.filter(b => b.ai);
+  const minutes = L => Math.max(1, Math.round(L.blocks.filter(b => !b.ai).reduce((t, b) => t + ({ heading: .5, text: 2, video: 7, image: 1, callout: 1, quiz: 1, divider: 0 }[b.type] || 0), 0)));
+  const needsAlt = b => b.type === 'image' && !b.decorative && !(b.alt || '').trim();
+  function issues(L) {
+    const out = [];
+    if (!L.blocks.length) out.push({ text: 'The lesson is empty. Students would open a blank page.', bid: null });
+    L.blocks.filter(needsAlt).forEach(b => out.push({ text: `Image ${b.file || ''} has no alt text. Screen reader users hear nothing in its place.`, bid: b.id }));
+    const d = drafts(L); if (d.length) out.push({ text: `${pl(d.length, 'AI draft is', 'AI drafts are')} waiting for review. Drafts stay hidden from students until you accept them.`, bid: d[0].id });
+    return out;
+  }
+  const blockLabel = b => b ? (b.type === 'heading' || b.type === 'callout' || b.type === 'text' ? `${BT[b.type][0]}, “${(b.text || '').slice(0, 28)}${(b.text || '').length > 28 ? '…' : ''}”` : b.type === 'quiz' ? 'Quiz question' : BT[b.type][0]) : 'the end of the lesson';
+  const ce = (b, field, cls, tagName = 'div', ph = '') => `<${tagName} class="${cls}" contenteditable="true" spellcheck="true" data-bedit="${field}" data-bid="${b.id}" data-ph="${esc(ph)}">${esc(b[field] || '')}</${tagName}>`;
+
+  function blockView(b, L, preview) {
+    const quizN = L.blocks.filter(x => x.type === 'quiz' && (!preview || !x.ai)); const qi = quizN.indexOf(b);
+    if (preview) {
+      if (b.type === 'heading') return `<h2 class="b-h">${esc(b.text)}</h2>`;
+      if (b.type === 'text') return `<p class="b-p">${esc(b.text)}</p>`;
+      if (b.type === 'callout') return `<div class="b-callout">${ic('callout', 16)}<div>${esc(b.text)}</div></div>`;
+      if (b.type === 'divider') return '<hr class="b-hr">';
+      if (b.type === 'video') return `<div class="b-video"><span class="play">${ic('play', 18)}</span><div class="cap"><b>${esc(b.text)}</b><span>${esc(b.len || '')} · Captions on</span></div></div>`;
+      if (b.type === 'image') return `<figure class="b-img"><div class="ph" role="img" aria-label="${esc(b.decorative ? '' : b.alt || '')}">${ic('image', 20)}<span>${esc(b.file || 'image.png')}</span></div>${b.caption ? `<figcaption>${esc(b.caption)}</figcaption>` : ''}</figure>`;
+      if (b.type === 'quiz') return `<div class="b-quiz"><div class="overline">Check yourself · question ${qi + 1} of ${quizN.length}</div><div class="q">${esc(b.q)}</div>${b.options.map(o => `<div class="opt"><span class="radio"></span>${esc(o)}</div>`).join('')}</div>`;
+      return '';
+    }
+    const sel = L.sel === b.id;
+    let inner = '';
+    if (b.type === 'heading') inner = ce(b, 'text', 'b-h', 'h2', 'Heading');
+    if (b.type === 'text') inner = ce(b, 'text', 'b-p', 'div', 'Start typing');
+    if (b.type === 'callout') inner = `<div class="b-callout">${ic('callout', 16)}${ce(b, 'text', 'grow', 'div', 'A tip students should not miss')}</div>`;
+    if (b.type === 'divider') inner = '<hr class="b-hr">';
+    if (b.type === 'video') inner = `<div class="b-video"><span class="play">${ic('play', 18)}</span><div class="cap"><b>${esc(b.text)}</b><span>${esc(b.len || '0:00')} · Captions on</span></div></div>`;
+    if (b.type === 'image') inner = `<figure class="b-img"><div class="ph">${needsAlt(b) ? '<span class="tag t-late noalt">No alt text</span>' : ''}${ic('image', 20)}<span>${esc(b.file || 'image.png')}</span></div>${ce(b, 'caption', 'figcap', 'figcaption', 'Add a caption')}</figure>`;
+    if (b.type === 'quiz') inner = `<div class="b-quiz"><div class="overline">Quiz · question ${qi + 1} of ${quizN.length}</div>${ce(b, 'q', 'q', 'div', 'Question')}
+      ${b.options.map((o, i) => `<div class="opt${b.correct === i ? ' ok' : ''}"><button type="button" class="radio" role="radio" aria-checked="${b.correct === i}" aria-label="Mark as the correct answer" data-act="qCorrect" data-v="${b.id},${i}"></button>${ce({ id: b.id, ['o' + i]: o }, 'o' + i, 'grow', 'div', 'Answer')}${b.correct === i ? '<span class="tag t-graded">Correct</span>' : ''}</div>`).join('')}
+      <div class="why"><span>Why:</span> ${ce(b, 'why', 'grow', 'span', 'Explain the answer')}</div></div>`;
+    const aiHead = b.ai ? `<div class="ai-head">${ic('sparkle', 14)}<span class="tag t-ai" data-badge="${b.id}">${b.ai === 'edited' ? 'AI draft · edited by you' : 'AI draft'}</span><span class="grow"></span><button class="btn sm ghost" data-act="aiBlock" data-v="discard,${b.id}">Discard</button><button class="btn sm primary" data-act="aiBlock" data-v="accept,${b.id}">${ic('check', 14)}Accept</button></div>` : '';
+    const tools = sel ? `<div class="blk-tools" role="toolbar" aria-label="Block actions"><button class="iconbtn" aria-label="Move up" data-act="blk" data-v="up">${ic('up', 15)}</button><button class="iconbtn" aria-label="Move down" data-act="blk" data-v="down">${ic('down', 15)}</button><button class="iconbtn" aria-label="Duplicate" data-act="blk" data-v="dup">${ic('copy', 15)}</button><button class="iconbtn" aria-label="Delete" data-act="blk" data-v="del">${ic('trash', 15)}</button></div>` : '';
+    return `<div class="blk${sel ? ' is-sel' : ''}${b.ai ? ' is-ai' : ''}" id="blk-${b.id}" data-act="selBlock" data-v="${b.id}" data-block="${b.id}">
+      <span class="grip" draggable="true" data-drag="move:${b.id}" title="Drag to move" aria-hidden="true">${ic('grip', 14)}</span>${tools}${aiHead}${inner}</div>`;
+  }
+
+  function lessonInspector(L, f) {
+    const b = L.blocks.find(x => x.id === L.sel);
+    const iss = issues(L);
+    const tabs = `<div class="itabs" role="tablist">${[['block', b ? 'Block' : 'Lesson'], ['ai', `${ic('sparkle', 13)}AI`], ['checks', `Checks${iss.length ? ` <span class="cnt" id="checks-count">${iss.length}</span>` : ''}`]].map(([k, l]) => `<button role="tab" aria-selected="${L.tab === k}" data-act="ltab" data-v="${k}">${l}</button>`).join('')}</div>`;
+    let body = '';
+    if (L.tab === 'block' && !b) {
+      const pre = links().filter(l => l[1] === S.param).map(l => findItem(l[0])).filter(Boolean);
+      body = `<div class="field"><label for="lt">Title</label><input id="lt" value="${esc(f.it.title)}" data-act="lessonTitle"></div>
+        <div class="kv"><span>Estimated time</span><b>${L.blocks.length ? 'about ' + minutes(L) + ' min' : 'Fills in as you add content'}</b></div><div class="kv"><span>Blocks</span><b>${L.blocks.length}</b></div><div class="kv"><span>Module</span><b>${f.mi + 1} · ${esc(f.m.title)}</b></div>
+        <div class="overline" style="margin-top:6px">Opens after</div>${pre.length ? pre.map(p => `<div class="linkrow">${ic(p.it.kind === 'lesson' ? 'play' : 'file', 14)}<span class="grow">${esc(p.it.title)}</span></div>`).join('') : '<p class="muted small" style="margin:0">Opens right away for students in this module.</p>'}
+        <a class="linkbtn small" href="#/instructor/builder/map" data-act="mapFocus" data-v="${S.param}">${ic('map', 14)}Edit order on the course map</a>
+        <div class="ai-tip">${ic('sparkle', 14)}<span>AI uses the lesson title and the module around it. Add a line about what students should be able to do, and the draft gets sharper.</span></div>`;
+    } else if (L.tab === 'block') {
+      const i = L.blocks.indexOf(b);
+      let fields = '';
+      if (b.type === 'image') fields = `<div class="field${needsAlt(b) ? ' invalid' : ''}" id="alt-field"><label for="alt">Alt text</label><textarea id="alt" data-act="bfield" data-v="alt" data-bid="${b.id}" placeholder="Describe what the image shows" ${b.decorative ? 'disabled' : ''}>${esc(b.alt || '')}</textarea><span class="help err">Required. Screen reader users hear this instead of the image.</span></div>
+          <label class="check"><input type="checkbox" data-act="decorative" ${b.decorative ? 'checked' : ''}> Decorative image, skip alt text</label>
+          <div class="field"><label for="cap">Caption</label><input id="cap" data-act="bfield" data-v="caption" data-bid="${b.id}" value="${esc(b.caption || '')}"></div>`;
+      else if (b.type === 'video') fields = `<div class="field"><label for="vt">Title</label><input id="vt" data-act="bfield" data-v="text" data-bid="${b.id}" value="${esc(b.text)}"></div><div class="kv"><span>Length</span><b>${esc(b.len || '0:00')}</b></div><div class="kv"><span>Captions</span><b>On, auto-checked</b></div>`;
+      else if (b.type === 'quiz') fields = `<p class="muted small">Edit the question and answers right on the page. The circle marks the correct answer. Students see “Why” after they answer.</p>`;
+      else if (b.type === 'divider') fields = `<p class="muted small">Splits the lesson into parts. Students see a thin line.</p>`;
+      else fields = `<p class="muted small">Type right on the page. ${b.type === 'heading' ? 'Headings build the “On this page” list.' : 'Plain text, no formatting to fix later.'}</p>`;
+      body = `<div class="ihead"><span class="kind">${ic(BT[b.type][1], 15)}</span><b>${BT[b.type][0]}</b><span class="grow"></span><span class="muted small">Block ${i + 1} of ${L.blocks.length}</span></div>${fields}
+        <div class="iacts"><button class="btn sm" aria-label="Move up" data-act="blk" data-v="up" ${i === 0 ? 'disabled' : ''}>${ic('up', 15)}</button><button class="btn sm" aria-label="Move down" data-act="blk" data-v="down" ${i === L.blocks.length - 1 ? 'disabled' : ''}>${ic('down', 15)}</button><button class="btn sm" aria-label="Duplicate" data-act="blk" data-v="dup">${ic('copy', 15)}</button><button class="btn sm danger" data-act="blk" data-v="del">${ic('trash', 15)}Delete</button></div>
+        <div class="keys">Alt + ↑↓ move · ⌘D duplicate · ⌫ delete · ⌘Z undo</div>`;
+    } else if (L.tab === 'ai') {
+      const acts = [['quiz', 'Quiz from this lesson'], ['recap', 'Recap for the end'], ['first', 'First draft from title']];
+      body = `<div class="ai-card"><h3>${ic('sparkle', 16)}Draft with AI</h3><p>AI adds blocks as drafts. You accept or discard each one, and students never see a draft.</p></div>
+        <div class="overline">Quick actions</div><div class="chips-col">${acts.map(([k, l]) => `<button class="chip" aria-pressed="${L.aiAct === k}" data-act="aiAct" data-v="${k}">${l}</button>`).join('')}</div>
+        <div class="field"><label for="aip">Or describe what you need</label><textarea id="aip" data-act="aiPrompt" placeholder="3 questions, one about naming variants">${esc(L.prompt)}</textarea><span class="help">Adds after: ${esc(blockLabel(L.blocks.find(x => x.id === L.sel) || L.blocks[L.blocks.length - 1]))}</span></div>
+        <button class="btn primary" data-load data-act="aiGen">${ic('sparkle', 16)}Generate</button>
+        ${L.aiNote ? `<div class="ai-done">${ic('check', 15)}${esc(L.aiNote)}</div>` : ''}
+        <p class="muted small demo-note">Demo: prepared sample answers. Nothing leaves your browser.</p>`;
+    } else {
+      body = iss.length ? `<div class="list">${iss.map(x => `<div class="issue">${ic('alert', 16)}<span class="grow">${esc(x.text)}</span>${x.bid ? `<button class="btn sm" data-act="showBlock" data-v="${x.bid}">Show</button>` : ''}</div>`).join('')}</div><p class="muted small">Checks run as you edit. Fix them before you send v3 for review.</p>`
+        : `<div class="ai-done">${ic('check', 15)}No problems found.</div><p class="muted small">Students can open this lesson once v3 is published.</p>`;
+    }
+    return `<aside class="card insp${S.sheet ? ' open' : ''}" aria-label="Inspector"><button class="sheet-handle" data-act="sheet" aria-label="${S.sheet ? 'Collapse' : 'Expand'} panel"></button>${tabs}<div class="ibody">${body}</div></aside>`;
+  }
+
+  function iLesson(id) {
+    const f = findItem(id);
+    if (!f || f.it.kind !== 'lesson') return head('Lesson not found') + emptyState('This lesson is not in the v3 draft', 'It may have been removed. Open the course builder to see what is there now.', '<a class="btn" href="#/instructor/builder">Open course builder</a>', 'book');
+    const L = lessonState(id);
+    return guard({ title: f.it.title, errWhat: 'this lesson', deniedWhat: 'this lesson', deniedWho: 'Only the course owner and admins can edit lessons. The owner is Maria Lopez.',
+      empty: head(f.it.title, `${tag('Draft')} <span class="mono">v3</span> · New lesson`) + emptyState('This lesson is empty', 'Drag a block from the left, or let AI draft a first version from the title.', `<a class="btn" href="#/instructor/lesson/l7">Open an empty lesson</a>`, 'text') }, () => {
+      const iss = issues(L); const d = drafts(L);
+      const outline = L.blocks.filter(b => b.type === 'heading' && !b.ai);
+      const selIdx = L.blocks.findIndex(b => b.id === L.sel);
+      const curH = selIdx < 0 ? null : [...L.blocks.slice(0, selIdx + 1)].reverse().find(b => b.type === 'heading');
+      const firstQuiz = L.blocks.find(b => b.type === 'quiz');
+      const pal = `<div class="card palette"><div class="overline">Blocks</div><div class="pal-list">${Object.entries(BT).map(([k, [l, i]]) => `<button class="pal-item" draggable="true" data-drag="add:${k}" data-act="addBlock" data-v="${k}"><span class="kind">${ic(i, 15)}</span><span class="grow">${l}</span><span class="dots" aria-hidden="true">${ic('grip', 13)}</span></button>`).join('')}</div>
+        <p class="muted small pal-hint">Drag onto the page, or click to add after the selected block.</p>
+        ${outline.length || firstQuiz ? `<div class="outline"><div class="overline">On this page</div>${outline.map(h => `<button class="olink${curH && curH.id === h.id ? ' cur' : ''}" data-act="showBlock" data-v="${h.id}" data-outline="${h.id}">${esc(h.text)}</button>`).join('')}${firstQuiz ? `<button class="olink${curH === undefined || (selIdx >= 0 && L.blocks[selIdx].type === 'quiz') ? ' cur' : ''}" data-act="showBlock" data-v="${firstQuiz.id}">Check yourself</button>` : ''}</div>` : ''}</div>`;
+      const page = L.preview
+        ? `<div class="lpage preview">${L.blocks.filter(b => !b.ai).map(b => blockView(b, L, true)).join('') || '<p class="muted">Nothing to show yet.</p>'}</div>`
+        : `<div class="lpage" data-drop="page">${L.blocks.length ? L.blocks.map(b => blockView(b, L, false)).join('') + `<button class="add-block" data-act="addBlock" data-v="text">${ic('plus', 15)}Add a block</button>`
+          : `<div class="lempty"><span class="kind">${ic('text', 18)}</span><h3>This lesson is empty</h3><p>Drag a block from the left, or let AI draft a first version from the title. You review it before anything is saved for students.</p>
+            <div class="row-btns"><button class="btn" data-act="addBlock" data-v="text">${ic('plus', 15)}Add text block</button><button class="btn primary" data-act="aiFirst">${ic('sparkle', 15)}Draft with AI</button></div></div><div class="dropzone">${ic('grip', 13)}Drop blocks here</div>`}</div>`;
+      const dbar = !L.preview && d.length ? `<div class="draftbar" role="region" aria-label="AI drafts">${ic('sparkle', 16)}<div class="grow"><b>${pl(d.length, 'AI draft', 'AI drafts')} to review</b><span>Students never see a draft.</span></div><button class="btn sm" data-act="aiAll" data-v="discard">Discard all</button><button class="btn sm primary" data-act="aiAll" data-v="accept">Accept all</button></div>` : '';
+      const sub = `${tag('Draft')} <span class="mono" style="margin:0 2px 0 6px">v3</span> · ${L.blocks.length ? 'about ' + minutes(L) + ' min · All changes saved to v3 draft' : 'New lesson · Not visible to students'}`;
+      const acts = `<button class="btn icon" aria-label="Undo" data-act="lundo" ${L.undo.length ? '' : 'disabled'}>${ic('undo', 17)}</button><button class="btn icon" aria-label="Redo" data-act="lredo" ${L.redo.length ? '' : 'disabled'}>${ic('redo', 17)}</button>
+        ${L.blocks.length ? `<button class="btn issues-btn${iss.length ? ' has' : ''}" id="lesson-issues" data-act="ltab" data-v="checks">${iss.length ? ic('alert', 16) + pl(iss.length, 'issue', 'issues') : ic('check', 16) + 'No issues'}</button>` : ''}
+        <button class="btn" data-act="lpreview">${L.preview ? ic('edit', 16) + 'Back to editing' : ic('eye', 16) + '<span>Preview<span class="hide-m"> as student</span></span>'}</button>`;
+      return `${head(esc(f.it.title), sub, acts, `<a href="#/instructor/builder">Course builder</a> / Module ${f.mi + 1}<span class="hide-m"> · ${esc(f.m.title)}</span>`)}
+        ${L.preview ? `<div class="banner info">${ic('eye', 18)}<div class="grow"><b>Student preview</b>${d.length ? pl(d.length, 'AI draft is', 'AI drafts are') + ' hidden, the way students will see it.' : 'This is what students will see once v3 is published.'}</div></div>` : ''}
+        <div class="lgrid${L.preview ? ' is-preview' : ''}">${L.preview ? '' : pal}<div class="lcanvas">${page}${dbar}</div>${L.preview ? '' : lessonInspector(L, f)}</div>`;
+    });
+  }
+
+  /* ================= COURSE MAP ================= */
+  // Modules are columns; "next in module" is implied by order; "opens after" links are drawn between items.
+  const MAPK = { cw: 198, ch: 54, gap: 22, head: 42, pad: 14, mw: 226, col: 30, row: 56, perRow: 3 };
+  function mapLayout() {
+    const M = mods(); const pos = {}; const boxes = []; let rowY = 0, rowH = 0;
+    M.forEach((m, mi) => {
+      const c = mi % MAPK.perRow; if (c === 0 && mi) { rowY += rowH + MAPK.row; rowH = 0; }
+      const x = c * (MAPK.mw + MAPK.col), y = rowY;
+      const h = MAPK.head + Math.max(1, m.items.length) * (MAPK.ch + MAPK.gap) - MAPK.gap + MAPK.pad;
+      boxes.push({ m, mi, x, y, h }); rowH = Math.max(rowH, h);
+      m.items.forEach((it, ii) => { pos[it.id] = { x: x + MAPK.pad, y: y + MAPK.head + ii * (MAPK.ch + MAPK.gap), it, mi, ii }; });
+    });
+    const W = Math.max(...boxes.map(b => b.x + MAPK.mw)) + 40, H = Math.max(...boxes.map(b => b.y + b.h)) + 40;
+    return { pos, boxes, W, H };
+  }
+  const orderIdx = () => { const o = {}; flatItems().forEach((x, i) => o[x.it.id] = i); return o; };
+  const conflicts = () => { const o = orderIdx(); return links().filter(([p, t]) => o[p] != null && o[t] != null && o[p] > o[t]); };
+  const isConflict = (p, t) => { const o = orderIdx(); return o[p] > o[t]; };
+  function mapState() { return S.map || (S.map = { x: 24, y: 24, k: 1, tool: 'select', sel: null, pick: null, from: null, ready: false, notes: null }); }
+  function edgePath(a, b) {
+    const ay = a.y + MAPK.ch / 2, by = b.y + MAPK.ch / 2;
+    if (b.x > a.x + 10) { const x1 = a.x + MAPK.cw, x2 = b.x, dx = Math.max(30, (x2 - x1) / 2); return `M${x1},${ay} C${x1 + dx},${ay} ${x2 - dx},${by} ${x2 - 2},${by}`; }
+    if (b.x < a.x - 10) { const x1 = a.x, x2 = b.x + MAPK.cw, dx = Math.max(30, (x1 - x2) / 2); return `M${x1},${ay} C${x1 - dx},${ay} ${x2 + dx},${by} ${x2 + 2},${by}`; }
+    const x1 = a.x + MAPK.cw, x2 = b.x + MAPK.cw; return `M${x1},${ay} C${x1 + 44},${ay} ${x2 + 44},${by} ${x2 + 2},${by}`;
+  }
+  function mapCanvas() {
+    const st = mapState(); const L = mapLayout(); const sel = st.sel; const bad = conflicts();
+    const badItems = new Set(bad.map(l => l[1]));
+    const related = sel ? new Set(links().filter(l => l[0] === sel || l[1] === sel).flat()) : new Set();
+    const nextArrows = L.boxes.map(bx => bx.m.items.slice(0, -1).map((it, ii) => { const p = L.pos[it.id]; const x = p.x + MAPK.cw / 2; return `<path d="M${x},${p.y + MAPK.ch + 4} L${x},${p.y + MAPK.ch + MAPK.gap - 5}" class="e-next" marker-end="url(#mk-g)"/>`; }).join('')).join('');
+    const edges = links().map(([p, t]) => { const a = L.pos[p], b = L.pos[t]; if (!a || !b) return ''; const c = isConflict(p, t); const on = sel && (p === sel || t === sel);
+      return `<path d="${edgePath(a, b)}" class="e-link${c ? ' bad' : ''}${on ? ' on' : ''}" marker-end="url(#mk-${c ? 'c' : on ? 'b' : 'g'})"/>`; }).join('');
+    const cards = Object.values(L.pos).map(p => { const it = p.it; const c = badItems.has(it.id);
+      return `<button class="mcard${sel === it.id ? ' sel' : ''}${c ? ' bad' : ''}${st.from === it.id ? ' from' : ''}${related.has(it.id) && sel !== it.id ? ' rel' : ''}" style="left:${p.x}px;top:${p.y}px" data-act="mapSel" data-v="${it.id}" data-card="${it.id}">
+        <span class="kind${it.kind === 'assignment' ? ' as' : ''}">${ic(it.kind === 'lesson' ? 'play' : 'file', 13)}</span><span class="txt"><b data-ctitle="${it.id}">${esc(it.title)}</b><span>${c ? 'Opens too early' : it.kind === 'lesson' ? 'Lesson · ' + esc(it.len) : 'Assignment · due ' + esc(it.due)}</span></span></button>`; }).join('');
+    const boxes = L.boxes.map(b => `<div class="mbox" style="left:${b.x}px;top:${b.y}px;width:${MAPK.mw}px;height:${b.h}px"><div class="mbox-h"><b>Module ${b.mi + 1} · ${esc(b.m.title)}</b><span>${pl(b.m.items.length, 'item', 'items')}</span></div></div>`).join('');
+    if (!st.notes) { const b3 = L.boxes[2] || L.boxes[0]; st.notes = [{ id: 'n1', x: b3.x, y: b3.y + b3.h + 46, who: 'Sofia Rossi', initials: 'SR', when: '2 min ago', text: 'Should the usability test open before Module 3 ends? Students asked for more time.' }]; }
+    const notes = st.notes.map(n => `<div class="mnote${st.selNote === n.id ? ' sel' : ''}" style="left:${n.x}px;top:${n.y}px" data-note="${n.id}"><div class="mnote-h" data-notedrag="${n.id}"><span class="avatar${n.initials === 'SR' ? ' av-sofia' : ''}">${n.initials}</span><b>${esc(n.who)}</b><span>${n.when}</span></div><div class="mnote-t" contenteditable="true" data-notetext="${n.id}">${esc(n.text)}</div></div>`).join('');
+    const sofia = st.notes[0] ? `<span class="cursor-tag" style="left:${st.notes[0].x + 200}px;top:${st.notes[0].y + 128}px" aria-hidden="true">${ic('cursor', 12)}<span>Sofia</span></span>` : '';
+    const hint = st.pick ? `Pick the item that has to come first for “${esc(findItem(st.pick).it.title)}”` : st.tool === 'connect' ? (st.from ? `Now pick what opens after “${esc(findItem(st.from).it.title)}”` : 'Pick the item that comes first, then the one it opens') : st.tool === 'note' ? 'Click anywhere on the map to leave a note' : '';
+    const tools = [['select', 'cursor', 'Select (V)'], ['hand', 'hand', 'Pan (H)'], ['connect', 'connect', 'Link two items (C)'], ['note', 'note', 'Add a note (N)']];
+    return `<div class="mapvp tool-${st.tool}" data-mapvp tabindex="0" aria-label="Course map. Use the list view for a text version.">
+      <div class="mworld" style="transform:translate(${st.x}px,${st.y}px) scale(${st.k});width:${L.W}px;height:${L.H}px">
+        ${boxes}<svg class="medges" width="${L.W}" height="${L.H}" aria-hidden="true"><defs>${[['g', '#9A9DAB'], ['b', '#2A3BFF'], ['c', '#FF6B3D']].map(([k, c]) => `<marker id="mk-${k}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1,1 L9,5 L1,9" fill="none" stroke="${c}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>`).join('')}</defs>${nextArrows}${edges}</svg>
+        ${cards}${notes}${sofia}</div>
+      ${hint ? `<div class="mhint" role="status">${hint}${st.pick || st.from ? '<button data-act="mapCancel">Cancel</button>' : ''}</div>` : '<div class="mhint touch-only">Pinch to zoom · drag to pan</div>'}
+      <div class="mlegend"><div><i class="lg-b"></i>Opens after</div><div><i class="lg-g"></i>Next in module</div><div><i class="lg-c"></i>Opens too early</div></div>
+      <div class="mtools" role="toolbar" aria-label="Map tools">${tools.map(([k, i, l]) => `<button class="${st.tool === k ? 'on' : ''}" aria-pressed="${st.tool === k}" aria-label="${l}" title="${l}" data-act="mapTool" data-v="${k}">${ic(i, 17)}</button>`).join('')}
+        <span class="sep"></span><button class="desk" aria-label="Zoom out" data-act="mapZoom" data-v="-1">${ic('minus', 17)}</button><span class="zoom desk" data-zoom>${Math.round(st.k * 100)}%</span><button class="desk" aria-label="Zoom in" data-act="mapZoom" data-v="1">${ic('plus', 17)}</button><button aria-label="Fit to screen" title="Fit to screen (0)" data-act="mapFit">${ic('fit', 17)}</button></div></div>`;
+  }
+  function mapInspector() {
+    const st = mapState(); const bad = conflicts();
+    const prob = bad.length ? `<div class="mprob">${ic('alert', 17)}<div class="grow"><b>${pl(bad.length, 'problem', 'problems')} on the map</b>${bad.map(([p, t]) => `<span>${esc(findItem(t).it.title)} opens before its prerequisite, ${esc(findItem(p).it.title)}.</span>`).join('')}</div><button class="btn sm" data-act="mapShow" data-v="${bad[0][1]}">Show</button></div>` : '';
+    if (!st.sel) return `<aside class="card minsp"><div class="ihead"><span class="kind">${ic('map', 15)}</span><b>Course map</b></div><p class="muted small" style="margin:0">${pl(mods().length, 'module', 'modules')} · ${pl(flatItems().length, 'item', 'items')} · ${pl(links().length, 'link', 'links')}</p>
+      <p class="small" style="margin:0">Click an item to see what opens it. Press <span class="kbd">C</span> to link two items, <span class="kbd">N</span> to leave a note. Drag the background or hold space to pan.</p>${prob}</aside>`;
+    const f = findItem(st.sel); const it = f.it; const o = orderIdx();
+    const pre = links().filter(l => l[1] === it.id); const nxt = links().filter(l => l[0] === it.id);
+    const row = (id, l) => { const x = findItem(id).it; const c = isConflict(l[0], l[1]); return `<div class="linkrow${c ? ' bad' : ''}">${ic(x.kind === 'lesson' ? 'play' : 'file', 14)}<span class="grow">${esc(x.title)}${c ? '<small>Comes later in the course</small>' : ''}</span><button class="iconbtn sm" aria-label="Remove link" data-act="unlink" data-v="${l[0]},${l[1]}">${ic('x', 14)}</button></div>`; };
+    const names = pre.map(l => findItem(l[0]).it.title);
+    const sees = names.length ? `Opens after you finish ${names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] : names[0]}.` : 'Open as soon as the module starts.';
+    return `<aside class="card minsp"><div class="ihead"><span class="kind">${ic(it.kind === 'lesson' ? 'play' : 'file', 15)}</span><b>${it.kind === 'lesson' ? 'Lesson' : 'Assignment'}</b><span class="grow"></span><span class="muted small">Module ${f.mi + 1} · ${f.ii + 1} of ${f.m.items.length}</span></div>
+      <div class="field"><label for="mt">Title</label><input id="mt" value="${esc(it.title)}" data-act="itemTitle" data-v="${it.id}"></div>
+      <div class="field"><label for="mm">Module</label><select id="mm" data-act="itemModule" data-v="${it.id}">${mods().map((m, i) => `<option value="${i}" ${i === f.mi ? 'selected' : ''}>Module ${i + 1} · ${esc(m.title)}</option>`).join('')}</select></div>
+      <div class="ordrow"><span class="muted small">Order in module</span><span class="grow"></span><button class="btn sm" aria-label="Move earlier" data-act="itemMove" data-v="-1" ${f.ii === 0 ? 'disabled' : ''}>${ic('up', 14)}</button><button class="btn sm" aria-label="Move later" data-act="itemMove" data-v="1" ${f.ii === f.m.items.length - 1 ? 'disabled' : ''}>${ic('down', 14)}</button></div>
+      <div class="overline">Opens after</div>${pre.map(l => row(l[0], l)).join('') || '<p class="muted small" style="margin:0">Nothing. It opens with the module.</p>'}
+      <button class="linkbtn small" data-act="mapPick" data-v="${it.id}">${ic('plus', 14)}Add prerequisite</button>
+      <div class="overline">Opens next</div>${nxt.map(l => row(l[1], l)).join('') || '<p class="muted small" style="margin:0">Nothing waits for it.</p>'}
+      <div class="sees">${ic('eye', 15)}<span>Students see: “${esc(sees)}”</span></div>
+      <a class="btn" href="${it.kind === 'lesson' ? '#/instructor/lesson/' + it.id : '#/instructor/editor'}">${ic('edit', 15)}Edit ${it.kind}</a>${prob}</aside>`;
+  }
+  function mapSheet() {
+    const st = mapState(); if (!st.sel) return `<div class="msheet"><span class="sheet-grab"></span><p class="muted small" style="margin:0">Tap an item to see what opens it.${conflicts().length ? ` <button class="linkbtn small" data-act="mapShow" data-v="${conflicts()[0][1]}">${pl(conflicts().length, 'problem', 'problems')} on the map</button>` : ''}</p></div>`;
+    const it = findItem(st.sel).it; const names = links().filter(l => l[1] === it.id).map(l => findItem(l[0]).it.title);
+    return `<div class="msheet"><span class="sheet-grab"></span><div class="who"><span class="kind">${ic(it.kind === 'lesson' ? 'play' : 'file', 15)}</span><div style="min-width:0"><b>${esc(it.title)}</b><div class="muted small">${names.length ? 'Opens after ' + esc(names.join(' and ')) : 'Opens with the module'}</div></div></div>
+      <div class="row-btns"><button class="btn" data-act="mapPick" data-v="${it.id}">${ic('connect', 15)}Edit links</button><a class="btn primary" href="${it.kind === 'lesson' ? '#/instructor/lesson/' + it.id : '#/instructor/editor'}">${ic('edit', 15)}Open</a></div></div>`;
+  }
+  const presence = () => `<span class="presence hide-m">${av('ML')}<span class="avatar av-sofia">SR</span><span class="muted small">Sofia is viewing</span></span>`;
+  const viewSeg = () => `<div class="vseg" role="group" aria-label="View"><a href="#/instructor/builder" aria-current="${S.param !== 'map'}">${ic('list', 15)}List</a><a href="#/instructor/builder/map" aria-current="${S.param === 'map'}">${ic('map', 15)}Map</a></div>`;
+  function iMap() {
+    return guard({ title: 'UX Design Fundamentals', errWhat: 'the course map', deniedWhat: 'this course', deniedWho: 'Only the course owner and admins can edit it. The owner is Maria Lopez.',
+      empty: head('New course', 'Draft · not visible to students', viewSeg()) + emptyState('Nothing to map yet', 'Add a module with a lesson or an assignment, and it appears here as a card you can link.', '<button class="btn primary" data-act="start" data-v="#/instructor/builder">' + ic('plus', 16) + 'Add first module</button>', 'map') }, () => `
+      ${head('UX Design Fundamentals', `${tag('Draft')} <span class="mono" style="margin:0 2px 0 6px">v3</span> · ${pl(mods().length, 'module', 'modules')} · ${pl(flatItems().length, 'item', 'items')} · owner Maria Lopez`, `${presence()}${viewSeg()}<button class="btn primary" data-act="modal" data-v="publish">Send v3 for review</button>`, '<a href="#/instructor/home">Dashboard</a> / Course builder')}
+      <div class="mgrid">${mapCanvas()}${mapInspector()}</div>${mapSheet()}`);
+  }
+  // Fit the whole map in view; on a phone, fit the width so cards stay readable.
+  function fitMap(force) {
+    const vp = document.querySelector('[data-mapvp]'); if (!vp) return; const st = mapState(); if (st.ready && !force) return;
+    const L = mapLayout(); const w = vp.clientWidth, h = vp.clientHeight;
+    const k = Math.max(.45, Math.min(1, (w - 48) / L.W, force ? (h - 110) / L.H : 1));
+    st.k = +k.toFixed(2); st.x = Math.max(12, (w - L.W * st.k) / 2); st.y = 24; st.ready = true;
+    // On a phone the whole map would be unreadable, so it opens at a readable zoom on the first problem (or the first item).
+    if (!force && w < 560) { const bad = conflicts(); const id = bad.length ? bad[0][1] : flatItems()[0].it.id; const p = L.pos[id];
+      st.k = .75; if (p) { st.x = Math.round(w / 2 - (p.x + MAPK.cw / 2) * st.k); st.y = Math.round(Math.min(24, h / 2.6 - (p.y + MAPK.ch / 2) * st.k)); } }
+    applyMap();
+  }
+  function applyMap() { const st = mapState(); const w = document.querySelector('.mworld'); if (w) w.style.transform = `translate(${st.x}px,${st.y}px) scale(${st.k})`; const z = document.querySelector('[data-zoom]'); if (z) z.textContent = Math.round(st.k * 100) + '%'; }
+  function zoomAt(k2, cx, cy) { const st = mapState(); k2 = Math.max(.4, Math.min(1.8, k2)); st.x = cx - (cx - st.x) * (k2 / st.k); st.y = cy - (cy - st.y) * (k2 / st.k); st.k = k2; applyMap(); }
+  function addLink(p, t) {
+    if (p === t) { toast('An item cannot open after itself.'); return false; }
+    if (links().some(l => l[0] === p && l[1] === t)) { toast('These two are already linked.'); return false; }
+    // Walk forward from t: if p is reachable, the new link would make a loop nobody can finish.
+    const reach = new Set([t]); let grew = true; while (grew) { grew = false; links().forEach(([a, b]) => { if (reach.has(a) && !reach.has(b)) { reach.add(b); grew = true; } }); }
+    if (reach.has(p)) { toast('That would make a loop. Students could never open either item.'); return false; }
+    links().push([p, t]); const late = isConflict(p, t);
+    S.undo = () => { S.links = links().filter(l => !(l[0] === p && l[1] === t)); };
+    toast(`${findItem(t).it.title} now opens after ${findItem(p).it.title}${late ? '. It comes later in the course, so the map flags it.' : ''}`, true); return true;
+  }
+
+  const DEFAULTS = { heading: { text: '' }, text: { text: '' }, video: { text: 'New video', len: '0:00' }, image: { file: 'image.png', alt: '', caption: '' }, callout: { text: '' }, quiz: { q: '', options: ['', '', ''], correct: 0, why: '' }, divider: {} };
+  function addBlockAt(L, type, at) {
+    const b = newBlock({ type, ...DEFAULTS[type] }); change(L, () => L.blocks.splice(at, 0, b)); L.sel = b.id; if (L.tab === 'checks') L.tab = 'block';
+    const fld = { heading: 'text', text: 'text', callout: 'text', quiz: 'q' }[type]; if (fld) S.focusCE = `#blk-${b.id} [data-bedit="${fld}"]`; S.scrollTo = '#blk-' + b.id; return b;
+  }
+  function blockOp(L, i, op) {
+    const b = L.blocks[i]; const B = L.blocks;
+    if (op === 'up' && i > 0) change(L, () => { [B[i - 1], B[i]] = [B[i], B[i - 1]]; });
+    if (op === 'down' && i < B.length - 1) change(L, () => { [B[i + 1], B[i]] = [B[i], B[i + 1]]; });
+    if (op === 'dup') { const c = newBlock(b); change(L, () => B.splice(i + 1, 0, c)); L.sel = c.id; }
+    if (op === 'del') { change(L, () => B.splice(i, 1)); L.sel = (B[i] || B[i - 1] || {}).id || null; S.undo = () => undoL(L); toast(`${BT[b.type][0]} deleted`, true); }
+    S.scrollTo = L.sel ? '#blk-' + L.sel : null;
+  }
+  function centerOn(id) { const vp = document.querySelector('[data-mapvp]'); const p = mapLayout().pos[id]; if (!vp || !p) return; const st = mapState();
+    st.x = vp.clientWidth / 2 - (p.x + MAPK.cw / 2) * st.k; st.y = vp.clientHeight / 2 - (p.y + MAPK.ch / 2) * st.k; applyMap(); }
 
   function iRoster() {
     const rows = D.enrolments.filter(e => e.cohort.startsWith('UX')).map((e, i) => ({ ...e, group: i % 2 ? 'Group B' : 'Group A', done: Math.min(4, Math.round(e.progress / 25)), risk: ['Paused', 'Dropped'].includes(e.state) || e.progress < 30 }))
@@ -502,7 +768,7 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
 
   /* ---------- render ---------- */
   const VIEWS = {
-    instructor: { home: iHome, queue: iQueue, grade: () => iGrade(S.param), builder: iBuilder, editor: iEditor, roster: iRoster },
+    instructor: { home: iHome, queue: iQueue, grade: () => iGrade(S.param), builder: () => S.param === 'map' ? iMap() : iBuilder(), lesson: () => iLesson(S.param), editor: iEditor, roster: iRoster },
     ta: { home: iQueue, queue: iQueue, grade: () => iGrade(S.param), roster: iRoster },
     admin: { home: aHome, catalogue: aCatalogue, enrolments: aEnrol, users: aUsers },
     student: { home: sHome, lesson: sLesson, assignment: sAssignment, grades: sGrades }
@@ -522,18 +788,26 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
     // A row highlight plays once, on the render that follows the action.
     if (S.flash.size) S.flash = new Set();
     if (S.focus) { const f = document.querySelector(S.focus); if (f) { f.focus(); if (f.setSelectionRange) f.setSelectionRange(f.value.length, f.value.length); } S.focus = null; }
+    if (S.focusCE) { const el = document.querySelector(S.focusCE); if (el) { el.focus(); const r = document.createRange(); r.selectNodeContents(el); r.collapse(false); const sl = window.getSelection(); sl.removeAllRanges(); sl.addRange(r); } S.focusCE = null; }
+    if (S.scrollTo) { const el = document.querySelector(S.scrollTo); if (el && el.scrollIntoView) { const r = el.getBoundingClientRect(); if (r.top < 120 || r.bottom > innerHeight - 120) el.scrollIntoView({ block: 'center', behavior: reduceMotion() ? 'auto' : 'smooth' }); } S.scrollTo = null; }
+    if (document.querySelector('[data-mapvp]')) { fitMap(false); if (S.mapCenter) { centerOn(S.mapCenter); S.mapCenter = null; } }
   }
   let current = '#/instructor/home';
-  function route(h) {
+  function route(h, replace) {
     if (h) current = h;
     const parts = current.replace(/^#\/?/, '').split('/');
     if (VIEWS[parts[0]]) { if (S.role !== parts[0]) { S.sel.clear(); S.eSel.clear(); } S.role = parts[0]; }
     S.page = parts[1] && VIEWS[S.role][parts[1]] ? parts[1] : 'home'; S.param = parts[2] || null; S.gtab = 'doc';
     // A role without a dashboard lands on its first page, so the nav always shows where you are.
     if (S.page === 'home' && !NAV[S.role].some(n => n[0] === 'home')) S.page = NAV[S.role][0][0];
-    S.panel = null; S.modal = null; render(); window.scrollTo(0, 0);
-    try { if (location.protocol !== 'about:' && history.replaceState) history.replaceState(null, '', current); } catch (e) {}
+    S.panel = null; S.modal = null; S.sheet = false; if (S.map) { S.map.from = null; S.map.pick = null; }
+    render(); window.scrollTo(0, 0);
+    // Each page gets its own history entry, so the browser Back button walks back through the demo.
+    try { if (location.protocol !== 'about:' && history.pushState && location.hash !== current) history[replace ? 'replaceState' : 'pushState'](null, '', current); } catch (e) {}
   }
+  const ROUTE_RE = /^#\/(student|instructor|ta|admin)\//;
+  function fromURL() { if (ROUTE_RE.test(location.hash) && location.hash !== current) route(location.hash, true); }
+  window.addEventListener('popstate', fromURL); window.addEventListener('hashchange', fromURL);
   /* Toast lives outside #app: page re-renders never replay its entrance,
      a new message replaces the text in place, and it fades out on its own. */
   const toastRoot = document.createElement('div'); toastRoot.id = 'toast-root'; toastRoot.setAttribute('aria-live', 'polite'); document.body.appendChild(toastRoot);
@@ -568,7 +842,7 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
     const link = e.target.closest('a[href^="#/"]');
     if (link) {
       e.preventDefault();
-      const ta = link.dataset.act; if (ta === 'demo') { setLongData(link.dataset.v === 'long'); S.demo = link.dataset.v; } if (ta === 'role') S.role = link.dataset.v;
+      const ta = link.dataset.act; if (ta === 'demo') { setLongData(link.dataset.v === 'long'); S.demo = link.dataset.v; } if (ta === 'role') S.role = link.dataset.v; if (ta === 'mapFocus') { const st = mapState(); st.sel = link.dataset.v; S.mapCenter = link.dataset.v; }
       route(link.getAttribute('href')); return;
     }
     const t = e.target.closest('[data-act]'); if (!t) return;
@@ -604,7 +878,7 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
         list.slice().reverse().forEach((em, k) => { const nm = em.split('@')[0].split(/[._]/).map(p => p[0].toUpperCase() + p.slice(1)).join(' '); D.enrolments.unshift({ id: 'n' + Date.now() + k, student: nm, initials: nm.split(' ').map(p => p[0]).join(''), email: em, cohort: coh, state: 'Invited', progress: 0, last: 'Never' }); });
         audit(`Invited ${list.length} students to ${coh}`); S.modal = null; S.eFilter = 'all'; toast(`${pl(list.length, 'invite', 'invites')} sent. They show as Invited until they accept.`); break; }
       case 'doInvite': { const nm = document.getElementById('in').value.trim() || 'New person'; const role = document.getElementById('ir').value; D.staff.push({ name: nm, initials: nm.split(' ').map(p => p[0]).join('').slice(0, 2), email: document.getElementById('ie').value, role, scope: document.getElementById('is').value, last: 'Invited' }); audit(`Invited ${nm} as ${role}`); S.modal = null; toast(`Invite sent to ${nm} · logged`); break; }
-      case 'addItem': { const [mi, kind] = v.split(','); const m = S.order[+mi]; m.items.push(kind === 'lesson' ? { kind, title: 'New lesson', len: '0 min' } : { kind, id: 'x', title: 'New assignment', due: 'not set' }); toast(kind === 'lesson' ? 'Lesson added to the v3 draft' : 'Assignment added. Set a due date and rubric.'); break; }
+      case 'addItem': { const [mi, kind] = v.split(','); const m = S.order[+mi]; m.items.push(kind === 'lesson' ? { kind, id: 'l' + Date.now(), title: 'New lesson', len: '0 min' } : { kind, id: 'a' + Date.now(), title: 'New assignment', due: 'not set' }); toast(kind === 'lesson' ? 'Lesson added to the v3 draft' : 'Assignment added. Set a due date and rubric.'); break; }
       case 'addModule': S.order.push({ id: 'm' + (S.order.length + 1), title: 'New module', items: [] }); toast('Module added to the v3 draft'); break;
       case 'releaseQ': { const s = D.subs.find(x => x.id === v); if (needsReview(s)) { toast(lockWhy(s)); break; }
         const sc = scoreOf(s); S.done.add(v); S.ret.delete(v); audit(`Released grade ${sc} to ${s.student}, ${s.assignment} · ${howGraded(s)}`);
@@ -648,6 +922,49 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
         go(`#/${S.role}/grade/${t.dataset.next}`); toast(`Grade ${sc} released to ${s.student.split(' ')[0]}. Next submission opened.`, true); render(); return; }
       case 'returnOne': S.ret.add(v); S.done.delete(v); toast('Returned for revision. The student can submit attempt 2.'); break;
       case 'mv': { const [i, d] = v.split(',').map(Number); const o = S.order; const j = i + d; if (j >= 0 && j < o.length) [o[i], o[j]] = [o[j], o[i]]; break; }
+      /* lesson editor */
+      case 'selBlock': { const L = curLesson(); if (L.preview) return; const ed = e.target.closest('[data-bedit]');
+        if (L.sel === v) return; L.sel = v; if (L.tab !== 'ai') L.tab = 'block';
+        if (ed) S.focusCE = `#blk-${v} [data-bedit="${ed.dataset.bedit}"]`; break; }
+      case 'blk': { const L = curLesson(); const i = L.blocks.findIndex(b => b.id === L.sel); if (i < 0) return; blockOp(L, i, v); break; }
+      case 'addBlock': { const L = curLesson(); L.preview = false; addBlockAt(L, v, L.sel ? L.blocks.findIndex(b => b.id === L.sel) + 1 : L.blocks.length); break; }
+      case 'qCorrect': { const L = curLesson(); const [id, i] = v.split(','); const b = L.blocks.find(x => x.id === id); change(L, () => { b.correct = +i; if (b.ai === 'draft') b.ai = 'edited'; }); L.sel = id; break; }
+      case 'aiBlock': { const L = curLesson(); const [kind, id] = v.split(','); const b = L.blocks.find(x => x.id === id);
+        change(L, () => { if (kind === 'accept') delete b.ai; else L.blocks = L.blocks.filter(x => x !== b); });
+        if (kind === 'discard' && L.sel === id) L.sel = null;
+        toast(kind === 'accept' ? 'Accepted. It joins the v3 draft and students see it once v3 is published.' : 'Draft discarded'); break; }
+      case 'aiAll': { const L = curLesson(); const n = drafts(L).length;
+        change(L, () => { if (v === 'accept') L.blocks.forEach(b => delete b.ai); else L.blocks = L.blocks.filter(b => !b.ai); });
+        if (!L.blocks.some(b => b.id === L.sel)) L.sel = null;
+        S.undo = () => undoL(L); toast(v === 'accept' ? `${pl(n, 'draft', 'drafts')} accepted into v3` : `${pl(n, 'draft', 'drafts')} discarded`, true); break; }
+      case 'ltab': { const L = curLesson(); L.tab = v; S.sheet = true; break; }
+      case 'sheet': S.sheet = !S.sheet; break;
+      case 'lundo': undoL(curLesson()); break;
+      case 'lredo': redoL(curLesson()); break;
+      case 'lpreview': { const L = curLesson(); L.preview = !L.preview; L.sel = null; window.scrollTo(0, 0); break; }
+      case 'aiAct': curLesson().aiAct = v; break;
+      case 'aiFirst': { const L = curLesson(); L.tab = 'ai'; L.aiAct = 'first'; S.sheet = true; break; }
+      case 'aiGen': { const L = curLesson(); const f = findItem(S.param); const A = D.aiSamples;
+        const at = L.sel ? L.blocks.findIndex(b => b.id === L.sel) + 1 : L.blocks.length;
+        const made = (L.aiAct === 'quiz' ? A.quiz.map(q => ({ type: 'quiz', ...q })) : L.aiAct === 'recap' ? [{ type: 'callout', text: A.recap }] : A.first(f.it.title)).map(b => newBlock({ ...b, ai: 'draft' }));
+        change(L, () => { L.blocks.splice(L.aiAct === 'recap' ? L.blocks.length : at, 0, ...made); });
+        L.sel = made[0].id; L.aiNote = L.aiAct === 'quiz' ? '3 questions added as drafts' : L.aiAct === 'recap' ? 'Recap added at the end as a draft' : `${pl(made.length, 'block', 'blocks')} added as drafts`;
+        S.scrollTo = '#blk-' + made[0].id; break; }
+      case 'showBlock': { const L = curLesson(); L.sel = v; L.preview = false; if (L.tab === 'checks') L.tab = 'block'; S.scrollTo = '#blk-' + v; break; }
+      /* course map */
+      case 'mapSel': { const st = mapState(); if (st.justPanned) return;
+        if (st.pick) { const ok = addLink(v, st.pick); if (ok) { st.sel = st.pick; st.pick = null; } break; }
+        if (st.tool === 'connect') { if (!st.from) { st.from = v; break; } if (addLink(st.from, v)) st.sel = v; st.from = null; break; }
+        st.sel = st.sel === v ? null : v; st.selNote = null; break; }
+      case 'mapTool': { const st = mapState(); st.tool = v; st.from = null; st.pick = null; break; }
+      case 'mapCancel': { const st = mapState(); st.from = null; st.pick = null; if (st.tool === 'connect') st.tool = 'select'; break; }
+      case 'mapPick': { const st = mapState(); st.pick = v; st.sel = v; st.from = null; break; }
+      case 'mapZoom': { const vp = document.querySelector('[data-mapvp]'); zoomAt(+(mapState().k + (+v) * .1).toFixed(2), vp.clientWidth / 2, vp.clientHeight / 2); return; }
+      case 'mapFit': fitMap(true); return;
+      case 'mapShow': { const st = mapState(); st.sel = v; st.pick = null; st.from = null; S.mapCenter = v; break; }
+      case 'unlink': { const [p, q] = v.split(','); const before = links().map(l => [...l]); S.links = links().filter(l => !(l[0] === p && l[1] === q));
+        S.undo = () => { S.links = before; }; toast(`${findItem(q).it.title} no longer waits for ${findItem(p).it.title}`, true); break; }
+      case 'itemMove': { const st = mapState(); const f = findItem(st.sel); const j = f.ii + (+v); if (j < 0 || j >= f.m.items.length) return; [f.m.items[f.ii], f.m.items[j]] = [f.m.items[j], f.m.items[f.ii]]; break; }
       case 'modal': S.modal = v; break;
       case 'panel': S.anim = !S.panel; S.swap = !!S.panel && S.panel !== v; S.panel = v; break;
       case 'gtab': S.gtab = v; window.scrollTo(0, 0); break;
@@ -662,6 +979,7 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
   });
   document.addEventListener('change', e => {
     const t = e.target; const a = t.dataset.act; if (!a) return;
+    if (['bfield', 'lessonTitle', 'aiPrompt', 'itemTitle', 'decorative', 'itemModule'].includes(a)) return;
     if (a === 'sel') { t.checked ? S.sel.add(t.dataset.v) : S.sel.delete(t.dataset.v); }
     if (a === 'selAll') { const rows = filteredSubs(); rows.forEach(r => t.checked ? S.sel.add(r.id) : S.sel.delete(r.id)); }
     if (a === 'eSel') { t.checked ? S.eSel.add(t.dataset.v) : S.eSel.delete(t.dataset.v); }
@@ -682,14 +1000,130 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
     if (e.target.dataset.act === 'q') { S.q = e.target.value; const pos = e.target.selectionStart; render(); const i = document.querySelector('[data-act="q"]'); i.focus(); i.setSelectionRange(pos, pos); }
   });
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && (S.modal || S.panel)) closeOverlays();
+    if (e.key === 'Escape' && (S.modal || S.panel)) { closeOverlays(); return; }
+    const ae = document.activeElement; const typing = /INPUT|TEXTAREA|SELECT/.test(ae.tagName) || ae.isContentEditable; const mod = e.metaKey || e.ctrlKey;
+    if (S.page === 'lesson' && VIEWS.instructor && S.role === 'instructor' && !S.modal) {
+      const L = curLesson();
+      // Enter in a text block starts a new text block; in a one-line field it finishes the edit.
+      if (ae.isContentEditable && ae.dataset.bedit && e.key === 'Enter' && !e.shiftKey) { e.preventDefault();
+        if (ae.dataset.bedit === 'text' && L.blocks.find(b => b.id === ae.dataset.bid).type === 'text') { addBlockAt(L, 'text', L.blocks.findIndex(b => b.id === ae.dataset.bid) + 1); render(); } else ae.blur(); return; }
+      if (typing) return;
+      if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? redoL(L) : undoL(L); render(); return; }
+      if (mod && e.key.toLowerCase() === 'y') { e.preventDefault(); redoL(L); render(); return; }
+      const i = L.blocks.findIndex(b => b.id === L.sel); if (i < 0) return;
+      if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) { e.preventDefault(); blockOp(L, i, e.key === 'ArrowUp' ? 'up' : 'down'); render(); return; }
+      if (mod && e.key.toLowerCase() === 'd') { e.preventDefault(); blockOp(L, i, 'dup'); render(); return; }
+      if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); blockOp(L, i, 'del'); render(); return; }
+      if (e.key === 'Escape') { L.sel = null; render(); return; }
+    }
+    if (S.page === 'builder' && S.param === 'map' && !typing && !S.modal && document.querySelector('[data-mapvp]')) {
+      const st = mapState(); const k = e.key.toLowerCase(); const vp = document.querySelector('[data-mapvp]');
+      const T = { v: 'select', h: 'hand', c: 'connect', n: 'note' };
+      if (k === ' ') { e.preventDefault(); S.space = true; vp.classList.add('space'); return; }
+      if (T[k] && !mod) { st.tool = T[k]; st.from = null; st.pick = null; render(); return; }
+      if (k === '+' || k === '=') { zoomAt(st.k + .1, vp.clientWidth / 2, vp.clientHeight / 2); return; }
+      if (k === '-') { zoomAt(st.k - .1, vp.clientWidth / 2, vp.clientHeight / 2); return; }
+      if (k === '0') { fitMap(true); return; }
+      if (k === 'escape') { st.from = null; st.pick = null; st.sel = null; st.selNote = null; if (st.tool === 'connect') st.tool = 'select'; render(); return; }
+      if ((k === 'delete' || k === 'backspace') && st.selNote) { st.notes = st.notes.filter(n => n.id !== st.selNote); st.selNote = null; render(); return; }
+    }
     if (S.page === 'grade' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
       const L = mySubs(); const i = Math.max(0, L.findIndex(s => s.id === S.param));
       if (e.key === 'j') go(`#/${S.role}/grade/${L.at((i + 1) % L.length).id}`);
       if (e.key === 'k') go(`#/${S.role}/grade/${L.at((i - 1 + L.length) % L.length).id}`);
     }
   });
+  /* ---------- lesson editor: typing, drag and drop, shortcuts ---------- */
+  function patchLesson(L) {
+    const iss = issues(L); const btn = document.getElementById('lesson-issues');
+    if (btn) { btn.classList.toggle('has', !!iss.length); btn.innerHTML = iss.length ? ic('alert', 16) + pl(iss.length, 'issue', 'issues') : ic('check', 16) + 'No issues'; }
+    const cnt = document.getElementById('checks-count'); if (cnt) cnt.textContent = iss.length;
+    L.blocks.filter(b => b.type === 'image').forEach(b => { const el = document.querySelector(`#blk-${b.id} .noalt`); if (el) el.style.display = needsAlt(b) ? '' : 'none'; });
+    const af = document.getElementById('alt-field'); const b = L.blocks.find(x => x.id === L.sel); if (af && b) af.classList.toggle('invalid', needsAlt(b));
+    const u = document.querySelector('[data-act="lundo"]'); if (u) u.disabled = !L.undo.length;
+  }
+  // The first keystroke of an edit saves one undo step for the whole edit.
+  function beginEdit(L) { if (S.ceDirty) return; L.undo.push(S.ceSnap || snap(L)); L.redo = []; S.ceDirty = true; }
+  document.addEventListener('focusin', e => { if (e.target.matches('[data-bedit],[data-act="bfield"]') && S.page === 'lesson') { S.ceSnap = snap(curLesson()); S.ceDirty = false; } });
+  document.addEventListener('input', e => {
+    const t = e.target;
+    if (t.dataset && t.dataset.bedit) { const L = curLesson(); const b = L.blocks.find(x => x.id === t.dataset.bid); if (!b) return; beginEdit(L);
+      const f = t.dataset.bedit, val = t.innerText.replace(/\n$/, '');
+      if (/^o\d$/.test(f)) b.options[+f[1]] = val; else b[f] = val;
+      if (b.ai === 'draft') { b.ai = 'edited'; const bd = document.querySelector(`[data-badge="${b.id}"]`); if (bd) bd.textContent = 'AI draft · edited by you'; }
+      if (b.type === 'heading') { const o = document.querySelector(`[data-outline="${b.id}"]`); if (o) o.textContent = val; }
+      patchLesson(L); return; }
+    if (t.dataset.act === 'bfield') { const L = curLesson(); const b = L.blocks.find(x => x.id === t.dataset.bid); beginEdit(L); b[t.dataset.v] = t.value;
+      if (t.dataset.v === 'caption') { const c = document.querySelector(`#blk-${b.id} [data-bedit="caption"]`); if (c) c.textContent = t.value; }
+      if (t.dataset.v === 'text') { const c = document.querySelector(`#blk-${b.id} .cap b`); if (c) c.textContent = t.value; }
+      patchLesson(L); return; }
+    if (t.dataset.act === 'lessonTitle') { const f = findItem(S.param); f.it.title = t.value; const h = document.querySelector('.page-head h1'); if (h) h.textContent = t.value || 'Untitled lesson'; return; }
+    if (t.dataset.act === 'aiPrompt') { curLesson().prompt = t.value; return; }
+    if (t.dataset.act === 'itemTitle') { const f = findItem(t.dataset.v); f.it.title = t.value; const c = document.querySelector(`[data-ctitle="${t.dataset.v}"]`); if (c) c.textContent = t.value; return; }
+    if (t.dataset.notetext) { const n = mapState().notes.find(x => x.id === t.dataset.notetext); if (n) n.text = t.innerText; }
+  });
+  document.addEventListener('change', e => {
+    const t = e.target;
+    if (t.dataset.act === 'decorative') { const L = curLesson(); const b = L.blocks.find(x => x.id === L.sel); change(L, () => { b.decorative = t.checked; }); render(); }
+    if (t.dataset.act === 'itemModule') { const f = findItem(t.dataset.v); const to = mods()[+t.value]; f.m.items.splice(f.ii, 1); to.items.push(f.it); toast(`Moved to Module ${+t.value + 1} · ${to.title}`); render(); }
+  });
+  // Paste as plain text, so lessons never carry fonts and colours from elsewhere.
+  document.addEventListener('paste', e => { const t = e.target.closest && e.target.closest('[contenteditable]'); if (!t) return; e.preventDefault(); const txt = (e.clipboardData || window.clipboardData).getData('text/plain'); document.execCommand('insertText', false, txt); });
+  let DRAG = null, DROP = null;
+  const clearDrop = () => document.querySelectorAll('.drop-before,.drop-after').forEach(x => x.classList.remove('drop-before', 'drop-after'));
+  document.addEventListener('dragstart', e => {
+    const d = e.target.closest && e.target.closest('[data-drag]'); if (!d) return; DRAG = d.dataset.drag;
+    try { e.dataTransfer.setData('text/plain', DRAG); e.dataTransfer.effectAllowed = 'copyMove'; } catch (x) {}
+    if (DRAG.startsWith('move:')) { const blk = d.closest('.blk'); if (blk && e.dataTransfer.setDragImage) e.dataTransfer.setDragImage(blk, 24, 24); }
+    document.body.classList.add('is-dragging');
+  });
+  document.addEventListener('dragover', e => {
+    if (!DRAG) return; const page = e.target.closest && e.target.closest('[data-drop="page"]'); if (!page) return; e.preventDefault();
+    const L = curLesson(); clearDrop(); const blk = e.target.closest('.blk');
+    if (blk) { const r = blk.getBoundingClientRect(); const after = e.clientY > r.top + r.height / 2; blk.classList.add(after ? 'drop-after' : 'drop-before'); DROP = { id: blk.dataset.block, after }; }
+    else { const last = page.querySelector('.blk:last-of-type'); if (last) { last.classList.add('drop-after'); DROP = { id: last.dataset.block, after: true }; } else DROP = { id: null, after: true }; }
+  });
+  document.addEventListener('drop', e => {
+    if (!DRAG || !DROP) return; e.preventDefault(); const L = curLesson();
+    let at = DROP.id ? L.blocks.findIndex(b => b.id === DROP.id) + (DROP.after ? 1 : 0) : L.blocks.length;
+    if (DRAG.startsWith('add:')) addBlockAt(L, DRAG.slice(4), at);
+    else { const id = DRAG.slice(5); const from = L.blocks.findIndex(b => b.id === id); if (from > -1 && at !== from && at !== from + 1) { change(L, () => { const [b] = L.blocks.splice(from, 1); L.blocks.splice(at > from ? at - 1 : at, 0, b); }); L.sel = id; } }
+    DRAG = null; DROP = null; clearDrop(); document.body.classList.remove('is-dragging'); render();
+  });
+  document.addEventListener('dragend', () => { DRAG = null; DROP = null; clearDrop(); document.body.classList.remove('is-dragging'); });
+
+  /* ---------- course map: pan, zoom, pinch, notes ---------- */
+  const ptrs = new Map(); let PAN = null, NOTE = null, PINCH = null;
+  const inMap = el => el && el.closest && el.closest('[data-mapvp]');
+  document.addEventListener('pointerdown', e => {
+    const vp = inMap(e.target); if (!vp) return; const st = mapState();
+    if (e.target.closest('.mtools,.mhint,.mlegend')) return;
+    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; PINCH = { d: Math.hypot(a.x - b.x, a.y - b.y), k: st.k }; PAN = null; return; }
+    const nd = e.target.closest('[data-notedrag]');
+    if (nd && st.tool !== 'hand') { const n = st.notes.find(x => x.id === nd.dataset.notedrag); NOTE = { n, x: e.clientX, y: e.clientY, el: nd.parentElement }; st.selNote = n.id; return; }
+    const onThing = e.target.closest('.mcard,.mnote');
+    if (st.tool === 'note' && !onThing) { const r = vp.getBoundingClientRect(); const n = { id: 'n' + Date.now(), x: (e.clientX - r.left - st.x) / st.k, y: (e.clientY - r.top - st.y) / st.k, who: D.people.instructor.name, initials: D.people.instructor.initials, when: 'just now', text: '' };
+      st.notes.push(n); st.tool = 'select'; st.selNote = n.id; render(); const t = document.querySelector(`[data-notetext="${n.id}"]`); if (t) t.focus(); return; }
+    if (onThing && st.tool !== 'hand' && !S.space) return;
+    PAN = { x: e.clientX, y: e.clientY, moved: 0 }; vp.classList.add('panning'); try { vp.setPointerCapture(e.pointerId); } catch (x) {}
+  });
+  document.addEventListener('pointermove', e => {
+    if (!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); const st = mapState();
+    if (PINCH && ptrs.size === 2) { const [a, b] = [...ptrs.values()]; const vp = document.querySelector('[data-mapvp]').getBoundingClientRect(); zoomAt(PINCH.k * Math.hypot(a.x - b.x, a.y - b.y) / PINCH.d, (a.x + b.x) / 2 - vp.left, (a.y + b.y) / 2 - vp.top); return; }
+    if (NOTE) { const dx = (e.clientX - NOTE.x) / st.k, dy = (e.clientY - NOTE.y) / st.k; NOTE.x = e.clientX; NOTE.y = e.clientY; NOTE.n.x += dx; NOTE.n.y += dy; NOTE.el.style.left = NOTE.n.x + 'px'; NOTE.el.style.top = NOTE.n.y + 'px'; return; }
+    if (PAN) { const dx = e.clientX - PAN.x, dy = e.clientY - PAN.y; PAN.x = e.clientX; PAN.y = e.clientY; PAN.moved += Math.abs(dx) + Math.abs(dy); st.x += dx; st.y += dy; applyMap(); }
+  });
+  const endPtr = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) PINCH = null; if (!ptrs.size) {
+    const st = S.map; if (PAN && st) { if (PAN.moved > 4) { st.justPanned = true; setTimeout(() => { st.justPanned = false; }, 0); } else if (!e.target.closest('.mcard,.mnote') && st.tool === 'select' && (st.sel || st.selNote)) { st.sel = null; st.selNote = null; render(); } }
+    PAN = null; NOTE = null; const vp = document.querySelector('[data-mapvp]'); if (vp) vp.classList.remove('panning'); } };
+  document.addEventListener('pointerup', endPtr); document.addEventListener('pointercancel', endPtr);
+  document.addEventListener('wheel', e => {
+    const vp = inMap(e.target); if (!vp) return; e.preventDefault(); const st = mapState(); const r = vp.getBoundingClientRect();
+    if (e.ctrlKey || e.metaKey) zoomAt(st.k * Math.exp(-e.deltaY * .01), e.clientX - r.left, e.clientY - r.top); else { st.x -= e.deltaX; st.y -= e.deltaY; applyMap(); }
+  }, { passive: false });
+  document.addEventListener('keyup', e => { if (e.key === ' ' && S.space) { S.space = false; const vp = document.querySelector('[data-mapvp]'); if (vp) vp.classList.remove('space'); } });
   let start = '#/instructor/home';
-  try { if (/^#\/(student|instructor|ta|admin)\//.test(location.hash)) start = location.hash; } catch (e) {}
-  route(start);
+  try { if (ROUTE_RE.test(location.hash)) start = location.hash; } catch (e) {}
+  route(start, true);
 })();

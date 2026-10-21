@@ -13,25 +13,57 @@ window.DB = (function () {
     id: 'uxf', title: 'UX Design Fundamentals', version: 2, state: 'Published', owner: 'Maria Lopez',
     modules: [
       { id: 'm1', title: 'Research', items: [
-        { kind: 'lesson', title: 'Why research comes first', len: '12 min' },
-        { kind: 'lesson', title: 'Planning user interviews', len: '18 min' },
+        { kind: 'lesson', id: 'l1', title: 'Why research comes first', len: '12 min' },
+        { kind: 'lesson', id: 'l2', title: 'Planning user interviews', len: '18 min' },
         { kind: 'assignment', id: 'a1', title: 'User interview plan', due: 'Sep 15' }
       ]},
       { id: 'm2', title: 'Structure', items: [
-        { kind: 'lesson', title: 'Information architecture', len: '16 min' },
-        { kind: 'lesson', title: 'Flows before screens', len: '14 min' },
+        { kind: 'lesson', id: 'l3', title: 'Information architecture', len: '16 min' },
+        { kind: 'lesson', id: 'l4', title: 'Flows before screens', len: '14 min' },
         { kind: 'assignment', id: 'a2', title: 'Wireframe review', due: 'Oct 2' }
       ]},
       { id: 'm3', title: 'Interface', items: [
-        { kind: 'lesson', title: 'Layout and hierarchy', len: '20 min' },
-        { kind: 'lesson', title: 'Working with components', len: '17 min' },
-        { kind: 'lesson', title: 'States nobody designs', len: '15 min' },
+        { kind: 'lesson', id: 'l5', title: 'Layout and hierarchy', len: '20 min' },
+        { kind: 'lesson', id: 'l6', title: 'Working with components', len: '17 min' },
+        { kind: 'lesson', id: 'l7', title: 'States nobody designs', len: '15 min' },
         { kind: 'assignment', id: 'a3', title: 'Usability test report', due: 'Oct 14' }
       ]},
       { id: 'm4', title: 'Delivery', items: [
-        { kind: 'lesson', title: 'Handoff that developers trust', len: '19 min' },
+        { kind: 'lesson', id: 'l8', title: 'Handoff that developers trust', len: '19 min' },
         { kind: 'assignment', id: 'a4', title: 'Final case study', due: 'Nov 4' }
       ]}
+    ],
+    // "Opens after" links for the course map: [prerequisite, item]. Next-in-module order is implied.
+    links: [['a1', 'l3'], ['a2', 'l5'], ['a2', 'a3'], ['l7', 'a3'], ['a3', 'l8'], ['l7', 'l4']]
+  };
+
+  /* Lesson blocks for the lesson editor. "Working with components" is the full example;
+     "States nobody designs" starts empty; other lessons get a short opening. */
+  const lessons = {
+    l6: [
+      { id: 'b1', type: 'heading', text: 'What a component is' },
+      { id: 'b2', type: 'text', text: 'A component is a part of the interface you design once and reuse everywhere: a button, an input, a card. When the main component changes, every copy changes with it.' },
+      { id: 'b3', type: 'video', text: 'Components in Figma, from scratch', len: '6:40' },
+      { id: 'b4', type: 'heading', text: 'Variants and properties' },
+      { id: 'b5', type: 'text', text: 'Variants group versions of one component, like a button in primary, secondary and danger styles. Properties switch them without detaching. Name them the way developers will: size=sm, state=disabled.' },
+      { id: 'b6', type: 'image', file: 'button-variants.png', alt: '', caption: 'Button component with 3 variants and 4 states' },
+      { id: 'b7', type: 'callout', text: 'Design the states first: default, hover, focus, disabled, loading. Most handoff bugs come from a state nobody drew.' }
+    ],
+    l7: []
+  };
+  // Prepared answers for the AI actions in the demo. Nothing is sent anywhere.
+  const aiSamples = {
+    quiz: [
+      { q: 'You change the corner radius of the main button component. What happens to its copies?', options: ['They all update', 'Only copies on this page update', 'Nothing, copies are independent'], correct: 0, why: 'Copies inherit from the main component unless that property was overridden.' },
+      { q: 'You need a button in primary and danger styles. What is the cleanest setup?', options: ['One component with a style variant', 'Two separate components', 'Detach a copy and recolour it'], correct: 0, why: 'Variants keep related versions together, so swapping style never breaks the layout.' },
+      { q: 'Which states are most often missing at handoff?', options: ['Default', 'Focus and loading', 'Hover'], correct: 1, why: 'Default and hover get drawn first. Developers end up inventing focus and loading.' }
+    ],
+    recap: 'Recap: build a part once as a component, group its versions as variants, and draw every state before handoff.',
+    first: t => [
+      { type: 'heading', text: 'Why ' + t.toLowerCase() + ' matters' },
+      { type: 'text', text: 'Every screen has more states than the one in the mockup: empty, loading, error, disabled and locked. Users meet them on their first day, and developers build them with or without a design.' },
+      { type: 'callout', text: 'Before handoff, list the states for each screen and check that each one is drawn.' },
+      { type: 'quiz', q: 'A list has no items yet. Which state is that?', options: ['Empty', 'Error', 'Loading'], correct: 0, why: 'Empty means the data loaded and there is nothing in it yet. It needs a next step, not an error message.' }
     ]
   };
 
@@ -109,7 +141,7 @@ window.DB = (function () {
     { title: 'Final case study', module: 'Delivery', status: 'Locked', score: null, date: 'Due Nov 4', feedback: '' }
   ];
 
-  return { today, people, course, subs, catalogue, cohorts, enrolments, staff, audit, studentGrades };
+  return { today, people, course, lessons, aiSamples, subs, catalogue, cohorts, enrolments, staff, audit, studentGrades };
 })();
 
 /* Long data: the same school with long names, long titles and about 200 rows.
