@@ -21,6 +21,7 @@ Online schools run the same course for several cohorts at once. Students, instru
 |---|---|
 | Student | Course home with the next step, lesson, locked lesson, assignment upload, grades |
 | Instructor | Grading queue with filters and bulk actions, quick review panel, full grading view with AI draft, course builder, assignment editor, roster |
+| Teaching assistant | The same grading tools scoped to Group A: queue, quick review, grading view, group roster. Work from other groups opens as No access, and a released grade is locked with a note that only the instructor can change it |
 | Admin | Overview, course review and publishing, cohort scheduling, enrolments with bulk pause and undo, users and roles with an audit log |
 
 Use the bar at the top to switch role and page state: normal, empty, loading, error, no access.

@@ -59,6 +59,7 @@
   const NAV = {
     student: [['home', 'Home', 'home'], ['lesson', 'Current lesson', 'play'], ['assignment', 'Assignment', 'file'], ['grades', 'Grades', 'chart']],
     instructor: [['home', 'Dashboard', 'home'], ['queue', 'Grading queue', 'inbox'], ['builder', 'Course builder', 'book'], ['editor', 'Assignment editor', 'edit'], ['roster', 'Cohort roster', 'users']],
+    ta: [['queue', 'Grading queue', 'inbox'], ['roster', 'Group roster', 'users']],
     admin: [['home', 'Overview', 'home'], ['catalogue', 'Courses', 'grid'], ['enrolments', 'Enrolments', 'list'], ['users', 'Users and roles', 'shield']]
   };
   const stOf = s => S.done.has(s.id) ? 'graded' : S.ret.has(s.id) ? 'returned' : s.status;
@@ -79,7 +80,11 @@
       + (needsReview(s) ? `<p class="muted release-hint">${lockWhy(s)}</p>` : '');
   };
   const finalOf = s => { const k = stOf(s); if (k === 'graded') return S.done.has(s.id) ? scoreOf(s) : s.final; if (k === 'returned') return S.ret.has(s.id) ? scoreOf(s) : s.final; return null; };
-  const pending = () => D.subs.filter(s => ['ai', 'submitted', 'late'].includes(stOf(s)));
+  // Scope: a teaching assistant sees only the groups assigned to them; the rules stay the same.
+  const myGroup = () => S.role === 'ta' ? D.people.ta.group : null;
+  const mySubs = () => myGroup() ? D.subs.filter(s => s.group === myGroup()) : D.subs;
+  const inScope = s => !myGroup() || s.group === myGroup();
+  const pending = () => mySubs().filter(s => ['ai', 'submitted', 'late'].includes(stOf(s)));
   const toReview = () => pending().length;
   const inReview = () => D.catalogue.filter(c => c.state === 'In review');
   const pl = (n, one, many) => `${n} ${n === 1 ? one : many}`;
@@ -88,10 +93,10 @@
   function side() {
     const me = D.people[S.role];
     const items = NAV[S.role].map(([p, l, i]) => {
-      const count = S.role === 'instructor' && p === 'queue' ? `<span class="count">${toReview()}</span>` : S.role === 'admin' && p === 'catalogue' && inReview().length ? `<span class="count">${inReview().length}</span>` : '';
+      const count = ['instructor', 'ta'].includes(S.role) && p === 'queue' ? `<span class="count">${toReview()}</span>` : S.role === 'admin' && p === 'catalogue' && inReview().length ? `<span class="count">${inReview().length}</span>` : '';
       return `<a href="#/${S.role}/${p}" ${S.page === p || (p === 'queue' && S.page === 'grade') ? 'aria-current="page"' : ''} title="${l}">${ic(i)}<span class="lbl">${l}</span>${count}</a>`;
     }).join('');
-    const ctx = S.role === 'student' ? 'UX Design Fundamentals · Spring 2026' : S.role === 'instructor' ? 'UXF · Spring 2026' : 'Cohorta School';
+    const ctx = S.role === 'student' ? 'UX Design Fundamentals · Spring 2026' : S.role === 'instructor' ? 'UXF · Spring 2026' : S.role === 'ta' ? `UXF · Spring 2026 · ${myGroup()}` : 'Cohorta School';
     return `<aside class="side" aria-label="Main">${lockup()}<div><div class="nav-label">${esc(ctx)}</div><nav class="nav">${items}</nav></div>
       <div class="me" title="${esc(me.name)} · ${me.role}">${av(me.initials)}<div class="me-txt"><div style="font-weight:600">${esc(me.name)}</div><div class="muted" style="font-size:12px">${me.role}</div></div></div></aside>`;
   }
@@ -101,7 +106,7 @@
   }
   function demoBar() {
     const seg = (key, opts) => `<div class="seg" role="group">${opts.map(([v, l]) => `<button type="button" data-act="${key}" data-v="${v}" aria-pressed="${S[key] === v}">${l}</button>`).join('')}</div>`;
-    return `<div class="demo" role="region" aria-label="Demo controls"><b>Cohorta demo</b><span class="show-m dhint">Demo controls · sample data</span><span class="dgrp"><span class="dlab">View as</span>${seg('role', [['student', 'Student'], ['instructor', 'Instructor'], ['admin', 'Admin']])}</span>
+    return `<div class="demo" role="region" aria-label="Demo controls"><b>Cohorta demo</b><span class="show-m dhint">Demo controls · sample data</span><span class="dgrp"><span class="dlab">View as</span>${seg('role', [['student', 'Student'], ['instructor', 'Instructor'], ['ta', 'TA'], ['admin', 'Admin']])}</span>
       <span class="dgrp"><span class="dlab">State</span>${seg('demo', [['normal', 'Normal'], ['empty', 'Empty'], ['loading', 'Loading'], ['error', 'Error'], ['denied', 'No access']])}</span>
       <span class="spacer"></span><span class="hide-m">Client project · names and data changed · UX/UI by Tania Aisen</span></div>`;
   }
@@ -156,7 +161,7 @@
   }
 
   function filteredSubs() {
-    let rows = D.subs.map(s => ({ ...s, status: stOf(s), final: finalOf(s) }));
+    let rows = mySubs().map(s => ({ ...s, status: stOf(s), final: finalOf(s) }));
     if (S.qStatus !== 'all') rows = rows.filter(r => r.status === S.qStatus);
     if (S.q) rows = rows.filter(r => r.student.toLowerCase().includes(S.q.toLowerCase()));
     const ord = d => { const [m, day] = d.split(' '); return (m === 'Sep' ? 0 : 100) + +day; };
@@ -165,11 +170,11 @@
   }
   function iQueue() {
     return guard({ title: 'Grading queue', sub: 'UXF · Spring 2026', errWhat: 'submissions', deniedWhat: 'this grading queue', deniedWho: 'Teaching assistants only see the groups they are assigned to. Group B belongs to Ben Okafor.',
-      deniedAlt: '<a class="btn" href="#/instructor/queue" data-act="demo" data-v="normal">Open my groups</a>',
+      deniedAlt: `<a class="btn" href="#/${S.role}/queue" data-act="demo" data-v="normal">Open my groups</a>`,
       empty: emptyState('No submissions yet', 'Your next review will appear here. Students submit Wireframe review by Oct 2.', '<a class="btn" href="#/instructor/editor">Check the assignment</a>') }, () => {
       const rows = filteredSubs();
-      const counts = s => D.subs.filter(x => stOf(x) === s).length;
-      const chips = [['all', `All ${D.subs.length}`], ['ai', `AI draft ready ${counts('ai')}`], ['submitted', `Submitted ${counts('submitted')}`], ['late', `Late ${counts('late')}`], ['graded', `Graded ${counts('graded')}`], ['returned', `Returned ${counts('returned')}`]]
+      const counts = s => mySubs().filter(x => stOf(x) === s).length;
+      const chips = [['all', `All ${mySubs().length}`], ['ai', `AI draft ready ${counts('ai')}`], ['submitted', `Submitted ${counts('submitted')}`], ['late', `Late ${counts('late')}`], ['graded', `Graded ${counts('graded')}`], ['returned', `Returned ${counts('returned')}`]]
         .map(([v, l]) => `<button class="chip" data-act="qStatus" data-v="${v}" aria-pressed="${S.qStatus === v}">${l}</button>`).join('');
       const allSel = rows.length && rows.every(r => S.sel.has(r.id));
       const pad = S.dense ? 'style="padding-top:5px;padding-bottom:5px"' : '';
@@ -183,17 +188,18 @@
       const canRelease = selRows.length && selRows.every(r => readyToRelease(D.subs.find(x => x.id === r.id)));
       const bulkEnter = S.sel.size && !S.bulkShown; S.bulkShown = !!S.sel.size;
       const bulk = S.sel.size ? `<div class="bulkbar${bulkEnter ? ' enter' : ''}" role="region" aria-label="Bulk actions"><b>${S.sel.size} selected</b><span class="spacer" style="flex:1"></span>
-        <button class="btn sm" data-act="bulk" data-v="assign">Assign to TA</button><button class="btn sm" data-act="bulk" data-v="return">Return for revision</button>
+        ${myGroup() ? '' : '<button class="btn sm" data-act="bulk" data-v="assign">Assign to TA</button>'}<button class="btn sm" data-act="bulk" data-v="return">Return for revision</button>
         ${canRelease ? '<button class="btn sm primary" data-act="bulk" data-v="release">Release grades</button>' : lockBtn('Release grades', 'Release only work you have reviewed. Open each AI draft and check the score first.', 'btn sm')}
         <button class="iconbtn" style="color:#C9CBD6" aria-label="Clear selection" data-act="clearSel">${ic('x')}</button></div>` : '';
-      return `${head('Grading queue', 'UX Design Fundamentals · Spring 2026 · Wireframe review is due Oct 2', '<button class="btn" data-act="dense">' + (S.dense ? 'Comfortable rows' : 'Compact rows') + '</button>')}
+      return `${head('Grading queue', `UX Design Fundamentals · Spring 2026${myGroup() ? ' · ' + myGroup() : ''} · Wireframe review is due Oct 2`, '<button class="btn" data-act="dense">' + (S.dense ? 'Comfortable rows' : 'Compact rows') + '</button>')}
+        ${myGroup() ? `<div class="banner info">${ic('users', 18)}<div class="grow"><b>You review ${myGroup()} only.</b>Group B belongs to Ben Okafor. Released grades can be changed by the instructor, Maria Lopez.</div></div>` : ''}
         <div class="toolbar"><label class="search">${ic('search', 16)}<span class="sr">Search students</span><input data-act="q" value="${esc(S.q)}" placeholder="Search students"></label>
           <select class="select" aria-label="Cohort"><option>Spring 2026</option><option>Autumn 2026</option></select>
           <select class="select" aria-label="Assignment"><option>All assignments</option><option>Wireframe review</option><option>User interview plan</option></select></div>
         <div class="toolbar" role="group" aria-label="Filter by status">${chips}</div>
         <div class="tablebox"><table class="rtable"><thead><tr><th class="check"><label class="hit"><input type="checkbox" aria-label="Select all" data-act="selAll" ${allSel ? 'checked' : ''}></label></th><th>Student</th><th class="c-2nd">Assignment</th><th class="c-2nd">Group</th>
           <th class="sortable c-2nd" data-act="sort" aria-sort="${S.sortDir === 'desc' ? 'descending' : 'ascending'}">Submitted ${S.sortDir === 'desc' ? '↓' : '↑'}</th><th>Status</th><th>AI score</th><th>Final score</th><th></th></tr></thead>
-          <tbody>${body || `<tr><td colspan="9"><div class="empty" style="padding:32px"><h3>No matches</h3><p>No submissions with this status. Clear the filter to see all ${D.subs.length}.</p><button class="btn sm" data-act="qStatus" data-v="all">Clear filter</button></div></td></tr>`}</tbody></table></div>${bulk}`;
+          <tbody>${body || `<tr><td colspan="9"><div class="empty" style="padding:32px"><h3>No matches</h3><p>No submissions with this status. Clear the filter to see all ${mySubs().length}.</p><button class="btn sm" data-act="qStatus" data-v="all">Clear filter</button></div></td></tr>`}</tbody></table></div>${bulk}`;
     });
   }
 
@@ -209,17 +215,24 @@
     return '';
   }
   const fbFor = st => (st.mode === 'accept' || st.mode === 'edit') ? (st.fb != null ? st.fb : FB) : (st.fb || '');
-  const stateBanner = s => stOf(s) === 'graded' ? `<div class="banner info" style="margin:0">${ic('check', 18)}<div class="grow"><b>Graded and released.</b>You can change the grade within 7 days; every change is logged.</div></div>`
+  const stateBanner = s => stOf(s) === 'graded' ? `<div class="banner info" style="margin:0">${ic('check', 18)}<div class="grow"><b>Graded and released.</b>${myGroup() ? 'Only the instructor can change a released grade. Ask Maria Lopez if it needs a correction.' : 'You can change the grade within 7 days; every change is logged.'}</div></div>`
     : stOf(s) === 'returned' ? `<div class="banner warn" style="margin:0">${ic('back', 18)}<div class="grow"><b>Returned for revision.</b>${esc(s.student.split(' ')[0])} can submit attempt 2 of 2.</div></div>` : '';
+  // A locked action stays visible, with one line on why and who can do it.
+  const releasedRow = () => myGroup() ? `<div style="display:flex;justify-content:flex-end">${lockBtn('Change grade', 'Only the instructor can change a released grade.', 'btn')}</div><p class="muted release-hint">Locked for teaching assistants after release. Every change by the instructor is logged.</p>` : '';
   function iGrade(id) {
-    const list = D.subs; const idx = Math.max(0, list.findIndex(s => s.id === id)); const s = list[idx];
+    const all = D.subs.find(x => x.id === id) || mySubs()[0];
+    // Out-of-scope work is a real permission rule for a TA, not only a demo state.
+    if (!inScope(all)) return head(esc(all.student), `${esc(all.assignment)} · ${all.group}`, '', `<a href="#/${S.role}/queue">Grading queue</a> / ${esc(all.assignment)}`)
+      + denied('this submission', `${esc(all.student)} is in ${all.group}, which is assigned to Ben Okafor. You review ${myGroup()} only.`, `<a class="btn" href="#/${S.role}/queue">Back to my queue</a>`);
+    const list = mySubs(); const idx = Math.max(0, list.findIndex(x => x.id === all.id)); const s = list[idx];
     const st = aiState(s);
+    const locked = !!myGroup() && stOf(s) === 'graded';
     const total = scoreText(s) || '—';
     const prev = list[(idx - 1 + list.length) % list.length].id, next = list[(idx + 1) % list.length].id;
-    return guard({ title: s.student, errWhat: 'this submission', deniedWhat: 'this submission', deniedWho: `${s.student} is in ${s.group}, which is assigned to another teaching assistant.`, deniedAlt: '<a class="btn" href="#/instructor/queue">Back to my queue</a>',
-      empty: emptyState('Nothing submitted', `${s.student} has not submitted ${s.assignment} yet. You'll get a notification when they do.`, '<a class="btn" href="#/instructor/queue">Back to queue</a>', 'file') }, () => `
-      ${head(esc(s.student), `${esc(s.assignment)} · ${s.group} · submitted ${s.submitted}`, `<a class="btn" href="#/instructor/grade/${prev}" aria-label="Previous submission">${ic('back', 16)}<span class="kbd">K</span></a><a class="btn" href="#/instructor/grade/${next}" aria-label="Next submission"><span class="kbd">J</span>${ic('chev', 16)}</a>`,
-        `<a href="#/instructor/queue">Grading queue</a> / ${esc(s.assignment)}`)}
+    return guard({ title: s.student, errWhat: 'this submission', deniedWhat: 'this submission', deniedWho: `${s.student} is in ${s.group}, which is assigned to another teaching assistant.`, deniedAlt: `<a class="btn" href="#/${S.role}/queue">Back to my queue</a>`,
+      empty: emptyState('Nothing submitted', `${s.student} has not submitted ${s.assignment} yet. You'll get a notification when they do.`, `<a class="btn" href="#/${S.role}/queue">Back to queue</a>`, 'file') }, () => `
+      ${head(esc(s.student), `${esc(s.assignment)} · ${s.group} · submitted ${s.submitted}`, `<a class="btn" href="#/${S.role}/grade/${prev}" aria-label="Previous submission">${ic('back', 16)}<span class="kbd">K</span></a><a class="btn" href="#/${S.role}/grade/${next}" aria-label="Next submission"><span class="kbd">J</span>${ic('chev', 16)}</a>`,
+        `<a href="#/${S.role}/queue">Grading queue</a> / ${esc(s.assignment)}`)}
       ${stateBanner(s) ? `<div style="margin-bottom:16px">${stateBanner(s)}</div>` : ''}
       <div class="gtabs" role="tablist" aria-label="Grading workspace"><button role="tab" aria-selected="${(S.gtab || 'doc') === 'doc'}" data-act="gtab" data-v="doc">Document</button><button role="tab" aria-selected="${S.gtab === 'assess'}" data-act="gtab" data-v="assess">Assessment · ${total}</button></div>
       <div class="split show-${S.gtab || 'doc'}">
@@ -231,10 +244,10 @@
           <button class="btn primary only-small" style="width:100%;margin-top:8px" data-act="gtab" data-v="assess">Continue to assessment</button></div>
         <div class="grid assess" style="gap:12px">${aiCard(s, st)}
           <div class="card rubric"><h2 style="margin-bottom:4px">Rubric</h2>
-            ${[['Problem framing', 25], ['Flow and structure', 25], ['States and edge cases', 25], ['Clarity of handoff', 25]].map(([n, max], i) => `<div class="r"><label for="c${i}">${n}<span class="muted"> / ${max}</span></label><input id="c${i}" class="score-input num" inputmode="numeric" data-act="crit" data-id="${s.id}" data-v="${i}" value="${st.crit[i]}"></div>`).join('')}
+            ${[['Problem framing', 25], ['Flow and structure', 25], ['States and edge cases', 25], ['Clarity of handoff', 25]].map(([n, max], i) => `<div class="r"><label for="c${i}">${n}<span class="muted"> / ${max}</span></label><input id="c${i}" class="score-input num" inputmode="numeric" data-act="crit" data-id="${s.id}" data-v="${i}" value="${st.crit[i]}" ${locked ? 'disabled' : ''}></div>`).join('')}
             <div class="r" style="font-weight:600"><span>Final score</span><span class="num" style="font-family:var(--font-brand);font-weight:600;font-size:24px">${total}<span class="muted" style="font-size:14px"> / 100</span></span></div></div>
-          <div class="card"><div class="field"><label for="fb">Feedback to ${esc(s.student.split(' ')[0])}</label><textarea id="fb" placeholder="Write feedback the student can act on" data-act="fbtext" data-id="${s.id}">${esc(fbFor(st))}</textarea><span class="help">Students see feedback only after you release it.</span></div>
-            <div style="margin-top:12px">${stOf(s) === 'graded' ? '' : releaseRow(s, 'release', ` data-next="${next}"`)}</div></div>
+          <div class="card"><div class="field"><label for="fb">Feedback to ${esc(s.student.split(' ')[0])}</label><textarea id="fb" placeholder="Write feedback the student can act on" data-act="fbtext" data-id="${s.id}" ${locked ? 'disabled' : ''}>${esc(fbFor(st))}</textarea><span class="help">Students see feedback only after you release it.</span></div>
+            <div style="margin-top:12px">${stOf(s) === 'graded' ? releasedRow() : releaseRow(s, 'release', ` data-next="${next}"`)}</div></div>
         </div></div>`);
   }
 
@@ -287,14 +300,18 @@
   }
 
   function iRoster() {
-    const rows = D.enrolments.filter(e => e.cohort.startsWith('UX')).map((e, i) => ({ ...e, done: Math.min(4, Math.round(e.progress / 25)), risk: ['Paused', 'Dropped'].includes(e.state) || e.progress < 30 }));
+    const rows = D.enrolments.filter(e => e.cohort.startsWith('UX')).map((e, i) => ({ ...e, group: i % 2 ? 'Group B' : 'Group A', done: Math.min(4, Math.round(e.progress / 25)), risk: ['Paused', 'Dropped'].includes(e.state) || e.progress < 30 }))
+      .filter(r => !myGroup() || r.group === myGroup());
+    // A TA sees the numbers for their own group; the instructor sees the whole cohort.
+    const statAvg = myGroup() ? Math.round(rows.reduce((a, r) => a + r.progress, 0) / rows.length) + '%' : '64%';
+    const statOn = myGroup() ? rows.filter(r => !r.risk).length : 36, statBehind = myGroup() ? rows.filter(r => r.risk).length : 12;
     return guard({ title: 'Cohort roster', errWhat: 'the roster', deniedWhat: 'this roster', deniedWho: 'You are not an instructor or TA of Autumn 2026 yet. Access starts when the cohort is scheduled for you.',
       empty: emptyState('No students yet', 'Students appear here when an admin enrols them in Autumn 2026. The cohort starts Oct 20.', '', 'users') }, () => `
-      ${head('Cohort roster', 'UX Design Fundamentals · Spring 2026 · 48 students, showing 16', '<button class="btn" data-act="toast" data-v="Message drafted to 5 students at risk">Message students at risk</button>')}
-      <div class="grid g-4" style="margin-bottom:16px"><div class="card stat"><div class="label">Average progress</div><div class="val num">64%</div></div><div class="card stat"><div class="label">On track</div><div class="val num">36</div></div>
-        <div class="card stat alert"><div class="label">Behind</div><div class="val num">12</div></div><div class="card stat"><div class="label">Completed</div><div class="val num">0</div><div class="hint">Course ends Nov 28</div></div></div>
+      ${head(myGroup() ? 'Group roster' : 'Cohort roster', myGroup() ? `UX Design Fundamentals · Spring 2026 · ${myGroup()} · ${rows.length} students` : 'UX Design Fundamentals · Spring 2026 · 48 students, showing 16', '<button class="btn" data-act="toast" data-v="Message drafted to 5 students at risk">Message students at risk</button>')}
+      <div class="grid g-4" style="margin-bottom:16px"><div class="card stat"><div class="label">Average progress</div><div class="val num">${statAvg}</div></div><div class="card stat"><div class="label">On track</div><div class="val num">${statOn}</div></div>
+        <div class="card stat alert"><div class="label">Behind</div><div class="val num">${statBehind}</div></div><div class="card stat"><div class="label">Completed</div><div class="val num">0</div><div class="hint">Course ends Nov 28</div></div></div>
       <div class="tablebox"><table><thead><tr><th>Student</th><th>Group</th><th>Progress</th><th>Assignments</th><th>Last active</th><th>Status</th></tr></thead><tbody>
-        ${rows.map((r, i) => `<tr><td><div class="who">${av(r.initials)}<b style="font-weight:600">${esc(r.student)}</b></div></td><td class="muted">${i % 2 ? 'Group B' : 'Group A'}</td>
+        ${rows.map((r, i) => `<tr><td><div class="who">${av(r.initials)}<b style="font-weight:600">${esc(r.student)}</b></div></td><td class="muted">${r.group}</td>
           <td><div style="display:flex;align-items:center;gap:10px">${bar(r.progress)}<span class="num muted" style="width:36px">${r.progress}%</span></div></td><td class="num">${r.done} / 4</td><td class="num">${r.last}</td>
           <td>${r.risk ? tag(r.state === 'Active' ? 'Late' : r.state) : tag(r.state)}</td></tr>`).join('')}</tbody></table></div>`);
   }
@@ -441,13 +458,13 @@
           <div class="field"><label for="us">Scope</label><input id="us" value="${esc(u.scope)}"><span class="help">Where the role applies: whole school, a course, a cohort or a group.</span></div>
           <button class="btn primary" data-load data-act="saveRole" data-v="${v}">Save changes</button>
           <div><h3 style="margin:8px 0">Activity</h3><div class="list" style="font-size:13px">${(log.length ? log : [{ what: 'Signed in', who: u.name, when: u.last }]).map(a => `<div class="row" style="flex-direction:column;align-items:flex-start;gap:2px"><span>${esc(a.what)}</span><span class="muted">${esc(a.who)} · ${esc(a.when)}</span></div>`).join('')}</div></div>`; }
-      if (k === 'grade') { const s = D.subs.find(x => x.id === v); const st = aiState(s); const i = D.subs.indexOf(s); const p2 = D.subs[(i - 1 + D.subs.length) % D.subs.length].id, n2 = D.subs[(i + 1) % D.subs.length].id; const done = stOf(s) === 'graded';
-        body = `<div class="crumbs">Quick review · ${i + 1} of ${D.subs.length}</div><div class="who" style="gap:12px">${av(s.initials)}<div style="flex:1;min-width:0"><h2 style="font-family:var(--font-brand);font-weight:600;letter-spacing:-.02em;margin:0">${esc(s.student)}</h2><div class="muted">${esc(s.assignment)} · ${s.group} · ${s.submitted}</div></div>${tag(subLabel(stOf(s)))}</div>
+      if (k === 'grade') { const s = D.subs.find(x => x.id === v); const st = aiState(s); const L = mySubs(); const i = L.indexOf(s); const p2 = L[(i - 1 + L.length) % L.length].id, n2 = L[(i + 1) % L.length].id; const done = stOf(s) === 'graded';
+        body = `<div class="crumbs">Quick review · ${i + 1} of ${L.length}</div><div class="who" style="gap:12px">${av(s.initials)}<div style="flex:1;min-width:0"><h2 style="font-family:var(--font-brand);font-weight:600;letter-spacing:-.02em;margin:0">${esc(s.student)}</h2><div class="muted">${esc(s.assignment)} · ${s.group} · ${s.submitted}</div></div>${tag(subLabel(stOf(s)))}</div>
           ${stateBanner(s)}${done ? '' : aiCard(s, st)}
           <div class="field"><label for="qs">Final score</label><div style="display:flex;align-items:center;gap:8px"><input id="qs" class="score-input num" style="width:88px" inputmode="numeric" data-act="qscore" data-id="${s.id}" value="${scoreText(s)}" placeholder="—" ${done ? 'disabled' : ''}><span class="muted">/ 100</span></div></div>
           <div class="field"><label for="fb">Feedback to ${esc(s.student.split(' ')[0])}</label><textarea id="fb" data-act="fbtext" data-id="${s.id}" placeholder="Write feedback the student can act on" ${done ? 'disabled' : ''}>${esc(fbFor(st))}</textarea><span class="help">Students see feedback only after you release it.</span></div>
-          ${done ? '' : `<div>${releaseRow(s, 'releaseQ')}</div>`}
-          <div style="display:flex;align-items:center;gap:8px;border-top:1px solid var(--line);padding-top:14px;margin-top:auto"><button class="btn sm" data-act="panel" data-v="grade:${p2}" aria-label="Previous submission">${ic('back', 14)}</button><button class="btn sm" data-act="panel" data-v="grade:${n2}" aria-label="Next submission">${ic('chev', 14)}</button><span style="flex:1"></span><a class="btn sm" href="#/instructor/grade/${s.id}">Open full view</a></div>`; }
+          ${done ? releasedRow() : `<div>${releaseRow(s, 'releaseQ')}</div>`}
+          <div style="display:flex;align-items:center;gap:8px;border-top:1px solid var(--line);padding-top:14px;margin-top:auto"><button class="btn sm" data-act="panel" data-v="grade:${p2}" aria-label="Previous submission">${ic('back', 14)}</button><button class="btn sm" data-act="panel" data-v="grade:${n2}" aria-label="Next submission">${ic('chev', 14)}</button><span style="flex:1"></span><a class="btn sm" href="#/${S.role}/grade/${s.id}">Open full view</a></div>`; }
       // First open slides the panel in; moving to another submission only fades the content.
       out += `<div class="scrim panel-scrim${S.anim ? ' enter' : ''}" data-act="closeAll"></div><aside class="panel${S.anim ? ' enter' : S.swap ? ' swap' : ''}" role="dialog" aria-modal="true" aria-label="Details"><button class="iconbtn" style="align-self:flex-end" aria-label="Close" data-act="closeAll">${ic('x')}</button>${body}</aside>`;
     }
@@ -475,6 +492,7 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
   /* ---------- render ---------- */
   const VIEWS = {
     instructor: { home: iHome, queue: iQueue, grade: () => iGrade(S.param), builder: iBuilder, editor: iEditor, roster: iRoster },
+    ta: { home: iQueue, queue: iQueue, grade: () => iGrade(S.param), roster: iRoster },
     admin: { home: aHome, catalogue: aCatalogue, enrolments: aEnrol, users: aUsers },
     student: { home: sHome, lesson: sLesson, assignment: sAssignment, grades: sGrades }
   };
@@ -500,6 +518,8 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
     const parts = current.replace(/^#\/?/, '').split('/');
     if (VIEWS[parts[0]]) { if (S.role !== parts[0]) { S.sel.clear(); S.eSel.clear(); } S.role = parts[0]; }
     S.page = parts[1] && VIEWS[S.role][parts[1]] ? parts[1] : 'home'; S.param = parts[2] || null; S.gtab = 'doc';
+    // A role without a dashboard lands on its first page, so the nav always shows where you are.
+    if (S.page === 'home' && !NAV[S.role].some(n => n[0] === 'home')) S.page = NAV[S.role][0][0];
     S.panel = null; S.modal = null; render(); window.scrollTo(0, 0);
     try { if (location.protocol !== 'about:' && history.replaceState) history.replaceState(null, '', current); } catch (e) {}
   }
@@ -613,8 +633,8 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
         break; }
       case 'release': { const s = D.subs.find(x => x.id === v); if (needsReview(s)) { toast(lockWhy(s)); break; }
         const sc = scoreOf(s); S.done.add(v); S.ret.delete(v); audit(`Released grade ${sc} to ${s.student}, ${s.assignment} · ${howGraded(s)}`);
-        S.undo = () => { S.done.delete(v); audit(`Took back the grade for ${s.student}, ${s.assignment}`); go(`#/instructor/grade/${v}`); };
-        go(`#/instructor/grade/${t.dataset.next}`); toast(`Grade ${sc} released to ${s.student.split(' ')[0]}. Next submission opened.`, true); render(); return; }
+        S.undo = () => { S.done.delete(v); audit(`Took back the grade for ${s.student}, ${s.assignment}`); go(`#/${S.role}/grade/${v}`); };
+        go(`#/${S.role}/grade/${t.dataset.next}`); toast(`Grade ${sc} released to ${s.student.split(' ')[0]}. Next submission opened.`, true); render(); return; }
       case 'returnOne': S.ret.add(v); S.done.delete(v); toast('Returned for revision. The student can submit attempt 2.'); break;
       case 'mv': { const [i, d] = v.split(',').map(Number); const o = S.order; const j = i + d; if (j >= 0 && j < o.length) [o[i], o[j]] = [o[j], o[i]]; break; }
       case 'modal': S.modal = v; break;
@@ -653,12 +673,12 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && (S.modal || S.panel)) closeOverlays();
     if (S.page === 'grade' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
-      const i = D.subs.findIndex(s => s.id === S.param);
-      if (e.key === 'j') go(`#/instructor/grade/${D.subs[(i + 1) % D.subs.length].id}`);
-      if (e.key === 'k') go(`#/instructor/grade/${D.subs[(i - 1 + D.subs.length) % D.subs.length].id}`);
+      const L = mySubs(); const i = Math.max(0, L.findIndex(s => s.id === S.param));
+      if (e.key === 'j') go(`#/${S.role}/grade/${L.at((i + 1) % L.length).id}`);
+      if (e.key === 'k') go(`#/${S.role}/grade/${L.at((i - 1 + L.length) % L.length).id}`);
     }
   });
   let start = '#/instructor/home';
-  try { if (/^#\/(student|instructor|admin)\//.test(location.hash)) start = location.hash; } catch (e) {}
+  try { if (/^#\/(student|instructor|ta|admin)\//.test(location.hash)) start = location.hash; } catch (e) {}
   route(start);
 })();

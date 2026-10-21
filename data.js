@@ -5,6 +5,7 @@ window.DB = (function () {
   const people = {
     student: { name: 'Lucía Fernández', initials: 'LF', role: 'Student' },
     instructor: { name: 'Maria Lopez', initials: 'ML', role: 'Instructor' },
+    ta: { name: 'Nadia Kowalski', initials: 'NK', role: 'Teaching assistant', group: 'Group A' },
     admin: { name: 'Alex Morgan', initials: 'AM', role: 'Admin' }
   };
 
