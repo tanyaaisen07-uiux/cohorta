@@ -1,9 +1,19 @@
 # Cohorta
 
-A role-based LMS for cohort-based online schools. UX/UI and front-end by **Tania Aisen**. Based on a client project (Belgium). Brand name and data changed for confidentiality.
+A role-based LMS for cohort-based online schools. UX/UI and front-end by **Tania Aisen**.
 
 **Live demo:** https://tanyaaisen07-uiux.github.io/cohorta
 **Figma:** https://www.figma.com/design/J4J6upc1wrEXRMm6xLjisE
+
+## Project type
+
+Self-initiated Product Design case study. All names and data in the demo are fictional.
+
+## Approach
+
+The product direction was developed through scenario-based design and product hypotheses. I mapped the needs of students, instructors and administrators, then explored how role-based permissions, grading workflows, course management and product states could support their tasks.
+
+The concepts and workflows represent design hypotheses, not findings from primary user research.
 
 ## Case study
 
