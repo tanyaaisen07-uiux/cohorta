@@ -322,3 +322,48 @@ tbody tr td{transition:background-color .15s ease}
 /* Release rule: hint under a locked release button */
 .release-hint{font-size:12px;margin:8px 0 0}
 .lockwrap .why{white-space:normal}
+
+/* Motion: calm and functional. Only toast, review panel, bulk actions, controls and loading move.
+   Tokens match the Motion collection in Figma. Reduced motion turns all of it into instant changes (rule above). */
+:root{
+  --motion-micro:150ms; --motion-toast-in:180ms; --motion-toast-out:150ms;
+  --motion-panel-in:200ms; --motion-panel-out:160ms; --motion-swap:120ms;
+  --motion-bulk-in:160ms; --motion-bulk-out:140ms; --motion-row:900ms;
+  --ease-out:cubic-bezier(.2,0,0,1); --ease-in:cubic-bezier(.4,0,1,1);
+}
+/* 1. Toast: fades in and rises, fades out; text changes in place */
+#toast-root .toast{animation:toastIn var(--motion-toast-in) var(--ease-out)}
+#toast-root .toast.leave{animation:toastOut var(--motion-toast-out) var(--ease-in) forwards;pointer-events:none}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes toastOut{from{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,4px)}}
+/* 2. Review panel: slides in once, content fades on next submission, slides out on close */
+.panel-scrim{background:rgba(11,13,23,.2);place-items:stretch}
+.panel-scrim.enter{animation:fadeIn var(--motion-panel-in) var(--ease-out)}
+.panel-scrim.leave{animation:fadeOut var(--motion-panel-out) var(--ease-in) forwards}
+.panel.enter{animation:panelIn var(--motion-panel-in) var(--ease-out)}
+.panel.leave{animation:panelOut var(--motion-panel-out) var(--ease-in) forwards}
+.panel.swap>*:not(.iconbtn){animation:fadeIn var(--motion-swap) var(--ease-out)}
+@keyframes panelIn{from{transform:translateX(32px);opacity:0}to{transform:none;opacity:1}}
+@keyframes panelOut{from{transform:none;opacity:1}to{transform:translateX(32px);opacity:0}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeOut{from{opacity:1}to{opacity:0}}
+/* 3. Bulk actions: bar rises in with the first selected row, leaves the same way; changed rows get a soft highlight */
+.bulkbar.enter{animation:bulkIn var(--motion-bulk-in) var(--ease-out)}
+.bulkbar.leave{animation:bulkOut var(--motion-bulk-out) var(--ease-in) forwards;pointer-events:none}
+@keyframes bulkIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes bulkOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px)}}
+tbody tr.flash{animation:rowFlash var(--motion-row) var(--ease-out)}
+@keyframes rowFlash{from{background:#E6E8FF}to{background:transparent}}
+/* 4. Controls: colour only on hover and press, a spinner while an action runs. No scale, no spring */
+.btn,.chip,.nav a,.iconbtn,.select,.search,.field input,.field select,.field textarea{transition-duration:var(--motion-micro);transition-timing-function:var(--ease-out)}
+.btn:active{background:var(--line-2)}
+.btn.primary:active{background:#131C8C;border-color:#131C8C}
+.bulkbar .btn:active{background:#33364A}
+.iconbtn:active{background:var(--line-2)}
+.btn.is-loading{position:relative;color:transparent!important;pointer-events:none}
+.btn.is-loading svg{visibility:hidden}
+.btn.is-loading::after{content:'';position:absolute;inset:0;margin:auto;width:16px;height:16px;border-radius:50%;border:2px solid var(--spin,var(--ink));border-right-color:transparent;animation:spin .7s linear infinite}
+.btn.primary.is-loading{--spin:#fff}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* 5. Loading: calm skeleton, only while data loads */
+.skel{background:linear-gradient(90deg,#EFEEE9 0,#F5F4F0 50%,#EFEEE9 100%);background-size:200% 100%;animation:sk 1.6s ease-in-out infinite}

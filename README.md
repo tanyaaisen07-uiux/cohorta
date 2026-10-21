@@ -33,6 +33,10 @@ Use the bar at the top to switch role and page state: normal, empty, loading, er
 - **Every sensitive action is logged.** Role changes, pushes and bulk actions land in the audit log; bulk actions have undo.
 - **Responsive by rule, not by shrinking.** Tablet splits grading into Document and Assessment tabs; mobile turns tables into compact rows with a fixed bulk bar.
 
+## Motion
+
+Motion appears only where it explains an action or a state: the review panel slides in once and only fades its content when you move to the next submission; toasts fade in and out and update in place; the bulk bar rises with the first selected row and the rows an action changed get a short highlight; buttons change colour on hover and press and show a spinner while an action runs; skeletons appear only while data loads. Micro transitions take 150 ms, panels 200 ms. Nothing pulses, bounces or animates between pages, and `prefers-reduced-motion` turns every movement into an instant change.
+
 ## Accessibility
 
 Text and status tags meet WCAG AA (status tags 12.6 to 17.2:1, primary button 6.6:1, secondary text 6.2:1). Focus states are visible, hit areas are at least 32 px, and motion respects `prefers-reduced-motion`.

@@ -9,8 +9,15 @@
     sel: new Set(), qStatus: 'all', q: '', sortDir: 'desc', dense: false,
     eSel: new Set(), eFilter: 'all', cFilter: 'all',
     toast: null, modal: null, panel: null,
-    ai: {}, done: new Set(), ret: new Set(), studentSubmitted: false, order: null, anim: false, focus: null
+    ai: {}, done: new Set(), ret: new Set(), studentSubmitted: false, order: null, anim: false, focus: null,
+    swap: false, flash: new Set(), bulkShown: false, eBulkShown: false
   };
+
+  /* ---------- motion: only where it explains an action or a state ---------- */
+  const reduceMotion = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  // Run fn after an exit animation; with reduced motion, right away.
+  const afterMotion = (ms, fn) => reduceMotion() ? fn() : setTimeout(fn, ms);
+  const MOTION = { toastOut: 150, panelOut: 160, bulkOut: 140, load: 600 };
 
   /* ---------- icons (stroke, 18px) ---------- */
   const P = {
@@ -166,7 +173,7 @@
         .map(([v, l]) => `<button class="chip" data-act="qStatus" data-v="${v}" aria-pressed="${S.qStatus === v}">${l}</button>`).join('');
       const allSel = rows.length && rows.every(r => S.sel.has(r.id));
       const pad = S.dense ? 'style="padding-top:5px;padding-bottom:5px"' : '';
-      const body = rows.map(r => `<tr class="${S.sel.has(r.id) ? 'sel' : ''}"><td class="check c-check" ${pad}><label class="hit"><input type="checkbox" aria-label="Select ${esc(r.student)}" data-act="sel" data-v="${r.id}" ${S.sel.has(r.id) ? 'checked' : ''}></label></td>
+      const body = rows.map(r => `<tr class="${S.sel.has(r.id) ? 'sel' : ''}${S.flash.has(r.id) ? ' flash' : ''}"><td class="check c-check" ${pad}><label class="hit"><input type="checkbox" aria-label="Select ${esc(r.student)}" data-act="sel" data-v="${r.id}" ${S.sel.has(r.id) ? 'checked' : ''}></label></td>
         <td class="c-student" ${pad}><div class="who">${av(r.initials)}<div style="min-width:0"><button class="linkbtn" data-act="panel" data-v="grade:${r.id}">${esc(r.student)}</button><div class="meta-2nd">${esc(r.assignment)} · ${r.group} · ${r.submitted}</div></div></div></td>
         <td class="c-2nd" ${pad}>${esc(r.assignment)}</td><td ${pad} class="muted c-2nd">${r.group}</td><td ${pad} class="num c-2nd">${r.submitted}</td><td class="c-status" ${pad}>${tag(subLabel(r.status))}</td>
         <td ${pad} class="num c-ai" data-label="AI">${r.ai != null ? `<span class="mono" style="background:#F1F2FF;padding:2px 6px;border-radius:6px">${r.ai}</span>` : '<span class="muted">—</span>'}</td>
@@ -174,7 +181,8 @@
         <td ${pad} class="c-act" style="text-align:right"><button class="btn sm" data-act="panel" data-v="grade:${r.id}">${r.status === 'graded' ? 'View' : 'Review'}</button></td></tr>`).join('');
       const selRows = rows.filter(r => S.sel.has(r.id));
       const canRelease = selRows.length && selRows.every(r => readyToRelease(D.subs.find(x => x.id === r.id)));
-      const bulk = S.sel.size ? `<div class="bulkbar" role="region" aria-label="Bulk actions"><b>${S.sel.size} selected</b><span class="spacer" style="flex:1"></span>
+      const bulkEnter = S.sel.size && !S.bulkShown; S.bulkShown = !!S.sel.size;
+      const bulk = S.sel.size ? `<div class="bulkbar${bulkEnter ? ' enter' : ''}" role="region" aria-label="Bulk actions"><b>${S.sel.size} selected</b><span class="spacer" style="flex:1"></span>
         <button class="btn sm" data-act="bulk" data-v="assign">Assign to TA</button><button class="btn sm" data-act="bulk" data-v="return">Return for revision</button>
         ${canRelease ? '<button class="btn sm primary" data-act="bulk" data-v="release">Release grades</button>' : lockBtn('Release grades', 'Release only work you have reviewed. Open each AI draft and check the score first.', 'btn sm')}
         <button class="iconbtn" style="color:#C9CBD6" aria-label="Clear selection" data-act="clearSel">${ic('x')}</button></div>` : '';
@@ -261,7 +269,7 @@
   function iEditor() {
     return guard({ title: 'Wireframe review', errWhat: 'the assignment', deniedWhat: 'this assignment', deniedWho: 'The course is archived, so assignments are read-only for everyone.',
       empty: emptyState('No assignments yet', 'Add an assignment to a module to set a brief, a due date and a rubric.', '<a class="btn" href="#/instructor/builder">Open course builder</a>', 'edit') }, () => `
-      ${head('Wireframe review', 'Module 2 · Structure · used in 2 cohorts', '<button class="btn" data-act="toast" data-v="Draft saved">Save draft</button>', '<a href="#/instructor/builder">Course builder</a> / Assignment')}
+      ${head('Wireframe review', 'Module 2 · Structure · used in 2 cohorts', '<button class="btn" data-load data-act="toast" data-v="Draft saved">Save draft</button>', '<a href="#/instructor/builder">Course builder</a> / Assignment')}
       <div class="grid g-main">
         <div class="grid" style="align-content:start">
           <div class="card grid" style="gap:14px"><div class="field"><label for="t">Title</label><input id="t" value="Wireframe review"></div>
@@ -333,14 +341,15 @@
     const rows = D.enrolments.filter(e => S.eFilter === 'all' || e.state === S.eFilter);
     const chips = ['all', 'Active', 'Invited', 'Paused', 'Dropped', 'Completed'].map(v => `<button class="chip" data-act="eFilter" data-v="${v}" aria-pressed="${S.eFilter === v}">${v === 'all' ? 'All ' + D.enrolments.length : v + ' ' + D.enrolments.filter(e => e.state === v).length}</button>`).join('');
     const allSel = rows.length && rows.every(r => S.eSel.has(r.id));
-    const bulk = S.eSel.size ? `<div class="bulkbar"><b>${S.eSel.size} selected</b><span style="flex:1"></span><button class="btn sm" data-act="ebulk" data-v="Paused">Pause</button><button class="btn sm" data-act="ebulk" data-v="move">Move to cohort</button><button class="btn sm" data-act="ebulk" data-v="Dropped">Drop</button><button class="iconbtn" style="color:#C9CBD6" aria-label="Clear selection" data-act="eClear">${ic('x')}</button></div>` : '';
+    const eEnter = S.eSel.size && !S.eBulkShown; S.eBulkShown = !!S.eSel.size;
+    const bulk = S.eSel.size ? `<div class="bulkbar${eEnter ? ' enter' : ''}" role="region" aria-label="Bulk actions"><b>${S.eSel.size} selected</b><span style="flex:1"></span><button class="btn sm" data-act="ebulk" data-v="Paused">Pause</button><button class="btn sm" data-act="ebulk" data-v="move">Move to cohort</button><button class="btn sm" data-act="ebulk" data-v="Dropped">Drop</button><button class="iconbtn" style="color:#C9CBD6" aria-label="Clear selection" data-act="eClear">${ic('x')}</button></div>` : '';
     return guard({ title: 'Enrolments', errWhat: 'enrolments', deniedWhat: 'Enrolments', deniedWho: 'Only admins can enrol, pause or drop students. Instructors see their own cohorts read-only in the roster.', deniedAlt: '<a class="btn" href="#/instructor/roster" data-act="role" data-v="instructor">Open my roster</a>',
       empty: emptyState('No students enrolled', 'Import a CSV or invite students by email. Autumn 2026 starts Oct 20.', '<button class="btn primary" data-act="modal" data-v="import">Import CSV</button>', 'users') }, () => `
       ${head('Enrolments', `${233 + D.enrolments.length} students in ${D.cohorts.length} cohorts`, '<button class="btn" data-act="modal" data-v="import">' + ic('upload', 16) + 'Import CSV</button><button class="btn primary" data-act="modal" data-v="enrol">' + ic('plus', 16) + 'Enrol students</button>')}
       <div class="toolbar"><label class="search">${ic('search', 16)}<span class="sr">Search</span><input placeholder="Search name or email"></label><select class="select" aria-label="Cohort"><option>All cohorts</option><option>UXF · Spring 2026</option><option>Service Design · Spring 2026</option></select></div>
       <div class="toolbar">${chips}</div>
       <div class="tablebox"><table class="rtable"><thead><tr><th class="check"><label class="hit"><input type="checkbox" aria-label="Select all" data-act="eSelAll" ${allSel ? 'checked' : ''}></label></th><th>Student</th><th class="c-2nd">Email</th><th class="c-2nd">Cohort</th><th>Status</th><th>Progress</th><th>Last active</th></tr></thead><tbody>
-        ${rows.map(r => `<tr class="${S.eSel.has(r.id) ? 'sel' : ''}"><td class="check c-check"><label class="hit"><input type="checkbox" aria-label="Select ${esc(r.student)}" data-act="eSel" data-v="${r.id}" ${S.eSel.has(r.id) ? 'checked' : ''}></label></td><td class="c-student"><div class="who">${av(r.initials)}<div style="min-width:0"><b style="font-weight:600">${esc(r.student)}</b><div class="meta-2nd">${esc(r.email)} · ${esc(r.cohort)}</div></div></div></td>
+        ${rows.map(r => `<tr class="${S.eSel.has(r.id) ? 'sel' : ''}${S.flash.has(r.id) ? ' flash' : ''}"><td class="check c-check"><label class="hit"><input type="checkbox" aria-label="Select ${esc(r.student)}" data-act="eSel" data-v="${r.id}" ${S.eSel.has(r.id) ? 'checked' : ''}></label></td><td class="c-student"><div class="who">${av(r.initials)}<div style="min-width:0"><b style="font-weight:600">${esc(r.student)}</b><div class="meta-2nd">${esc(r.email)} · ${esc(r.cohort)}</div></div></div></td>
           <td class="muted c-2nd">${esc(r.email)}</td><td class="c-2nd">${esc(r.cohort)}</td><td class="c-status">${tag(r.state)}</td><td class="c-ai" data-label="Progress"><div style="display:flex;align-items:center;gap:10px">${bar(r.progress)}<span class="num muted" style="width:36px">${r.progress}%</span></div></td><td class="num c-final" data-label="Last active">${r.last}</td></tr>`).join('')}</tbody></table></div>${bulk}`);
   }
 
@@ -421,16 +430,16 @@
       if (k === 'review') { const c = D.catalogue.find(x => x.id === v); body = `<div class="crumbs">Review course</div><h2 style="font-family:var(--font-brand);font-weight:600;letter-spacing:-.02em;margin:0">${esc(c.title)}</h2><div>${tag(c.state)} <span class="mono">${c.version}</span> · owner ${esc(c.owner)}</div>
           <div class="card" style="padding:14px"><h3>What changed</h3><ul style="margin:0;padding-left:18px;color:var(--text-2)"><li>New module: Accessibility checks</li><li>Rubric updated for 2 assignments</li><li>3 lessons rewritten</li></ul></div>
           <div class="field"><label for="note">Note to ${esc(c.owner.split(' ')[0])}</label><textarea id="note" placeholder="Optional. Required if you request changes."></textarea></div>
-          <div style="display:flex;gap:8px"><button class="btn" data-act="review" data-v="changes:${c.id}">Request changes</button><button class="btn primary" data-act="review" data-v="approve:${c.id}">Approve and publish</button></div>`; }
+          <div style="display:flex;gap:8px"><button class="btn" data-load data-act="review" data-v="changes:${c.id}">Request changes</button><button class="btn primary" data-load data-act="review" data-v="approve:${c.id}">Approve and publish</button></div>`; }
       if (k === 'cohort') { const c = D.catalogue.find(x => x.id === v); body = `<div class="crumbs">Schedule cohort</div><h2 style="font-family:var(--font-brand);font-weight:600;letter-spacing:-.02em;margin:0">${esc(c.title)} · ${c.version}</h2><p class="muted" style="margin:0">The cohort runs this version. Content edits on the course won't reach it until you push an update.</p>
           <div class="field"><label for="cn">Cohort name</label><input id="cn" value="Winter 2027"></div><div class="grid g-2"><div class="field"><label for="cs">Starts</label><input id="cs" value="Jan 12, 2027"></div><div class="field"><label for="ce">Ends</label><input id="ce" value="Apr 9, 2027"></div></div>
           <div class="field"><label for="ci">Instructors</label><select id="ci"><option>${esc(c.owner)}</option></select></div><div class="field"><label for="ct">Teaching assistants</label><select id="ct"><option>Nadia Kowalski · Group A</option><option>Ben Okafor · Group B</option></select></div>
           <div class="grid g-2"><div class="field"><label for="cg">Groups</label><input id="cg" value="2" inputmode="numeric"></div><div class="field"><label for="cc">Capacity</label><input id="cc" value="48" inputmode="numeric"><span class="help">Max 24 per group</span></div></div>
-          <button class="btn primary" data-act="schedule" data-v="${c.id}">Schedule cohort</button>`; }
+          <button class="btn primary" data-load data-act="schedule" data-v="${c.id}">Schedule cohort</button>`; }
       if (k === 'user') { const u = D.staff[+v]; const log = D.audit.filter(a => a.what.includes(u.name.split(' ')[0]) || a.who === u.name); body = `<div class="crumbs">User</div><div class="who" style="gap:12px">${av(u.initials)}<div><h2 style="font-family:var(--font-brand);font-weight:600;letter-spacing:-.02em;margin:0">${esc(u.name)}</h2><div class="muted">${esc(u.email)}</div></div></div>
           <div class="field"><label for="ur">Role</label><select id="ur">${['Admin', 'Instructor', 'Admin + Instructor', 'Teaching assistant'].map(r => `<option ${r === u.role ? 'selected' : ''}>${r}</option>`).join('')}</select></div>
           <div class="field"><label for="us">Scope</label><input id="us" value="${esc(u.scope)}"><span class="help">Where the role applies: whole school, a course, a cohort or a group.</span></div>
-          <button class="btn primary" data-act="saveRole" data-v="${v}">Save changes</button>
+          <button class="btn primary" data-load data-act="saveRole" data-v="${v}">Save changes</button>
           <div><h3 style="margin:8px 0">Activity</h3><div class="list" style="font-size:13px">${(log.length ? log : [{ what: 'Signed in', who: u.name, when: u.last }]).map(a => `<div class="row" style="flex-direction:column;align-items:flex-start;gap:2px"><span>${esc(a.what)}</span><span class="muted">${esc(a.who)} · ${esc(a.when)}</span></div>`).join('')}</div></div>`; }
       if (k === 'grade') { const s = D.subs.find(x => x.id === v); const st = aiState(s); const i = D.subs.indexOf(s); const p2 = D.subs[(i - 1 + D.subs.length) % D.subs.length].id, n2 = D.subs[(i + 1) % D.subs.length].id; const done = stOf(s) === 'graded';
         body = `<div class="crumbs">Quick review · ${i + 1} of ${D.subs.length}</div><div class="who" style="gap:12px">${av(s.initials)}<div style="flex:1;min-width:0"><h2 style="font-family:var(--font-brand);font-weight:600;letter-spacing:-.02em;margin:0">${esc(s.student)}</h2><div class="muted">${esc(s.assignment)} · ${s.group} · ${s.submitted}</div></div>${tag(subLabel(stOf(s)))}</div>
@@ -439,27 +448,27 @@
           <div class="field"><label for="fb">Feedback to ${esc(s.student.split(' ')[0])}</label><textarea id="fb" data-act="fbtext" data-id="${s.id}" placeholder="Write feedback the student can act on" ${done ? 'disabled' : ''}>${esc(fbFor(st))}</textarea><span class="help">Students see feedback only after you release it.</span></div>
           ${done ? '' : `<div>${releaseRow(s, 'releaseQ')}</div>`}
           <div style="display:flex;align-items:center;gap:8px;border-top:1px solid var(--line);padding-top:14px;margin-top:auto"><button class="btn sm" data-act="panel" data-v="grade:${p2}" aria-label="Previous submission">${ic('back', 14)}</button><button class="btn sm" data-act="panel" data-v="grade:${n2}" aria-label="Next submission">${ic('chev', 14)}</button><span style="flex:1"></span><a class="btn sm" href="#/instructor/grade/${s.id}">Open full view</a></div>`; }
-      out += `<div class="scrim" style="background:rgba(11,13,23,.2);place-items:stretch" data-act="closeAll"></div><aside class="panel${S.anim ? ' enter' : ''}" role="dialog" aria-modal="true" aria-label="Details"><button class="iconbtn" style="align-self:flex-end" aria-label="Close" data-act="closeAll">${ic('x')}</button>${body}</aside>`;
+      // First open slides the panel in; moving to another submission only fades the content.
+      out += `<div class="scrim panel-scrim${S.anim ? ' enter' : ''}" data-act="closeAll"></div><aside class="panel${S.anim ? ' enter' : S.swap ? ' swap' : ''}" role="dialog" aria-modal="true" aria-label="Details"><button class="iconbtn" style="align-self:flex-end" aria-label="Close" data-act="closeAll">${ic('x')}</button>${body}</aside>`;
     }
     if (S.modal) {
       const M = {
-        publish: `<h2>Send v3 for review?</h2><p class="muted" style="margin:0">Alex Morgan will review it. Spring 2026 keeps v2 until the update is pushed.</p><div class="field"><label for="m1">What changed</label><textarea id="m1">New lesson on component states. Rubric for Wireframe review now asks for an error state.</textarea></div><div class="foot"><button class="btn" data-act="closeAll">Cancel</button><button class="btn primary" data-act="closeAll" data-toast="Sent to Alex Morgan for review">Send for review</button></div>`,
-        push: `<h2>Push v2 to running cohorts?</h2><p class="muted" style="margin:0">Spring 2026 (48 students) will switch to v2 tonight. Progress and grades are kept. Students see a note about what changed.</p><label style="display:flex;gap:8px"><input type="checkbox" checked>Notify students and staff</label><div class="foot"><button class="btn" data-act="closeAll">Cancel</button><button class="btn primary" data-act="push">Push update</button></div>`,
+        publish: `<h2>Send v3 for review?</h2><p class="muted" style="margin:0">Alex Morgan will review it. Spring 2026 keeps v2 until the update is pushed.</p><div class="field"><label for="m1">What changed</label><textarea id="m1">New lesson on component states. Rubric for Wireframe review now asks for an error state.</textarea></div><div class="foot"><button class="btn" data-act="closeAll">Cancel</button><button class="btn primary" data-load data-act="closeAll" data-toast="Sent to Alex Morgan for review">Send for review</button></div>`,
+        push: `<h2>Push v2 to running cohorts?</h2><p class="muted" style="margin:0">Spring 2026 (48 students) will switch to v2 tonight. Progress and grades are kept. Students see a note about what changed.</p><label style="display:flex;gap:8px"><input type="checkbox" checked>Notify students and staff</label><div class="foot"><button class="btn" data-act="closeAll">Cancel</button><button class="btn primary" data-load data-act="push">Push update</button></div>`,
         import: `<h2>182 of 200 students imported</h2><div class="banner error" style="margin:0">${ic('alert', 18)}<div class="grow"><b>We couldn't import 18 students.</b>Review the rows below and try again.</div></div>
           <div class="tablebox" style="max-height:200px"><table><thead><tr><th>Row</th><th>Value</th><th>Problem</th></tr></thead><tbody>${[[14, 'jonas.weber@', 'Email is incomplete'], [27, 'priya nair@mail.com', 'Email has a space'], [41, '', 'Email is missing'], [58, 'leo.rossi@mail', 'Domain is incomplete'], [77, 'sara@mail.com', 'Already enrolled in this cohort']].map(r => `<tr><td class="num">${r[0]}</td><td class="mono">${esc(r[1] || '—')}</td><td>${r[2]}</td></tr>`).join('')}<tr><td colspan="3" class="muted">and 13 more</td></tr></tbody></table></div>
           <div class="foot"><button class="btn" data-act="closeAll" data-toast="18 rows downloaded as CSV">Download 18 rows</button><button class="btn primary" data-act="closeAll">Done</button></div>`,
         enrol: `<h2>Enrol students</h2><div class="field"><label for="ec">Cohort</label><select id="ec"><option>UX Design Fundamentals · Autumn</option><option>Service Design 101 · Winter</option></select><span class="help">Autumn 2026 starts Oct 20 · 48 seats</span></div>
           <div class="field"><label for="ee">Emails, one per line</label><textarea id="ee">rosa.marin@mail.com
 theo.laurent@mail.com
-nina.berg@mail.com</textarea><span class="help">Each person gets an invite and counts as enrolled once they accept.</span></div><div class="foot"><button class="btn" data-act="closeAll">Cancel</button><button class="btn primary" data-act="doEnrol">Send invites</button></div>`,
+nina.berg@mail.com</textarea><span class="help">Each person gets an invite and counts as enrolled once they accept.</span></div><div class="foot"><button class="btn" data-act="closeAll">Cancel</button><button class="btn primary" data-load data-act="doEnrol">Send invites</button></div>`,
         invite: `<h2>Invite people</h2><div class="field"><label for="in">Name</label><input id="in" value="Irene Duarte"></div><div class="field"><label for="ie">Email</label><input id="ie" value="irene.duarte@cohorta.school"></div>
           <div class="grid g-2"><div class="field"><label for="ir">Role</label><select id="ir"><option>Teaching assistant</option><option>Instructor</option><option>Admin</option></select></div><div class="field"><label for="is">Scope</label><select id="is"><option>UXF Autumn 2026 · Group A</option><option>UX Design Fundamentals</option><option>Whole school</option></select></div></div>
-          <p class="muted" style="margin:0;font-size:13px">Role sets what they can do, scope sets where. You can change both later; every change is logged.</p><div class="foot"><button class="btn" data-act="closeAll">Cancel</button><button class="btn primary" data-act="doInvite">Send invite</button></div>`,
-        move: `<h2>Move ${pl(S.eSel.size, 'student', 'students')}</h2><div class="field"><label for="mv">To cohort</label><select id="mv"><option>UX Design Fundamentals · Autumn 2026</option><option>Service Design 101 · Winter 2026</option></select><span class="help">Progress moves with them. Grades stay in the old cohort's record.</span></div><div class="foot"><button class="btn" data-act="closeAll">Cancel</button><button class="btn primary" data-act="doMove">Move students</button></div>`
+          <p class="muted" style="margin:0;font-size:13px">Role sets what they can do, scope sets where. You can change both later; every change is logged.</p><div class="foot"><button class="btn" data-act="closeAll">Cancel</button><button class="btn primary" data-load data-act="doInvite">Send invite</button></div>`,
+        move: `<h2>Move ${pl(S.eSel.size, 'student', 'students')}</h2><div class="field"><label for="mv">To cohort</label><select id="mv"><option>UX Design Fundamentals · Autumn 2026</option><option>Service Design 101 · Winter 2026</option></select><span class="help">Progress moves with them. Grades stay in the old cohort's record.</span></div><div class="foot"><button class="btn" data-act="closeAll">Cancel</button><button class="btn primary" data-load data-act="doMove">Move students</button></div>`
       };
       out += `<div class="scrim" data-act="scrim"><div class="modal" role="dialog" aria-modal="true">${M[S.modal]}</div></div>`;
     }
-    if (S.toast) out += `<div class="toast" role="status">${esc(S.toast.text)}${S.toast.undo ? '<button data-act="undo">Undo</button>' : ''}</div>`;
     return out;
   }
 
@@ -480,7 +489,9 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
       .replace(/\b(Spring|Summer|Autumn|Winter) (\d{4})\b/g, '$1\u00A0$2')
       .replace(/(\d) (min|MB|px|students|days|h|d)\b/g, '$1\u00A0$2');
     document.title = `${(NAV[S.role].find(n => n[0] === S.page) || ['', 'Cohorta'])[1]} · Cohorta`;
-    S.anim = false;
+    S.anim = false; S.swap = false;
+    // A row highlight plays once, on the render that follows the action.
+    if (S.flash.size) S.flash = new Set();
     if (S.focus) { const f = document.querySelector(S.focus); if (f) { f.focus(); if (f.setSelectionRange) f.setSelectionRange(f.value.length, f.value.length); } S.focus = null; }
   }
   let current = '#/instructor/home';
@@ -492,9 +503,35 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
     S.panel = null; S.modal = null; render(); window.scrollTo(0, 0);
     try { if (location.protocol !== 'about:' && history.replaceState) history.replaceState(null, '', current); } catch (e) {}
   }
+  /* Toast lives outside #app: page re-renders never replay its entrance,
+     a new message replaces the text in place, and it fades out on its own. */
+  const toastRoot = document.createElement('div'); toastRoot.id = 'toast-root'; toastRoot.setAttribute('aria-live', 'polite'); document.body.appendChild(toastRoot);
   let toastTimer;
-  function toast(text, undo) { S.toast = { text, undo }; clearTimeout(toastTimer); toastTimer = setTimeout(() => { S.toast = null; render(); }, undo ? 6000 : 3000); }
+  function paintToast() {
+    const cur = toastRoot.querySelector('.toast:not(.leave)');
+    if (!S.toast) { if (cur) { cur.classList.add('leave'); afterMotion(MOTION.toastOut, () => cur.remove()); } return; }
+    const inner = `<span>${esc(S.toast.text)}</span>${S.toast.undo ? '<button data-act="undo">Undo</button>' : ''}`;
+    if (cur) { cur.innerHTML = inner; return; }
+    toastRoot.insertAdjacentHTML('beforeend', `<div class="toast" role="status">${inner}</div>`);
+  }
+  function toast(text, undo) { S.toast = { text, undo }; paintToast(); clearTimeout(toastTimer); toastTimer = setTimeout(() => { S.toast = null; paintToast(); }, undo ? 6000 : 3000); }
+  function hideToast() { clearTimeout(toastTimer); S.toast = null; paintToast(); }
   const go = h => route(h);
+
+  /* Review panel closes by sliding back, then the page renders without it. */
+  function closeOverlays() {
+    const p = document.querySelector('.panel');
+    if (S.panel && p && !S.modal && !reduceMotion()) {
+      p.classList.add('leave'); const sc = document.querySelector('.panel-scrim'); if (sc) sc.classList.add('leave');
+      setTimeout(() => { S.panel = null; render(); }, MOTION.panelOut);
+    } else { S.modal = null; S.panel = null; render(); }
+  }
+  /* Bulk bar leaves the way it came, then the selection and the rows update. */
+  function leaveBulk(fn) {
+    const bar = document.querySelector('.bulkbar');
+    if (bar && !reduceMotion()) { bar.classList.add('leave'); setTimeout(() => { fn(); render(); }, MOTION.bulkOut); }
+    else { fn(); render(); }
+  }
 
   document.addEventListener('click', e => {
     const link = e.target.closest('a[href^="#/"]');
@@ -507,6 +544,12 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
     const a = t.dataset.act, v = t.dataset.v;
     if (t.tagName === 'INPUT' && t.type === 'checkbox') return; // handled on change
     if (a === 'scrim' && e.target !== t) return;
+    // Actions that would wait on a server show a spinner and lock the button first.
+    if (t.hasAttribute('data-load') && t.dataset.loaded !== '1') {
+      if (t.classList.contains('is-loading')) return;
+      t.classList.add('is-loading'); t.setAttribute('aria-busy', 'true'); t.setAttribute('aria-disabled', 'true');
+      setTimeout(() => { t.dataset.loaded = '1'; t.click(); }, MOTION.load); return;
+    }
     switch (a) {
       case 'role': S.sel.clear(); S.eSel.clear(); go(`#/${v}/home`); return;
       case 'demo': S.demo = v; break;
@@ -515,16 +558,16 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
       case 'eFilter': S.eFilter = v; S.eSel.clear(); break;
       case 'sort': S.sortDir = S.sortDir === 'desc' ? 'asc' : 'desc'; break;
       case 'dense': S.dense = !S.dense; break;
-      case 'clearSel': S.sel.clear(); break;
-      case 'eClear': S.eSel.clear(); break;
+      case 'clearSel': leaveBulk(() => S.sel.clear()); return;
+      case 'eClear': leaveBulk(() => S.eSel.clear()); return;
       case 'start': S.demo = 'normal'; go(v); return;
       case 'review': { const [kind, id] = v.split(':'); const c = D.catalogue.find(x => x.id === id);
         if (kind === 'approve') { c.state = 'Published'; c.updated = 'Oct 6'; audit(`Published ${c.title} ${c.version}`); toast(`${c.title} published. Instructors can schedule cohorts.`); }
         else { c.state = 'Draft'; c.updated = 'Oct 6'; audit(`Requested changes to ${c.title} ${c.version}`); toast(`Changes requested from ${c.owner}. The course is back in draft.`); }
-        S.panel = null; break; }
-      case 'schedule': { const c = D.catalogue.find(x => x.id === v); c.cohorts++; D.cohorts.push({ id: 'c' + (D.cohorts.length + 1), course: c.title, name: 'Winter 2027', state: 'Scheduled', students: 0, progress: 0, behind: 0, start: 'Jan 12', end: 'Apr 9' }); audit(`Scheduled cohort Winter 2027 for ${c.title}`); toast('Winter 2027 scheduled. Enrolment is open.'); S.panel = null; break; }
+        closeOverlays(); return; }
+      case 'schedule': { const c = D.catalogue.find(x => x.id === v); c.cohorts++; D.cohorts.push({ id: 'c' + (D.cohorts.length + 1), course: c.title, name: 'Winter 2027', state: 'Scheduled', students: 0, progress: 0, behind: 0, start: 'Jan 12', end: 'Apr 9' }); audit(`Scheduled cohort Winter 2027 for ${c.title}`); toast('Winter 2027 scheduled. Enrolment is open.'); closeOverlays(); return; }
       case 'push': audit('Pushed UX Design Fundamentals v2 to cohort Spring 2026'); S.modal = null; toast('v2 scheduled for Spring 2026 tonight · logged'); break;
-      case 'saveRole': { const u = D.staff[+v]; const r = document.getElementById('ur').value, sc = document.getElementById('us').value; if (r !== u.role) audit(`Changed role of ${u.name}: ${u.role} → ${r}`); u.role = r; u.scope = sc; S.panel = null; toast('Role saved and logged'); break; }
+      case 'saveRole': { const u = D.staff[+v]; const r = document.getElementById('ur').value, sc = document.getElementById('us').value; if (r !== u.role) audit(`Changed role of ${u.name}: ${u.role} → ${r}`); u.role = r; u.scope = sc; toast('Role saved and logged'); closeOverlays(); return; }
       case 'newCourse': D.catalogue.unshift({ id: 'n' + D.catalogue.length, title: 'Untitled course', state: 'Draft', version: 'v1', owner: 'Alex Morgan', cohorts: 0, students: 0, updated: 'Oct 6' }); S.cFilter = 'all'; toast('Draft created. Assign an owner to start writing.'); break;
       case 'doEnrol': { const list = document.getElementById('ee').value.split(/\s+/).filter(x => x.includes('@')); const coh = document.getElementById('ec').value;
         list.slice().reverse().forEach((em, k) => { const nm = em.split('@')[0].split(/[._]/).map(p => p[0].toUpperCase() + p.slice(1)).join(' '); D.enrolments.unshift({ id: 'n' + Date.now() + k, student: nm, initials: nm.split(' ').map(p => p[0]).join(''), email: em, cohort: coh, state: 'Invited', progress: 0, last: 'Never' }); });
@@ -535,29 +578,32 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
       case 'releaseQ': { const s = D.subs.find(x => x.id === v); if (needsReview(s)) { toast(lockWhy(s)); break; }
         const sc = scoreOf(s); S.done.add(v); S.ret.delete(v); audit(`Released grade ${sc} to ${s.student}, ${s.assignment} · ${howGraded(s)}`);
         S.undo = () => { S.done.delete(v); audit(`Took back the grade for ${s.student}, ${s.assignment}`); S.panel = 'grade:' + v; };
-        toast(`Grade ${sc} released to ${s.student.split(' ')[0]}`, true); const nx = pending()[0]; S.panel = nx ? 'grade:' + nx.id : null; break; }
+        toast(`Grade ${sc} released to ${s.student.split(' ')[0]}`, true); const nx = pending()[0];
+        if (nx) { S.swap = true; S.panel = 'grade:' + nx.id; break; } closeOverlays(); return; }
       case 'bulk': {
         const n = S.sel.size; const ids = [...S.sel];
         if (v === 'release') {
           const ok = ids.filter(i => readyToRelease(D.subs.find(x => x.id === i)));
           if (ok.length !== ids.length) { toast('Some selected work is not reviewed yet. Open each AI draft first.'); break; }
           ok.forEach(i => { const s = D.subs.find(x => x.id === i); S.done.add(i); S.ret.delete(i); audit(`Released grade ${scoreOf(s)} to ${s.student}, ${s.assignment} · ${howGraded(s)}`); });
-          S.undo = () => { ok.forEach(i => S.done.delete(i)); audit(`Took back ${pl(ok.length, 'released grade', 'released grades')}`); };
+          S.undo = () => { ok.forEach(i => S.done.delete(i)); S.flash = new Set(ok); audit(`Took back ${pl(ok.length, 'released grade', 'released grades')}`); };
           toast(`${pl(n, 'grade', 'grades')} released to students`, true);
         }
         if (v === 'return') { ids.forEach(i => { S.ret.add(i); S.done.delete(i); }); toast(`${pl(n, 'submission', 'submissions')} returned for revision`); }
         if (v === 'assign') toast(`${pl(n, 'submission', 'submissions')} assigned to Nadia Kowalski`);
-        S.sel.clear(); break;
+        // The bar leaves first, then the changed rows update with a short highlight.
+        S.flash = new Set(ids); leaveBulk(() => S.sel.clear()); return;
       }
       case 'ebulk': {
         if (v === 'move') { S.modal = 'move'; break; }
         const ids = [...S.eSel]; const before = ids.map(i => [i, D.enrolments.find(e => e.id === i).state]);
         ids.forEach(i => D.enrolments.find(e => e.id === i).state = v);
-        S.undo = () => before.forEach(([i, s]) => D.enrolments.find(e => e.id === i).state = s);
-        toast(`${pl(ids.length, 'student', 'students')} ${v === 'Paused' ? 'paused' : 'dropped'} · logged`, true); S.eSel.clear(); break;
+        S.undo = () => { before.forEach(([i, s]) => D.enrolments.find(e => e.id === i).state = s); S.flash = new Set(ids); };
+        toast(`${pl(ids.length, 'student', 'students')} ${v === 'Paused' ? 'paused' : 'dropped'} · logged`, true);
+        S.flash = new Set(ids); leaveBulk(() => S.eSel.clear()); return;
       }
-      case 'doMove': toast(`${pl(S.eSel.size, 'student', 'students')} moved to Autumn 2026`); S.eSel.clear(); S.modal = null; break;
-      case 'undo': if (S.undo) S.undo(); S.undo = null; S.toast = null; break;
+      case 'doMove': toast(`${pl(S.eSel.size, 'student', 'students')} moved to Autumn 2026`); S.flash = new Set(S.eSel); S.eSel.clear(); S.modal = null; break;
+      case 'undo': if (S.undo) S.undo(); S.undo = null; hideToast(); break;
       case 'ai': { const id = t.dataset.id || S.param; const st = aiState(D.subs.find(s => s.id === id)); st.mode = v === 'restore' ? 'draft' : v;
         if (v === 'accept') { st.final = null; toast('AI draft accepted. Check the score, then release.'); }
         if (v === 'edit') S.focus = '#fb';
@@ -572,9 +618,9 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
       case 'returnOne': S.ret.add(v); S.done.delete(v); toast('Returned for revision. The student can submit attempt 2.'); break;
       case 'mv': { const [i, d] = v.split(',').map(Number); const o = S.order; const j = i + d; if (j >= 0 && j < o.length) [o[i], o[j]] = [o[j], o[i]]; break; }
       case 'modal': S.modal = v; break;
-      case 'panel': S.anim = !S.panel; S.panel = v; break;
+      case 'panel': S.anim = !S.panel; S.swap = !!S.panel && S.panel !== v; S.panel = v; break;
       case 'gtab': S.gtab = v; window.scrollTo(0, 0); break;
-      case 'closeAll': S.modal = null; S.panel = null; if (t.dataset.toast) toast(t.dataset.toast); break;
+      case 'closeAll': if (t.dataset.toast) toast(t.dataset.toast); closeOverlays(); return;
       case 'scrim': S.modal = null; break;
       case 'toast': toast(v); break;
       case 'submit': S.studentSubmitted = true; toast('Submitted. You can replace the file until Oct 14.'); break;
@@ -589,6 +635,11 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
     if (a === 'selAll') { const rows = filteredSubs(); rows.forEach(r => t.checked ? S.sel.add(r.id) : S.sel.delete(r.id)); }
     if (a === 'eSel') { t.checked ? S.eSel.add(t.dataset.v) : S.eSel.delete(t.dataset.v); }
     if (a === 'eSelAll') { D.enrolments.filter(r => S.eFilter === 'all' || r.state === S.eFilter).forEach(r => t.checked ? S.eSel.add(r.id) : S.eSel.delete(r.id)); }
+    // Unticking the last row lets the bulk bar leave before the page updates.
+    if (['sel', 'selAll', 'eSel', 'eSelAll'].includes(a) && !(a.startsWith('e') ? S.eSel : S.sel).size) {
+      const bar = document.querySelector('.bulkbar');
+      if (bar && !reduceMotion()) { bar.classList.add('leave'); setTimeout(render, MOTION.bulkOut); return; }
+    }
     // Changing the score or the feedback by hand counts as reviewing the AI draft.
     if (a === 'crit') { const st = aiState(D.subs.find(s => s.id === t.dataset.id)); st.crit[+t.dataset.v] = t.value.trim() === '' ? '' : Math.max(0, Math.min(25, parseInt(t.value) || 0)); st.final = null; if (st.mode === 'draft') st.mode = 'edit'; }
     if (a === 'qscore') { const st = aiState(D.subs.find(s => s.id === t.dataset.id)); st.final = t.value.trim() === '' ? null : Math.max(0, Math.min(100, parseInt(t.value) || 0)); if (st.mode === 'draft') st.mode = 'edit'; }
@@ -600,7 +651,7 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
     if (e.target.dataset.act === 'q') { S.q = e.target.value; const pos = e.target.selectionStart; render(); const i = document.querySelector('[data-act="q"]'); i.focus(); i.setSelectionRange(pos, pos); }
   });
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && (S.modal || S.panel)) { S.modal = null; S.panel = null; render(); }
+    if (e.key === 'Escape' && (S.modal || S.panel)) closeOverlays();
     if (S.page === 'grade' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
       const i = D.subs.findIndex(s => s.id === S.param);
       if (e.key === 'j') go(`#/instructor/grade/${D.subs[(i + 1) % D.subs.length].id}`);
