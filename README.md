@@ -28,7 +28,7 @@ Use the bar at the top to switch role and page state: normal, empty, loading, er
 ## Key UX decisions
 
 - **Queue first, not inbox.** Instructors grade from one queue sorted by risk and due date, with a quick review panel so they never lose their place.
-- **AI drafts a grade, a person releases it.** The AI draft is visibly marked, can be accepted, edited or discarded, and nothing reaches a student without a human release.
+- **AI drafts a grade, a person releases it.** The AI draft is visibly marked, can be accepted, edited or discarded, and nothing reaches a student without a human release. Release stays locked until the draft is accepted, edited or discarded, a discarded draft takes its score with it, and every release says in the audit log whether AI helped. A release can be undone for a few seconds.
 - **Versions protect running cohorts.** Course edits go into a new version; a running cohort keeps its version until an admin pushes the update.
 - **Every sensitive action is logged.** Role changes, pushes and bulk actions land in the audit log; bulk actions have undo.
 - **Responsive by rule, not by shrinking.** Tablet splits grading into Document and Assessment tabs; mobile turns tables into compact rows with a fixed bulk bar.

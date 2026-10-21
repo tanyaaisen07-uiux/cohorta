@@ -55,8 +55,22 @@
     admin: [['home', 'Overview', 'home'], ['catalogue', 'Courses', 'grid'], ['enrolments', 'Enrolments', 'list'], ['users', 'Users and roles', 'shield']]
   };
   const stOf = s => S.done.has(s.id) ? 'graded' : S.ret.has(s.id) ? 'returned' : s.status;
-  const aiState = s => S.ai[s.id] || (S.ai[s.id] = { mode: s.ai ? 'draft' : 'none', final: null, crit: (() => { const t = s.ai || 76; const a = [Math.round(t * .26), Math.round(t * .25), Math.round(t * .24)].map(x => Math.min(25, x)); a.push(Math.max(0, Math.min(25, t - a[0] - a[1] - a[2]))); return a; })() });
+  // A submission with an AI draft starts from the AI's rubric split; one without starts empty, so no score appears that nobody gave.
+  const aiState = s => S.ai[s.id] || (S.ai[s.id] = { mode: s.ai ? 'draft' : 'none', final: null, crit: s.ai ? (() => { const t = s.ai; const a = [Math.round(t * .26), Math.round(t * .25), Math.round(t * .24)].map(x => Math.min(25, x)); a.push(Math.max(0, Math.min(25, t - a[0] - a[1] - a[2]))); return a; })() : ['', '', '', ''] });
   const scoreOf = s => { const st = aiState(s); return st.final != null ? st.final : st.crit.reduce((x, y) => x + (+y || 0), 0); };
+  // Release rule: a grade leaves only after a person has looked at it.
+  const emptyScore = st => st.final == null && st.crit.every(x => x === '' || x == null);
+  const needsReview = s => { const st = aiState(s); return st.mode === 'draft' || emptyScore(st); };
+  const lockWhy = s => aiState(s).mode === 'draft' ? 'Accept, edit or discard the AI draft first. Students only see a grade you release.' : 'Enter a score first. Students only see a grade you release.';
+  const scoreText = s => emptyScore(aiState(s)) ? '' : String(scoreOf(s));
+  const howGraded = s => ({ accept: 'AI draft accepted', edit: 'AI draft edited' }[aiState(s).mode] || 'graded by hand');
+  const readyToRelease = s => ['ai', 'submitted', 'late'].includes(stOf(s)) && !needsReview(s);
+  const releaseRow = (s, act, extra = '') => {
+    const label = `Release grade${scoreText(s) ? ' ' + scoreText(s) : ''}`;
+    const btn = needsReview(s) ? lockBtn(label, lockWhy(s), 'btn') : `<button class="btn primary" data-act="${act}" data-v="${s.id}"${extra}>${label}</button>`;
+    return `<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="returnOne" data-v="${s.id}">Return for revision</button><span class="spacer" style="flex:1"></span>${btn}</div>`
+      + (needsReview(s) ? `<p class="muted release-hint">${lockWhy(s)}</p>` : '');
+  };
   const finalOf = s => { const k = stOf(s); if (k === 'graded') return S.done.has(s.id) ? scoreOf(s) : s.final; if (k === 'returned') return S.ret.has(s.id) ? scoreOf(s) : s.final; return null; };
   const pending = () => D.subs.filter(s => ['ai', 'submitted', 'late'].includes(stOf(s)));
   const toReview = () => pending().length;
@@ -159,10 +173,10 @@
         <td ${pad} class="num c-final" data-label="Final" style="font-weight:600">${r.final != null ? r.final : '<span class="muted" style="font-weight:400">—</span>'}</td>
         <td ${pad} class="c-act" style="text-align:right"><button class="btn sm" data-act="panel" data-v="grade:${r.id}">${r.status === 'graded' ? 'View' : 'Review'}</button></td></tr>`).join('');
       const selRows = rows.filter(r => S.sel.has(r.id));
-      const canRelease = selRows.length && selRows.every(r => r.status === 'graded');
+      const canRelease = selRows.length && selRows.every(r => readyToRelease(D.subs.find(x => x.id === r.id)));
       const bulk = S.sel.size ? `<div class="bulkbar" role="region" aria-label="Bulk actions"><b>${S.sel.size} selected</b><span class="spacer" style="flex:1"></span>
         <button class="btn sm" data-act="bulk" data-v="assign">Assign to TA</button><button class="btn sm" data-act="bulk" data-v="return">Return for revision</button>
-        ${canRelease ? '<button class="btn sm primary" data-act="bulk" data-v="release">Release grades</button>' : lockBtn('Release grades', 'Only graded work can be released. Review the AI drafts first.', 'btn sm')}
+        ${canRelease ? '<button class="btn sm primary" data-act="bulk" data-v="release">Release grades</button>' : lockBtn('Release grades', 'Release only work you have reviewed. Open each AI draft and check the score first.', 'btn sm')}
         <button class="iconbtn" style="color:#C9CBD6" aria-label="Clear selection" data-act="clearSel">${ic('x')}</button></div>` : '';
       return `${head('Grading queue', 'UX Design Fundamentals · Spring 2026 · Wireframe review is due Oct 2', '<button class="btn" data-act="dense">' + (S.dense ? 'Comfortable rows' : 'Compact rows') + '</button>')}
         <div class="toolbar"><label class="search">${ic('search', 16)}<span class="sr">Search students</span><input data-act="q" value="${esc(S.q)}" placeholder="Search students"></label>
@@ -192,7 +206,7 @@
   function iGrade(id) {
     const list = D.subs; const idx = Math.max(0, list.findIndex(s => s.id === id)); const s = list[idx];
     const st = aiState(s);
-    const total = scoreOf(s);
+    const total = scoreText(s) || '—';
     const prev = list[(idx - 1 + list.length) % list.length].id, next = list[(idx + 1) % list.length].id;
     return guard({ title: s.student, errWhat: 'this submission', deniedWhat: 'this submission', deniedWho: `${s.student} is in ${s.group}, which is assigned to another teaching assistant.`, deniedAlt: '<a class="btn" href="#/instructor/queue">Back to my queue</a>',
       empty: emptyState('Nothing submitted', `${s.student} has not submitted ${s.assignment} yet. You'll get a notification when they do.`, '<a class="btn" href="#/instructor/queue">Back to queue</a>', 'file') }, () => `
@@ -212,7 +226,7 @@
             ${[['Problem framing', 25], ['Flow and structure', 25], ['States and edge cases', 25], ['Clarity of handoff', 25]].map(([n, max], i) => `<div class="r"><label for="c${i}">${n}<span class="muted"> / ${max}</span></label><input id="c${i}" class="score-input num" inputmode="numeric" data-act="crit" data-id="${s.id}" data-v="${i}" value="${st.crit[i]}"></div>`).join('')}
             <div class="r" style="font-weight:600"><span>Final score</span><span class="num" style="font-family:var(--font-brand);font-weight:600;font-size:24px">${total}<span class="muted" style="font-size:14px"> / 100</span></span></div></div>
           <div class="card"><div class="field"><label for="fb">Feedback to ${esc(s.student.split(' ')[0])}</label><textarea id="fb" placeholder="Write feedback the student can act on" data-act="fbtext" data-id="${s.id}">${esc(fbFor(st))}</textarea><span class="help">Students see feedback only after you release it.</span></div>
-            <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn" data-act="returnOne" data-v="${s.id}">Return for revision</button><span class="spacer" style="flex:1"></span><button class="btn primary" data-act="release" data-v="${s.id}" data-next="${next}">Release grade ${total}</button></div></div>
+            <div style="margin-top:12px">${stOf(s) === 'graded' ? '' : releaseRow(s, 'release', ` data-next="${next}"`)}</div></div>
         </div></div>`);
   }
 
@@ -421,9 +435,9 @@
       if (k === 'grade') { const s = D.subs.find(x => x.id === v); const st = aiState(s); const i = D.subs.indexOf(s); const p2 = D.subs[(i - 1 + D.subs.length) % D.subs.length].id, n2 = D.subs[(i + 1) % D.subs.length].id; const done = stOf(s) === 'graded';
         body = `<div class="crumbs">Quick review · ${i + 1} of ${D.subs.length}</div><div class="who" style="gap:12px">${av(s.initials)}<div style="flex:1;min-width:0"><h2 style="font-family:var(--font-brand);font-weight:600;letter-spacing:-.02em;margin:0">${esc(s.student)}</h2><div class="muted">${esc(s.assignment)} · ${s.group} · ${s.submitted}</div></div>${tag(subLabel(stOf(s)))}</div>
           ${stateBanner(s)}${done ? '' : aiCard(s, st)}
-          <div class="field"><label for="qs">Final score</label><div style="display:flex;align-items:center;gap:8px"><input id="qs" class="score-input num" style="width:88px" inputmode="numeric" data-act="qscore" data-id="${s.id}" value="${scoreOf(s)}" ${done ? 'disabled' : ''}><span class="muted">/ 100</span></div></div>
+          <div class="field"><label for="qs">Final score</label><div style="display:flex;align-items:center;gap:8px"><input id="qs" class="score-input num" style="width:88px" inputmode="numeric" data-act="qscore" data-id="${s.id}" value="${scoreText(s)}" placeholder="—" ${done ? 'disabled' : ''}><span class="muted">/ 100</span></div></div>
           <div class="field"><label for="fb">Feedback to ${esc(s.student.split(' ')[0])}</label><textarea id="fb" data-act="fbtext" data-id="${s.id}" placeholder="Write feedback the student can act on" ${done ? 'disabled' : ''}>${esc(fbFor(st))}</textarea><span class="help">Students see feedback only after you release it.</span></div>
-          ${done ? '' : `<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="returnOne" data-v="${s.id}">Return for revision</button><span style="flex:1"></span><button class="btn primary" data-act="releaseQ" data-v="${s.id}">Release grade ${scoreOf(s)}</button></div>`}
+          ${done ? '' : `<div>${releaseRow(s, 'releaseQ')}</div>`}
           <div style="display:flex;align-items:center;gap:8px;border-top:1px solid var(--line);padding-top:14px;margin-top:auto"><button class="btn sm" data-act="panel" data-v="grade:${p2}" aria-label="Previous submission">${ic('back', 14)}</button><button class="btn sm" data-act="panel" data-v="grade:${n2}" aria-label="Next submission">${ic('chev', 14)}</button><span style="flex:1"></span><a class="btn sm" href="#/instructor/grade/${s.id}">Open full view</a></div>`; }
       out += `<div class="scrim" style="background:rgba(11,13,23,.2);place-items:stretch" data-act="closeAll"></div><aside class="panel${S.anim ? ' enter' : ''}" role="dialog" aria-modal="true" aria-label="Details"><button class="iconbtn" style="align-self:flex-end" aria-label="Close" data-act="closeAll">${ic('x')}</button>${body}</aside>`;
     }
@@ -518,10 +532,19 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
       case 'doInvite': { const nm = document.getElementById('in').value.trim() || 'New person'; const role = document.getElementById('ir').value; D.staff.push({ name: nm, initials: nm.split(' ').map(p => p[0]).join('').slice(0, 2), email: document.getElementById('ie').value, role, scope: document.getElementById('is').value, last: 'Invited' }); audit(`Invited ${nm} as ${role}`); S.modal = null; toast(`Invite sent to ${nm} · logged`); break; }
       case 'addItem': { const [mi, kind] = v.split(','); const m = S.order[+mi]; m.items.push(kind === 'lesson' ? { kind, title: 'New lesson', len: '0 min' } : { kind, id: 'x', title: 'New assignment', due: 'not set' }); toast(kind === 'lesson' ? 'Lesson added to the v3 draft' : 'Assignment added. Set a due date and rubric.'); break; }
       case 'addModule': S.order.push({ id: 'm' + (S.order.length + 1), title: 'New module', items: [] }); toast('Module added to the v3 draft'); break;
-      case 'releaseQ': { const s = D.subs.find(x => x.id === v); S.done.add(v); S.ret.delete(v); toast(`Grade ${scoreOf(s)} released to ${s.student.split(' ')[0]}`); const nx = pending()[0]; S.panel = nx ? 'grade:' + nx.id : null; break; }
+      case 'releaseQ': { const s = D.subs.find(x => x.id === v); if (needsReview(s)) { toast(lockWhy(s)); break; }
+        const sc = scoreOf(s); S.done.add(v); S.ret.delete(v); audit(`Released grade ${sc} to ${s.student}, ${s.assignment} · ${howGraded(s)}`);
+        S.undo = () => { S.done.delete(v); audit(`Took back the grade for ${s.student}, ${s.assignment}`); S.panel = 'grade:' + v; };
+        toast(`Grade ${sc} released to ${s.student.split(' ')[0]}`, true); const nx = pending()[0]; S.panel = nx ? 'grade:' + nx.id : null; break; }
       case 'bulk': {
         const n = S.sel.size; const ids = [...S.sel];
-        if (v === 'release') { toast(`${pl(n, 'grade', 'grades')} released to students`); }
+        if (v === 'release') {
+          const ok = ids.filter(i => readyToRelease(D.subs.find(x => x.id === i)));
+          if (ok.length !== ids.length) { toast('Some selected work is not reviewed yet. Open each AI draft first.'); break; }
+          ok.forEach(i => { const s = D.subs.find(x => x.id === i); S.done.add(i); S.ret.delete(i); audit(`Released grade ${scoreOf(s)} to ${s.student}, ${s.assignment} · ${howGraded(s)}`); });
+          S.undo = () => { ok.forEach(i => S.done.delete(i)); audit(`Took back ${pl(ok.length, 'released grade', 'released grades')}`); };
+          toast(`${pl(n, 'grade', 'grades')} released to students`, true);
+        }
         if (v === 'return') { ids.forEach(i => { S.ret.add(i); S.done.delete(i); }); toast(`${pl(n, 'submission', 'submissions')} returned for revision`); }
         if (v === 'assign') toast(`${pl(n, 'submission', 'submissions')} assigned to Nadia Kowalski`);
         S.sel.clear(); break;
@@ -535,8 +558,17 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
       }
       case 'doMove': toast(`${pl(S.eSel.size, 'student', 'students')} moved to Autumn 2026`); S.eSel.clear(); S.modal = null; break;
       case 'undo': if (S.undo) S.undo(); S.undo = null; S.toast = null; break;
-      case 'ai': { const id = t.dataset.id || S.param; const st = aiState(D.subs.find(s => s.id === id)); st.mode = v === 'restore' ? 'draft' : v; if (v === 'accept') { st.final = null; toast('AI draft accepted. Check the score, then release.'); } if (v === 'edit') S.focus = '#fb'; if (v === 'discard') st.fb = ''; break; }
-      case 'release': S.done.add(v); S.ret.delete(v); toast('Grade released. Next submission opened.'); go(`#/instructor/grade/${t.dataset.next}`); return;
+      case 'ai': { const id = t.dataset.id || S.param; const st = aiState(D.subs.find(s => s.id === id)); st.mode = v === 'restore' ? 'draft' : v;
+        if (v === 'accept') { st.final = null; toast('AI draft accepted. Check the score, then release.'); }
+        if (v === 'edit') S.focus = '#fb';
+        // Discarding the draft also clears its score, so the AI number cannot be released as a hand grade.
+        if (v === 'discard') { st.fb = ''; st.aiCrit = st.crit; st.crit = ['', '', '', '']; st.final = null; }
+        if (v === 'restore' && st.aiCrit) { st.crit = st.aiCrit; st.final = null; }
+        break; }
+      case 'release': { const s = D.subs.find(x => x.id === v); if (needsReview(s)) { toast(lockWhy(s)); break; }
+        const sc = scoreOf(s); S.done.add(v); S.ret.delete(v); audit(`Released grade ${sc} to ${s.student}, ${s.assignment} · ${howGraded(s)}`);
+        S.undo = () => { S.done.delete(v); audit(`Took back the grade for ${s.student}, ${s.assignment}`); go(`#/instructor/grade/${v}`); };
+        go(`#/instructor/grade/${t.dataset.next}`); toast(`Grade ${sc} released to ${s.student.split(' ')[0]}. Next submission opened.`, true); render(); return; }
       case 'returnOne': S.ret.add(v); S.done.delete(v); toast('Returned for revision. The student can submit attempt 2.'); break;
       case 'mv': { const [i, d] = v.split(',').map(Number); const o = S.order; const j = i + d; if (j >= 0 && j < o.length) [o[i], o[j]] = [o[j], o[i]]; break; }
       case 'modal': S.modal = v; break;
@@ -557,12 +589,14 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
     if (a === 'selAll') { const rows = filteredSubs(); rows.forEach(r => t.checked ? S.sel.add(r.id) : S.sel.delete(r.id)); }
     if (a === 'eSel') { t.checked ? S.eSel.add(t.dataset.v) : S.eSel.delete(t.dataset.v); }
     if (a === 'eSelAll') { D.enrolments.filter(r => S.eFilter === 'all' || r.state === S.eFilter).forEach(r => t.checked ? S.eSel.add(r.id) : S.eSel.delete(r.id)); }
-    if (a === 'crit') { const st = aiState(D.subs.find(s => s.id === t.dataset.id)); st.crit[+t.dataset.v] = Math.max(0, Math.min(25, parseInt(t.value) || 0)); st.final = null; }
-    if (a === 'qscore') { const st = aiState(D.subs.find(s => s.id === t.dataset.id)); st.final = Math.max(0, Math.min(100, parseInt(t.value) || 0)); }
+    // Changing the score or the feedback by hand counts as reviewing the AI draft.
+    if (a === 'crit') { const st = aiState(D.subs.find(s => s.id === t.dataset.id)); st.crit[+t.dataset.v] = t.value.trim() === '' ? '' : Math.max(0, Math.min(25, parseInt(t.value) || 0)); st.final = null; if (st.mode === 'draft') st.mode = 'edit'; }
+    if (a === 'qscore') { const st = aiState(D.subs.find(s => s.id === t.dataset.id)); st.final = t.value.trim() === '' ? null : Math.max(0, Math.min(100, parseInt(t.value) || 0)); if (st.mode === 'draft') st.mode = 'edit'; }
     if (a === 'fbtext') { aiState(D.subs.find(s => s.id === t.dataset.id)).fb = t.value; return; }
     render();
   });
   document.addEventListener('input', e => {
+    if (e.target.dataset.act === 'fbtext') { const st = aiState(D.subs.find(s => s.id === e.target.dataset.id)); st.fb = e.target.value; if (st.mode === 'draft') { st.mode = 'edit'; S.focus = '#fb'; render(); } return; }
     if (e.target.dataset.act === 'q') { S.q = e.target.value; const pos = e.target.selectionStart; render(); const i = document.querySelector('[data-act="q"]'); i.focus(); i.setSelectionRange(pos, pos); }
   });
   document.addEventListener('keydown', e => {

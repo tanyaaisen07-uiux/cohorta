@@ -318,3 +318,7 @@ tbody tr td{transition:background-color .15s ease}
 .btn.add:hover{border-color:var(--cobalt);color:var(--cobalt);background:#F7F8FF}
 .add-module{width:100%;min-height:48px}
 @media (max-width:720px){.add-row{padding-left:14px}.add-row .btn{flex:1}}
+
+/* Release rule: hint under a locked release button */
+.release-hint{font-size:12px;margin:8px 0 0}
+.lockwrap .why{white-space:normal}
