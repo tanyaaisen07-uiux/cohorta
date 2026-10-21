@@ -1,8 +1,12 @@
 /* Cohorta demo app: one course, three roles. Vanilla JS, hash routing. */
 (function () {
   const D = window.DB;
+  /* Long data demo state: swaps the sample school for one with long names, titles and ~200 rows. */
+  const DB_BASE = { ...D }; let DB_LONG = null;
   const $ = s => document.querySelector(s);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  // One line with an ellipsis, full text on hover: long names never push table columns off screen.
+  const trunc = (t, w) => `<span class="trunc" style="--tw:${w}px" title="${esc(t)}">${esc(t)}</span>`;
 
   const S = {
     role: 'instructor', page: 'home', param: null, demo: 'normal',
@@ -18,6 +22,13 @@
   // Run fn after an exit animation; with reduced motion, right away.
   const afterMotion = (ms, fn) => reduceMotion() ? fn() : setTimeout(fn, ms);
   const MOTION = { toastOut: 150, panelOut: 160, bulkOut: 140, load: 600 };
+  function setLongData(on) {
+    if (on === !!S.longData) return;
+    S.longData = on;
+    if (on) { DB_LONG = DB_LONG || window.makeLongDB(DB_BASE); Object.assign(D, DB_LONG); }
+    else { Object.assign(D, DB_BASE); delete D.feedback; }
+    S.order = null; S.ai = {}; S.done = new Set(); S.ret = new Set(); S.sel.clear(); S.eSel.clear(); S.flash = new Set(); S.panel = null;
+  }
 
   /* ---------- icons (stroke, 18px) ---------- */
   const P = {
@@ -107,7 +118,7 @@
   function demoBar() {
     const seg = (key, opts) => `<div class="seg" role="group">${opts.map(([v, l]) => `<button type="button" data-act="${key}" data-v="${v}" aria-pressed="${S[key] === v}">${l}</button>`).join('')}</div>`;
     return `<div class="demo" role="region" aria-label="Demo controls"><b>Cohorta demo</b><span class="show-m dhint">Demo controls · sample data</span><span class="dgrp"><span class="dlab">View as</span>${seg('role', [['student', 'Student'], ['instructor', 'Instructor'], ['ta', 'TA'], ['admin', 'Admin']])}</span>
-      <span class="dgrp"><span class="dlab">State</span>${seg('demo', [['normal', 'Normal'], ['empty', 'Empty'], ['loading', 'Loading'], ['error', 'Error'], ['denied', 'No access']])}</span>
+      <span class="dgrp"><span class="dlab">State</span>${seg('demo', [['normal', 'Normal'], ['empty', 'Empty'], ['loading', 'Loading'], ['error', 'Error'], ['denied', 'No access'], ['long', 'Long data']])}</span>
       <span class="spacer"></span><span class="hide-m">Client project · names and data changed · UX/UI by Tania Aisen</span></div>`;
   }
 
@@ -179,8 +190,8 @@
       const allSel = rows.length && rows.every(r => S.sel.has(r.id));
       const pad = S.dense ? 'style="padding-top:5px;padding-bottom:5px"' : '';
       const body = rows.map(r => `<tr class="${S.sel.has(r.id) ? 'sel' : ''}${S.flash.has(r.id) ? ' flash' : ''}"><td class="check c-check" ${pad}><label class="hit"><input type="checkbox" aria-label="Select ${esc(r.student)}" data-act="sel" data-v="${r.id}" ${S.sel.has(r.id) ? 'checked' : ''}></label></td>
-        <td class="c-student" ${pad}><div class="who">${av(r.initials)}<div style="min-width:0"><button class="linkbtn" data-act="panel" data-v="grade:${r.id}">${esc(r.student)}</button><div class="meta-2nd">${esc(r.assignment)} · ${r.group} · ${r.submitted}</div></div></div></td>
-        <td class="c-2nd" ${pad}>${esc(r.assignment)}</td><td ${pad} class="muted c-2nd">${r.group}</td><td ${pad} class="num c-2nd">${r.submitted}</td><td class="c-status" ${pad}>${tag(subLabel(r.status))}</td>
+        <td class="c-student" ${pad}><div class="who">${av(r.initials)}<div style="min-width:0"><button class="linkbtn" data-act="panel" data-v="grade:${r.id}" title="${esc(r.student)}">${esc(r.student)}</button><div class="meta-2nd">${esc(r.assignment)} · ${r.group} · ${r.submitted}</div></div></div></td>
+        <td class="c-2nd" ${pad}>${trunc(r.assignment, 260)}</td><td ${pad} class="muted c-2nd">${r.group}</td><td ${pad} class="num c-2nd">${r.submitted}</td><td class="c-status" ${pad}>${tag(subLabel(r.status))}</td>
         <td ${pad} class="num c-ai" data-label="AI">${r.ai != null ? `<span class="mono" style="background:#F1F2FF;padding:2px 6px;border-radius:6px">${r.ai}</span>` : '<span class="muted">—</span>'}</td>
         <td ${pad} class="num c-final" data-label="Final" style="font-weight:600">${r.final != null ? r.final : '<span class="muted" style="font-weight:400">—</span>'}</td>
         <td ${pad} class="c-act" style="text-align:right"><button class="btn sm" data-act="panel" data-v="grade:${r.id}">${r.status === 'graded' ? 'View' : 'Review'}</button></td></tr>`).join('');
@@ -206,7 +217,7 @@
   const FB = 'Strong flow from sign-up to first course. The empty states are thought through. Two things to fix: the enrolment screen hides the cohort dates, and the error on a failed upload does not say what to do next.';
   function aiCard(s, st) {
     if (st.mode === 'draft') return `<div class="ai" aria-label="AI draft"><div class="head">${ic('sparkle', 16)}<b>AI draft</b>${tag('AI draft ready')}<span class="spacer" style="flex:1"></span><span class="mono">Suggested ${s.ai}</span></div>
-        <div style="font-size:14px;color:var(--text-2)">${FB}</div><div class="muted" style="font-size:12px">Based on the rubric. Check it before you send; students see only what you release.</div>
+        <div style="font-size:14px;color:var(--text-2)">${D.feedback || FB}</div><div class="muted" style="font-size:12px">Based on the rubric. Check it before you send; students see only what you release.</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm primary" data-act="ai" data-v="accept" data-id="${s.id}">Accept draft</button><button class="btn sm" data-act="ai" data-v="edit" data-id="${s.id}">Edit</button><button class="btn sm ghost" data-act="ai" data-v="discard" data-id="${s.id}">Discard</button></div></div>`;
     if (st.mode === 'none') return `<div class="banner info" style="margin:0">${ic('clock', 18)}<div class="grow"><b>AI draft is not ready yet.</b>It usually takes a minute after submission. You can grade without it.</div></div>`;
     if (st.mode === 'discard') return `<div class="banner info" style="margin:0">${ic('x', 18)}<div class="grow"><b>AI draft discarded.</b>Grade with the rubric.</div><button class="btn sm" data-act="ai" data-v="restore" data-id="${s.id}">Undo</button></div>`;
@@ -214,7 +225,7 @@
     if (st.mode === 'edit') return `<div class="banner info" style="margin:0">${ic('edit', 18)}<div class="grow"><b>Editing the AI draft.</b>Your version replaces the draft; the student sees only what you release.</div></div>`;
     return '';
   }
-  const fbFor = st => (st.mode === 'accept' || st.mode === 'edit') ? (st.fb != null ? st.fb : FB) : (st.fb || '');
+  const fbFor = st => (st.mode === 'accept' || st.mode === 'edit') ? (st.fb != null ? st.fb : (D.feedback || FB)) : (st.fb || '');
   const stateBanner = s => stOf(s) === 'graded' ? `<div class="banner info" style="margin:0">${ic('check', 18)}<div class="grow"><b>Graded and released.</b>${myGroup() ? 'Only the instructor can change a released grade. Ask Maria Lopez if it needs a correction.' : 'You can change the grade within 7 days; every change is logged.'}</div></div>`
     : stOf(s) === 'returned' ? `<div class="banner warn" style="margin:0">${ic('back', 18)}<div class="grow"><b>Returned for revision.</b>${esc(s.student.split(' ')[0])} can submit attempt 2 of 2.</div></div>` : '';
   // A locked action stays visible, with one line on why and who can do it.
@@ -311,7 +322,7 @@
       <div class="grid g-4" style="margin-bottom:16px"><div class="card stat"><div class="label">Average progress</div><div class="val num">${statAvg}</div></div><div class="card stat"><div class="label">On track</div><div class="val num">${statOn}</div></div>
         <div class="card stat alert"><div class="label">Behind</div><div class="val num">${statBehind}</div></div><div class="card stat"><div class="label">Completed</div><div class="val num">0</div><div class="hint">Course ends Nov 28</div></div></div>
       <div class="tablebox"><table><thead><tr><th>Student</th><th>Group</th><th>Progress</th><th>Assignments</th><th>Last active</th><th>Status</th></tr></thead><tbody>
-        ${rows.map((r, i) => `<tr><td><div class="who">${av(r.initials)}<b style="font-weight:600">${esc(r.student)}</b></div></td><td class="muted">${r.group}</td>
+        ${rows.map((r, i) => `<tr><td><div class="who">${av(r.initials)}<b style="font-weight:600" title="${esc(r.student)}">${esc(r.student)}</b></div></td><td class="muted">${r.group}</td>
           <td><div style="display:flex;align-items:center;gap:10px">${bar(r.progress)}<span class="num muted" style="width:36px">${r.progress}%</span></div></td><td class="num">${r.done} / 4</td><td class="num">${r.last}</td>
           <td>${r.risk ? tag(r.state === 'Active' ? 'Late' : r.state) : tag(r.state)}</td></tr>`).join('')}</tbody></table></div>`);
   }
@@ -330,7 +341,7 @@
         <div class="card stat alert"><div class="label">At-risk cohorts</div><div class="val num">2</div><div class="hint">More than 25% behind</div></div></div>
       <div class="grid g-main">
         <div class="card"><h2>Cohorts</h2><div class="scrollx"><table><thead><tr><th>Cohort</th><th>Status</th><th>Progress</th><th>Behind</th><th>Ends</th></tr></thead><tbody>
-          ${D.cohorts.map(c => `<tr><td><b style="font-weight:600">${esc(c.course)}</b><div class="muted" style="font-size:12px">${c.name} · ${c.students} students</div></td><td>${tag(c.state)}</td>
+          ${D.cohorts.map(c => `<tr><td><b style="font-weight:600">${trunc(c.course, 260)}</b><div class="muted" style="font-size:12px">${c.name} · ${c.students} students</div></td><td>${tag(c.state)}</td>
             <td><div style="display:flex;align-items:center;gap:10px">${bar(c.progress)}<span class="num muted">${c.progress}%</span></div></td><td class="num" ${c.behind / c.students > .25 ? 'style="color:var(--s-error);font-weight:600"' : ''}>${c.behind}</td><td class="num">${c.end}</td></tr>`).join('')}</tbody></table></div></div>
         <div class="grid" style="align-content:start">
           <div class="card"><h2>System alerts</h2>
@@ -350,8 +361,8 @@
       empty: emptyState('No courses yet', 'Instructors create drafts, you review and publish them. Invite an instructor to start.', '<a class="btn primary" href="#/admin/users">Invite an instructor</a>', 'grid') }, () => `
       ${head('Courses', 'A course is the template; a cohort is one dated run of it', '<button class="btn primary" data-act="newCourse">' + ic('plus', 16) + 'New course</button>')}
       <div class="toolbar">${chips}</div>
-      <div class="tablebox"><table><thead><tr><th>Course</th><th>Status</th><th>Version</th><th>Owner</th><th>Cohorts</th><th>Students</th><th>Updated</th><th></th></tr></thead><tbody>
-        ${list.map(c => `<tr><td><b style="font-weight:600">${esc(c.title)}</b></td><td>${tag(c.state)}</td><td class="mono">${c.version}</td><td>${esc(c.owner)}</td><td class="num">${c.cohorts}</td><td class="num">${c.students}</td><td class="num muted">${c.updated}</td><td style="text-align:right">${act(c)}</td></tr>`).join('')}</tbody></table></div>`);
+      <div class="tablebox"><table><thead><tr><th>Course</th><th>Status</th><th>Version</th><th>Owner</th><th class="c-wide">Cohorts</th><th class="c-wide">Students</th><th class="c-wide">Updated</th><th></th></tr></thead><tbody>
+        ${list.map(c => `<tr><td><b style="font-weight:600">${trunc(c.title, 320)}</b></td><td>${tag(c.state)}</td><td class="mono">${c.version}</td><td>${trunc(c.owner, 200)}</td><td class="num c-wide">${c.cohorts}</td><td class="num c-wide">${c.students}</td><td class="num muted c-wide">${c.updated}</td><td style="text-align:right">${act(c)}</td></tr>`).join('')}</tbody></table></div>`);
   }
 
   function aEnrol() {
@@ -366,8 +377,8 @@
       <div class="toolbar"><label class="search">${ic('search', 16)}<span class="sr">Search</span><input placeholder="Search name or email"></label><select class="select" aria-label="Cohort"><option>All cohorts</option><option>UXF · Spring 2026</option><option>Service Design · Spring 2026</option></select></div>
       <div class="toolbar">${chips}</div>
       <div class="tablebox"><table class="rtable"><thead><tr><th class="check"><label class="hit"><input type="checkbox" aria-label="Select all" data-act="eSelAll" ${allSel ? 'checked' : ''}></label></th><th>Student</th><th class="c-2nd">Email</th><th class="c-2nd">Cohort</th><th>Status</th><th>Progress</th><th>Last active</th></tr></thead><tbody>
-        ${rows.map(r => `<tr class="${S.eSel.has(r.id) ? 'sel' : ''}${S.flash.has(r.id) ? ' flash' : ''}"><td class="check c-check"><label class="hit"><input type="checkbox" aria-label="Select ${esc(r.student)}" data-act="eSel" data-v="${r.id}" ${S.eSel.has(r.id) ? 'checked' : ''}></label></td><td class="c-student"><div class="who">${av(r.initials)}<div style="min-width:0"><b style="font-weight:600">${esc(r.student)}</b><div class="meta-2nd">${esc(r.email)} · ${esc(r.cohort)}</div></div></div></td>
-          <td class="muted c-2nd">${esc(r.email)}</td><td class="c-2nd">${esc(r.cohort)}</td><td class="c-status">${tag(r.state)}</td><td class="c-ai" data-label="Progress"><div style="display:flex;align-items:center;gap:10px">${bar(r.progress)}<span class="num muted" style="width:36px">${r.progress}%</span></div></td><td class="num c-final" data-label="Last active">${r.last}</td></tr>`).join('')}</tbody></table></div>${bulk}`);
+        ${rows.map(r => `<tr class="${S.eSel.has(r.id) ? 'sel' : ''}${S.flash.has(r.id) ? ' flash' : ''}"><td class="check c-check"><label class="hit"><input type="checkbox" aria-label="Select ${esc(r.student)}" data-act="eSel" data-v="${r.id}" ${S.eSel.has(r.id) ? 'checked' : ''}></label></td><td class="c-student"><div class="who">${av(r.initials)}<div style="min-width:0"><b style="font-weight:600" title="${esc(r.student)}">${esc(r.student)}</b><div class="meta-2nd">${esc(r.email)} · ${esc(r.cohort)}</div></div></div></td>
+          <td class="muted c-2nd">${trunc(r.email, 210)}</td><td class="c-2nd">${trunc(r.cohort, 190)}</td><td class="c-status">${tag(r.state)}</td><td class="c-ai" data-label="Progress"><div style="display:flex;align-items:center;gap:10px">${bar(r.progress)}<span class="num muted" style="width:36px">${r.progress}%</span></div></td><td class="num c-final" data-label="Last active">${r.last}</td></tr>`).join('')}</tbody></table></div>${bulk}`);
   }
 
   function aUsers() {
@@ -375,9 +386,9 @@
       empty: emptyState('Only you so far', 'Invite instructors and teaching assistants, then choose what each can reach.', '<button class="btn primary" data-act="start" data-v="#/admin/users">Invite people</button>', 'shield') }, () => `
       ${head('Users and roles', 'Role sets the action · scope sets the reach · state can lock it', '<button class="btn primary" data-act="modal" data-v="invite">' + ic('plus', 16) + 'Invite people</button>')}
       <div class="grid g-main">
-        <div class="tablebox"><table><thead><tr><th>Person</th><th>Role</th><th>Scope</th><th>Last active</th><th></th></tr></thead><tbody>
-          ${D.staff.map((u, i) => `<tr><td><div class="who">${av(u.initials)}<div><b style="font-weight:600">${esc(u.name)}</b><div class="muted" style="font-size:12px">${esc(u.email)}</div></div></div></td><td>${esc(u.role)}</td><td class="muted" style="white-space:normal;max-width:220px">${esc(u.scope)}</td><td class="num">${u.last}</td>
-            <td style="text-align:right"><button class="btn sm" data-act="panel" data-v="user:${i}">Open</button></td></tr>`).join('')}</tbody></table></div>
+        <div class="tablebox"><table class="utable"><thead><tr><th>Person</th><th>Role</th><th>Scope</th><th>Last active</th><th></th></tr></thead><tbody>
+          ${D.staff.map((u, i) => `<tr><td class="u-who"><div class="who">${av(u.initials)}<div><b style="font-weight:600" title="${esc(u.name)}">${esc(u.name)}</b><div class="muted" style="font-size:12px">${trunc(u.email, 220)}</div></div></div></td><td class="u-role" data-last="${esc(u.last)}">${esc(u.role)}</td><td class="muted u-scope" style="white-space:normal;max-width:220px">${esc(u.scope)}</td><td class="num u-last">${u.last}</td>
+            <td class="u-act" style="text-align:right"><button class="btn sm" data-act="panel" data-v="user:${i}">Open</button></td></tr>`).join('')}</tbody></table></div>
         <div class="card" style="align-self:start"><h2>Audit log</h2><div class="list" style="font-size:13px">${D.audit.map(a => `<div class="row" style="align-items:flex-start;flex-direction:column;gap:2px"><span>${esc(a.what)}</span><span class="muted">${esc(a.who)} · ${a.when}</span></div>`).join('')}</div></div></div>`);
   }
 
@@ -557,7 +568,7 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
     const link = e.target.closest('a[href^="#/"]');
     if (link) {
       e.preventDefault();
-      const ta = link.dataset.act; if (ta === 'demo') S.demo = link.dataset.v; if (ta === 'role') S.role = link.dataset.v;
+      const ta = link.dataset.act; if (ta === 'demo') { setLongData(link.dataset.v === 'long'); S.demo = link.dataset.v; } if (ta === 'role') S.role = link.dataset.v;
       route(link.getAttribute('href')); return;
     }
     const t = e.target.closest('[data-act]'); if (!t) return;
@@ -572,7 +583,7 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
     }
     switch (a) {
       case 'role': S.sel.clear(); S.eSel.clear(); go(`#/${v}/home`); return;
-      case 'demo': S.demo = v; break;
+      case 'demo': setLongData(v === 'long'); S.demo = v; break;
       case 'qStatus': S.qStatus = v; S.sel.clear(); break;
       case 'cFilter': S.cFilter = v; break;
       case 'eFilter': S.eFilter = v; S.eSel.clear(); break;
@@ -580,7 +591,7 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
       case 'dense': S.dense = !S.dense; break;
       case 'clearSel': leaveBulk(() => S.sel.clear()); return;
       case 'eClear': leaveBulk(() => S.eSel.clear()); return;
-      case 'start': S.demo = 'normal'; go(v); return;
+      case 'start': setLongData(false); S.demo = 'normal'; go(v); return;
       case 'review': { const [kind, id] = v.split(':'); const c = D.catalogue.find(x => x.id === id);
         if (kind === 'approve') { c.state = 'Published'; c.updated = 'Oct 6'; audit(`Published ${c.title} ${c.version}`); toast(`${c.title} published. Instructors can schedule cohorts.`); }
         else { c.state = 'Draft'; c.updated = 'Oct 6'; audit(`Requested changes to ${c.title} ${c.version}`); toast(`Changes requested from ${c.owner}. The course is back in draft.`); }

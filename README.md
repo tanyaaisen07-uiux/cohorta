@@ -24,7 +24,7 @@ Online schools run the same course for several cohorts at once. Students, instru
 | Teaching assistant | The same grading tools scoped to Group A: queue, quick review, grading view, group roster. Work from other groups opens as No access, and a released grade is locked with a note that only the instructor can change it |
 | Admin | Overview, course review and publishing, cohort scheduling, enrolments with bulk pause and undo, users and roles with an audit log |
 
-Use the bar at the top to switch role and page state: normal, empty, loading, error, no access.
+Use the bar at the top to switch role and page state: normal, empty, loading, error, no access, long data.
 
 ## Key UX decisions
 
@@ -37,6 +37,15 @@ Use the bar at the top to switch role and page state: normal, empty, loading, er
 ## Motion
 
 Motion appears only where it explains an action or a state: the review panel slides in once and only fades its content when you move to the next submission; toasts fade in and out and update in place; the bulk bar rises with the first selected row and the rows an action changed get a short highlight; buttons change colour on hover and press and show a spinner while an action runs; skeletons appear only while data loads. Micro transitions take 150 ms, panels 200 ms. Nothing pulses, bounces or animates between pages, and `prefers-reduced-motion` turns every movement into an instant change.
+
+## Long content
+
+The **Long data** state swaps the sample data for a stress set: 200 enrolments and 198 submissions, 30 to 40 character names with diacritics, long emails, course and cohort titles, scopes and feedback. Rules it checks:
+
+- One line cells (email, course, cohort, owner) truncate with an ellipsis and keep the full text in a tooltip; names never push the status, score or actions out of the row.
+- Long text that carries meaning (feedback, scope, audit entries) wraps instead of truncating.
+- At 1024 px secondary columns hide before anything truncates to a few letters.
+- At 390 px tables turn into stacked rows; wide reference tables scroll inside their card, never the page.
 
 ## Accessibility
 

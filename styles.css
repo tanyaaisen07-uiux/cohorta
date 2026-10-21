@@ -380,3 +380,41 @@ tbody tr.flash{animation:rowFlash var(--motion-row) var(--ease-out)}
 /* On dark (bulk bar): a disabled button stays dark and quiet, so it never reads as the light active one */
 .bulkbar .btn[aria-disabled="true"],.bulkbar .btn[aria-disabled="true"]:hover,.bulkbar .btn[aria-disabled="true"]:active{background:transparent;border-color:#2A2D3A;color:#8E91A3}
 .bulkbar .btn.is-loading{--spin:var(--paper)}
+
+/* Long content: one line with an ellipsis and the full text on hover; wide tables scroll inside their card on phones */
+.trunc{display:block;max-width:var(--tw,240px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:720px){
+  .rtable .trunc{max-width:100%}
+  .tablebox:not(:has(.rtable)){overflow-x:auto}
+  .demo .dgrp{min-width:0}
+  .demo .seg{flex:1 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none}
+  .demo .seg::-webkit-scrollbar{display:none}
+  .demo .seg button{flex:0 0 auto}
+}
+.who .linkbtn,.who > b,.who > div > b{display:block;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meta-2nd{overflow-wrap:anywhere}
+@media (max-width:720px){.rtable .who .linkbtn,.rtable .who > div > b{white-space:normal;max-width:none}}
+.trunc{max-width:min(var(--tw,240px),17vw)}
+.who .linkbtn,.who > b,.who > div > b{max-width:min(240px,15vw)}
+@media (max-width:720px){.rtable .trunc{max-width:100%}.rtable .who .linkbtn,.rtable .who > div > b{max-width:none}}
+/* Secondary numbers in wide admin tables give way first on tablets */
+@media (max-width:1100px){.c-wide{display:none}}
+
+/* Users table: stacked rows on phones so long scopes read as text, not a 60px column */
+@media (max-width:720px){
+  .tablebox:has(.utable){overflow-x:visible}
+  .utable thead{display:none}
+  .utable,.utable tbody{display:block}
+  .utable tbody tr{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;row-gap:6px;padding:12px;border-bottom:1px solid var(--line)}
+  .utable tbody tr:last-child{border-bottom:0}
+  .utable td{padding:0!important;border:0!important;background:none!important}
+  .utable .u-who{grid-column:1;grid-row:1;min-width:0}
+  .utable .u-act{grid-column:2;grid-row:1;align-self:center}
+  .utable .u-role{grid-column:1/-1;grid-row:2;font-size:13px}
+  .utable .u-role::after{content:" · " attr(data-last)}
+  .utable .u-scope{grid-column:1/-1;grid-row:3;max-width:none!important;font-size:13px}
+  .utable .u-last{display:none}
+  .utable .who .trunc,.utable .who > div > b{max-width:100%}
+  .utable .who > div{min-width:0}
+}
+@media (max-width:720px){.rtable td.c-final[data-label="Last active"]{min-width:0;flex-wrap:wrap;row-gap:0;white-space:normal}}

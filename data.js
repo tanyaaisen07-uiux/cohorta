@@ -111,3 +111,30 @@ window.DB = (function () {
 
   return { today, people, course, subs, catalogue, cohorts, enrolments, staff, audit, studentGrades };
 })();
+
+/* Long data: the same school with long names, long titles and about 200 rows.
+   Used by the "Long data" demo state to check that nothing breaks with real content. */
+window.makeLongDB = function (D) {
+  const names = ['Maximiliana Konstantinopoulou', 'Bartholomew Oyelaran-Whitfield', 'Anne-Sophie van der Westhuizen', 'Nguyễn Thị Minh Khai Hoàng',
+    'Christopher Alexander Montgomery III', 'Guðmundur Sigurðarson-Eriksen', 'María de los Ángeles Rodríguez Zapatero', 'Oluwaseun Adebayo-Okonkwo',
+    'Wolfgang Schwarzenberger-Lindqvist', 'Aleksandra Wiśniewska-Kowalczyk', 'Siddharth Venkataraman Iyer', 'Jean-Baptiste Delacroix-Beaumont'];
+  const ini = n => n.split(/[\s-]+/).filter(Boolean).slice(0, 2).map(p => p[0].toUpperCase()).join('');
+  const nameAt = i => names[i % names.length] + (i >= names.length ? ' ' + (Math.floor(i / names.length) + 1) : '');
+  const mail = n => n.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ð/g, 'd').replace(/þ/g, 'th').replace(/[^a-z0-9]+/g, '.').replace(/^\.|\.$/g, '') + '@continuing-education.university.example';
+  const course = { ...D.course, title: 'UX Design Fundamentals for Product Teams Moving From Agency Work',
+    modules: D.course.modules.map((m, mi) => ({ ...m, title: m.title + [' and discovery interviews', ': information architecture and flows', ': components, states and accessibility', ' and handoff to engineering'][mi],
+      items: m.items.map(it => ({ ...it, title: it.title + (it.kind === 'lesson' ? ' with a worked example from a real product' : ' (individual, peer-reviewed, 4 to 8 pages)') })) })) };
+  const subs = Array.from({ length: 198 }, (_, i) => { const b = D.subs[i % D.subs.length]; const n = nameAt(i);
+    return { ...b, id: 's' + (i + 1), student: n, initials: ini(n), group: i % 2 ? 'Group B' : 'Group A',
+      assignment: i % 6 === 3 ? 'User interview plan and recruitment screener' : 'Wireframe review: enrolment, payment and first lesson flow' }; });
+  const catalogue = D.catalogue.map((c, i) => ({ ...c, title: c.title + [' for Product Teams Moving From Agency Work', ': From Interview Guide to Synthesis Board', ' at Scale, With Tokens and Governance', ' for Product Designers Who Prototype in Code', ': Journeys, Blueprints and Operations', ' and Inclusive Design Reviews', ' for Interfaces, Errors and Empty States', ' and Shared Libraries Across Teams'][i], owner: nameAt(i + 3) }));
+  const cohorts = D.cohorts.map((c, i) => ({ ...c, course: catalogue.find(x => c.course.startsWith(x.title.split(/ for | at |: | and /)[0])) ? c.course + ' for Product Teams Moving From Agency Work' : c.course, name: c.name + ' · Evening, Europe and Africa time zones' }));
+  const enrolments = Array.from({ length: 200 }, (_, i) => { const b = D.enrolments[i % D.enrolments.length]; const n = nameAt(i);
+    return { ...b, id: 'e' + (i + 1), student: n, initials: ini(n), email: mail(n), cohort: b.cohort.replace('UX Design Fundamentals', 'UX Design Fundamentals for Product Teams').replace('Service Design 101', 'Service Design 101: Journeys and Blueprints') + ' · Evening' }; });
+  const staff = D.staff.map((s, i) => ({ ...s, name: nameAt(i + 5), initials: ini(nameAt(i + 5)), email: mail(nameAt(i + 5)), scope: s.scope + ', plus the Evening cohorts in Europe and Africa time zones' }));
+  const audit = D.audit.map((a, i) => ({ ...a, who: nameAt(i + 5), what: a.what + ' · reason: agreed with the programme lead after the cohort review meeting' }));
+  const studentGrades = D.studentGrades.map(g => ({ ...g, title: g.title + ' (individual, peer-reviewed)', feedback: g.feedback ? g.feedback + ' Your goals are specific and each one maps to a question, which makes the plan easy to run. For the next round, add a screener with two disqualifying questions, plan a pilot session with a colleague, and write down how you will take notes so that synthesis takes one afternoon instead of three.' : '' }));
+  return { ...D, course, subs, catalogue, cohorts, enrolments, staff, audit, studentGrades,
+    people: { ...D.people, student: { ...D.people.student, name: 'María de los Ángeles Rodríguez Zapatero', initials: 'MR' } },
+    feedback: 'Strong flow from sign-up to first course, and the empty states are thought through: each one tells the student what happens next and offers one clear action. Two things to fix before v3. First, the enrolment screen hides the cohort dates until after payment, which is the moment students most need them; move the dates and the time zone to the course page. Second, the error on a failed upload says only "Something went wrong"; say what failed, whether the file was kept, and what to try next, for example a smaller PDF or a different browser.' };
+};
