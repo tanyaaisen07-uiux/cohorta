@@ -762,3 +762,44 @@ th.check{background:#F6F7FB}
 @media (max-width:720px){.hero{flex-wrap:wrap;padding:20px}.hero .btn{width:100%}.mod-lessons{padding-left:0}.mod-lesson .muted{display:none}}
 .qwrap.docked .who .linkbtn,.qwrap.docked .meta-2nd{max-width:min(220px,15vw)}
 .qwrap.docked td.c-act .btn{padding:0 10px}
+/* Queue summary: one quiet row, no cards of its own */
+.qsum{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:-8px 0 16px;color:var(--text-2)}
+.qm{display:inline-flex;align-items:center;gap:8px}
+.qm b{font-family:var(--font-brand);font-size:18px;font-weight:600;color:var(--ink)}
+.qm .qchip{width:28px;height:28px;border-radius:8px}
+.qdiv{width:1px;height:20px;background:var(--line-2)}
+.qstats{display:none}
+/* Quick review: AI suggestion, then the teacher's decision, then release */
+.qr-ai{background:#F1F2FF;border-radius:var(--r-md);padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.qr-ai .head{display:flex;align-items:center;gap:8px}
+.qr-ai .head svg{color:var(--cobalt);flex:none}
+.qr-ai.compact{gap:6px}
+.qr-ai .qr-rubric{background:none;border:0;padding:0;gap:6px}
+.qr-ai .qr-rubric .bar{background:var(--line-2)}
+.qr-big{font-size:20px}
+.qr-mid{font-weight:600;font-size:14px}
+.qr-mid small{font-size:12px;font-weight:400;color:var(--text-3)}
+.qr-dec{display:flex;flex-direction:column;gap:10px}
+.overline{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3)}
+.qr-acts{display:flex;gap:8px}
+.qr-acts .btn.primary{flex:1}
+.qr .field textarea{min-height:72px}
+.rsteps{list-style:none;margin:0;padding:0;display:flex;align-items:center;gap:8px;font-size:13px;flex-wrap:wrap}
+.rsteps li{display:flex;align-items:center;gap:8px}
+.rsteps li.now{font-weight:600}
+.rsteps li.locked{color:var(--text-3)}
+.rsteps .line{width:24px;height:1px;background:var(--line-2)}
+.sdot{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:600;flex:none}
+.sdot.now{background:var(--cobalt);color:#fff}
+.sdot.done{background:var(--s-graded);color:var(--ink)}
+.sdot.locked{background:var(--subtle);color:var(--text-3)}
+.qr-released{display:flex;align-items:center;gap:10px;background:var(--s-graded);border-radius:10px;padding:10px 8px 10px 14px;font-size:13px}
+.qr-released .grow{flex:1}
+.qr-foot .release-hint{font-size:12px}
+.qr-foot>.btn{width:100%}
+/* Student home: one side card with sections instead of three cards */
+.side-card{align-self:stretch;display:flex;flex-direction:column}
+.side-card section{padding:16px 0;border-top:1px solid var(--line)}
+.side-card section:first-child{padding-top:0;border-top:0}
+.side-card section:last-child{padding-bottom:0}
+.side-card h3{font-size:14px;font-weight:600;margin:0 0 10px}
