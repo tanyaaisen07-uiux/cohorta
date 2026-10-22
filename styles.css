@@ -13,7 +13,7 @@
   --fb-warning-bg:#FFF1C2; --fb-warning-border:#F0DE9C; --fb-error-bg:#FDE3E1; --fb-error-border:#F6C6C1; --fb-error-text:#B42318;
   --text-on-dark-2:#C9CBD6; --text-placeholder:#6B6E7B; --text-disabled:#62656F; --text-disabled-on-dark:#8E91A3; --icon-muted:#9A9DAB;
   --line-dashed:#C9C7BE; --line-on-dark:#2A2D3A; --ink-raised:#1C1F2C; --ink-pressed:#33364A; --cobalt-pressed:#131C8C;
-  --scrim:rgba(11,13,23,.2); --canvas-bg:#F3F3F0; --canvas-dot:#D6D4CB; --canvas-section:#ECEBE6;
+  --scrim-modal:rgba(11,13,23,.4); --scrim-panel:rgba(11,13,23,.2); --canvas-bg:#F3F3F0; --canvas-dot:#D6D4CB; --canvas-section:#ECEBE6;
   --canvas-link:#5A5E6E; --canvas-link-next:#C9CBD6; --canvas-link-problem:#FF6B3D; --canvas-link-selected:#2A3BFF; --canvas-note:#FFF1C2;
   --presence:#FF6B3D; --skel-base:#EFEEE9; --skel-shine:#F5F4F0;
 
@@ -157,7 +157,7 @@ h1,h2,h3,.big{text-wrap:balance}
 /* Toast and modal */
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 12px 10px 16px;border-radius:12px;display:flex;align-items:center;gap:14px;z-index:100;box-shadow:0 8px 24px rgba(11,13,23,.2)}
 .toast button{background:none;border:0;color:var(--haze);font-weight:600;cursor:pointer;min-height:32px}
-.scrim{position:fixed;inset:0;background:rgba(11,13,23,.4);z-index:90;display:grid;place-items:center;padding:16px}
+.scrim{position:fixed;inset:0;background:var(--scrim-modal);z-index:90;display:grid;place-items:center;padding:16px}
 .modal{background:var(--white);border-radius:var(--r-lg);width:min(520px,100%);padding:24px;display:flex;flex-direction:column;gap:14px}
 .modal h2{font-family:var(--font-brand);font-weight:600;letter-spacing:-.02em;font-size:24px;margin:0}
 .modal .foot{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}
@@ -348,7 +348,7 @@ tbody tr td{transition:background-color .15s ease}
 @keyframes toastIn{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
 @keyframes toastOut{from{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,4px)}}
 /* 2. Review panel: slides in once, content fades on next submission, slides out on close */
-.panel-scrim{background:rgba(11,13,23,.2);place-items:stretch}
+.panel-scrim{background:var(--scrim-panel);place-items:stretch}
 .panel-scrim.enter{animation:fadeIn var(--motion-panel-in) var(--ease-out)}
 .panel-scrim.leave{animation:fadeOut var(--motion-panel-out) var(--ease-in) forwards}
 .panel.enter{animation:panelIn var(--motion-panel-in) var(--ease-out)}
@@ -694,7 +694,7 @@ th.check{background:var(--surface-table-head)}
 .qr-head{display:flex;align-items:center;gap:12px}
 .qr-head .avatar.ill{width:48px;height:48px}
 .qr-who{flex:1;min-width:0}
-.qr-who h2{font-family:var(--font-brand);font-weight:600;letter-spacing:-.02em;font-size:20px;line-height:26px;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.qr-who h2{font-family:var(--font-brand);font-weight:600;letter-spacing:-.02em;font-size:20px;line-height:26px;margin:0;overflow-wrap:anywhere}
 .qr-who .small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .qr-nav{display:flex;gap:6px;align-self:flex-start}
 .qr-nav .iconbtn{border:1px solid var(--line-2);color:var(--text-2)}

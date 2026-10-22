@@ -70,10 +70,22 @@ The **Long data** state swaps the sample data for a stress set: 200 enrolments a
 - Long text that carries meaning (feedback, scope, audit entries) wraps instead of truncating.
 - At 1024 px secondary columns hide before anything truncates to a few letters.
 - At 390 px tables turn into stacked rows; wide reference tables scroll inside their card, never the page.
+- A student's name in the review header wraps in full on a phone instead of being cut.
+
+## Resizing rules
+
+Every Figma container says how it grows, so a longer label, a translation or an extra row does not break the layout. The Handoff page has the full table; the short version:
+
+- Buttons are instances of one component. Width hugs the label; only the main action on a phone fills the width. The icon is a component property, not a separate layer.
+- Text is Fill width and Auto height. There are no fixed text boxes.
+- Cards and lists hug their content. Clipping is kept only for scroll areas, the course map canvas, media and bottom sheets.
+- Two-column pages: the work area fills, the side column stays 372 px.
+- Label and value rows use Space between, not a large fixed gap. The sidebar fills the height and a growing spacer keeps the profile at the bottom.
+- The stress frame `SM01-L` shows the student home at 360 px with long course and assignment names, long dates and five Due next items: everything wraps and the cards grow.
 
 ## Design tokens
 
-Every colour, spacing and radius in Figma and in `styles.css` comes from a named token, and each token has one meaning. Semantic tokens cover feedback (info, success, warning, error), surface states (tint, hover, table head, highlight), text on dark, placeholder, muted icons, dashed lines, the scrim, skeletons, the course map and the collaborator's presence. Status colours are used only for status tags and status metrics, never borrowed for another meaning. Figma names map to CSS custom properties: `surface/tint` is `--surface-tint`, `feedback/error-bg` is `--fb-error-bg`.
+Every colour, spacing and radius in Figma and in `styles.css` comes from a named token, and each token has one meaning. Semantic tokens cover feedback (info, success, warning, error), surface states (tint, hover, table head, highlight), text on dark, placeholder, muted icons, dashed lines, two scrims (40% for a modal, 20% for a side panel), skeletons, the course map and the collaborator's presence. Status colours are used only for status tags and status metrics, never borrowed for another meaning. Figma names map to CSS custom properties: `surface/tint` is `--surface-tint`, `feedback/error-bg` is `--fb-error-bg`.
 
 ## Accessibility
 
