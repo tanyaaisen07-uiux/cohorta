@@ -148,7 +148,7 @@ window.DB = (function () {
    Used by the "Long data" demo state to check that nothing breaks with real content. */
 window.makeLongDB = function (D) {
   const names = ['Maximiliana Konstantinopoulou', 'Bartholomew Oyelaran-Whitfield', 'Anne-Sophie van der Westhuizen', 'Nguyễn Thị Minh Khai Hoàng',
-    'Christopher Alexander Montgomery III', 'Guðmundur Sigurðarson-Eriksen', 'María de los Ángeles Rodríguez Zapatero', 'Oluwaseun Adebayo-Okonkwo',
+    'Christopher Alexander Montgomery III', 'Gudmundur Sigurdarson-Eriksen', 'María de los Ángeles Rodríguez Zapatero', 'Oluwaseun Adebayo-Okonkwo',
     'Wolfgang Schwarzenberger-Lindqvist', 'Aleksandra Wiśniewska-Kowalczyk', 'Siddharth Venkataraman Iyer', 'Jean-Baptiste Delacroix-Beaumont'];
   const ini = n => n.split(/[\s-]+/).filter(Boolean).slice(0, 2).map(p => p[0].toUpperCase()).join('');
   const nameAt = i => names[i % names.length] + (i >= names.length ? ' ' + (Math.floor(i / names.length) + 1) : '');
