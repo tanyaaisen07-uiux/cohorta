@@ -29,7 +29,7 @@ Online schools run the same course for several cohorts at once. Students, instru
 
 | Role | Key flows |
 |---|---|
-| Student | Course home with the next step, lesson, locked lesson, assignment upload, grades |
+| Student | One finished flow: course home with the next step, lesson marked as done, assignment (choose a file, then submit), what happens next, grades with a grade the instructor released in the same session. Also the locked lesson |
 | Instructor | Grading queue with filters and bulk actions, quick review panel, full grading view with AI draft, course builder, assignment editor, roster |
 | Teaching assistant | The same grading tools scoped to Group A, in a simpler view: queue without the Group column, quick review over the queue, grading view, group roster. Work from other groups opens as No access, and a released grade is locked with a note that only the instructor can change it |
 | Admin | Overview, course review and publishing, cohort scheduling, enrolments with bulk pause and undo, users and roles with an audit log |
@@ -51,6 +51,16 @@ Motion appears only where it explains an action or a state: the review panel sli
 ## Visual layer
 
 The original white sidebar with the cobalt logo, content on a light canvas, and white cards with a barely visible shadow. People are drawn as illustrated, faceless avatars generated from their names, so long-data names get a stable drawing too. For instructors on screens 1400 px and wider the quick review is a column next to the grading queue: any row opens in one click and the queue is never dimmed. Below 1400 px, and always for a teaching assistant, it slides over the queue; on a phone review is a separate step. Release has three visible states: locked until a decision on the AI draft, ready with a preview of what the student will see, and released with a few seconds to undo.
+
+## Responsive experience across roles
+
+Cohorta is designed as a responsive LMS, adapting learning and teaching workflows to different screen sizes. Student learning is optimized for mobile, while complex grading and administration workflows prioritize desktop usability.
+
+- **Student, mobile first.** The whole flow works on a phone: next lesson, assignment, submission and the released grade. Every phone page keeps space above the bottom navigation, so the last card is never hidden.
+- **Instructor.** On a phone the queue and the review are separate steps with a clear way back; on a wide screen the review is a column next to the queue.
+- **Admin, desktop first.** Bulk work, tables and roles are built for a desktop. On a phone tables become stacked rows and nothing scrolls sideways.
+
+Checked at 360, 390 and 430 px for phones, 1024 for tablets and 1440 for desktop, including the long data, loading and error states.
 
 ## Long content
 
