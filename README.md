@@ -50,7 +50,7 @@ Motion appears only where it explains an action or a state: the review panel sli
 
 ## Visual layer
 
-A brand sidebar in deep cobalt, content on a rounded canvas, and white cards with a barely visible shadow. People are drawn as illustrated, faceless avatars generated from their names, so long-data names get a stable drawing too. On screens 1400 px and wider the quick review is a column next to the grading queue: any row opens in one click and the queue is never dimmed. Below 1400 px it slides over the queue, and on a phone review is a separate step.
+The original white sidebar with the cobalt logo, content on a light canvas, and white cards with a barely visible shadow. People are drawn as illustrated, faceless avatars generated from their names, so long-data names get a stable drawing too. On screens 1400 px and wider the quick review is a column next to the grading queue: any row opens in one click and the queue is never dimmed. Below 1400 px it slides over the queue, and on a phone review is a separate step.
 
 ## Long content
 

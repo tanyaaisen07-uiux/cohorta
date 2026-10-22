@@ -646,24 +646,10 @@ tbody tr.flash{animation:rowFlash var(--motion-row) var(--ease-out)}
 }
 
 /* ===== Showcase visual layer (Figma: SC01, SC03, SC12) =====
-   Brand sidebar, a rounded canvas surface for content, white cards with a barely visible shadow. */
+   Original white sidebar; content on a light canvas, white cards with a barely visible shadow. */
 :root{--navy:#131C8C;--canvas:#EEF0F8;--on-brand-muted:var(--haze);--r-xl:20px;--r-2xl:28px;--elev:0 1px 2px rgba(11,13,23,.03),0 4px 12px rgba(11,13,23,.04)}
-.shell{background:var(--navy)}
-.main{background:var(--canvas);border-radius:var(--r-2xl);margin:12px 12px 12px 0;min-height:calc(100vh - 44px - 24px)}
-.side{background:transparent;border-right:0;color:#fff;padding:16px 16px 12px 20px}
-.side .brand{color:#fff}
-.side .brand svg path,.side .brand svg rect,.side .brand svg g{fill:#fff}
-.nav-label{color:var(--on-brand-muted)}
-.nav{gap:4px}
-.nav a{color:#fff;padding:11px 12px;border-radius:var(--r-md)}
-.nav a svg{color:var(--on-brand-muted)}
-.nav a:hover{background:rgba(255,255,255,.08);color:#fff}
-.nav a[aria-current="page"]{background:#fff;color:var(--navy);font-weight:600}
-.nav a[aria-current="page"] svg{color:var(--navy)}
-.nav a .count{background:#fff;color:var(--navy)}
-.nav a[aria-current="page"] .count{background:var(--cobalt);color:#fff}
-.me{border-top:0;background:rgba(255,255,255,.08);border-radius:var(--r-lg);padding:12px;color:#fff}
-.me .muted{color:var(--on-brand-muted)}
+.shell{background:var(--canvas)}
+.main{background:var(--canvas)}
 .card,.tablebox{border-color:transparent;border-radius:var(--r-xl);box-shadow:var(--elev)}
 th{background:#F6F7FB}
 .cta-card{background:var(--cobalt);border-color:var(--cobalt);color:#fff}
@@ -676,11 +662,6 @@ th{background:#F6F7FB}
 .me .avatar{width:36px;height:36px}
 .who .avatar.ill{width:32px;height:32px}
 .presence .avatar.ill{border:2px solid var(--canvas)}
-@media (min-width:721px) and (max-width:1024px){.side{padding:16px 10px}.nav a{justify-content:center}}
-@media (max-width:720px){
-  .shell{background:var(--canvas)}
-  .main{margin:0;border-radius:0;min-height:0}
-}
 /* Grading queue: summary cards and the quick review column */
 .qstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:20px}
 .qstat{display:flex;align-items:center;gap:16px;padding:16px 20px}
