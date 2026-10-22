@@ -169,7 +169,7 @@
   const skeleton = () => `<div class="grid g-4" style="margin-bottom:16px">${'<div class="card"><div class="skel" style="height:14px;width:60%"></div><div class="skel" style="height:30px;width:40%;margin-top:12px"></div></div>'.repeat(4)}</div>
     <div class="tablebox" style="padding:12px" aria-busy="true" aria-label="Loading">${'<div style="display:flex;gap:16px;padding:12px 4px"><div class="skel" style="width:28px;height:28px;border-radius:50%"></div><div class="skel" style="height:14px;flex:2;margin-top:7px"></div><div class="skel" style="height:14px;flex:1;margin-top:7px"></div><div class="skel" style="height:14px;flex:1;margin-top:7px"></div></div>'.repeat(8)}</div>`;
   const errorBanner = (what) => `<div class="banner error" role="alert">${ic('alert', 20)}<div class="grow"><b>We couldn't load ${what}.</b>Check your connection and try again. Your last changes are saved.</div><button class="btn sm" data-act="demo" data-v="normal">Try again</button></div>`;
-  const denied = (what, who, alt) => `<div class="denied card"><div class="lock" style="color:#fff">${ic('lock', 24)}</div><h2 style="font-family:var(--font-brand);font-weight:600;letter-spacing:-.02em;margin:0 0 8px">You can't open ${what}</h2>
+  const denied = (what, who, alt) => `<div class="denied card"><div class="lock" style="color:var(--white)">${ic('lock', 24)}</div><h2 style="font-family:var(--font-brand);font-weight:600;letter-spacing:-.02em;margin:0 0 8px">You can't open ${what}</h2>
     <p class="muted" style="margin:0 0 16px">${who}</p>${alt}</div>`;
   function guard(cfg, render) {
     if (S.demo === 'loading') return head(cfg.title, cfg.sub) + (S.role === 'student' ? studentSkeleton() : skeleton());
@@ -239,7 +239,7 @@
       const body = rows.map(r => `<tr class="${S.sel.has(r.id) ? 'sel' : ''}${S.flash.has(r.id) ? ' flash' : ''}${cur === r.id ? ' cur' : ''}"><td class="check c-check" ${pad}><label class="hit"><input type="checkbox" aria-label="Select ${esc(r.student)}" data-act="sel" data-v="${r.id}" ${S.sel.has(r.id) ? 'checked' : ''}></label></td>
         <td class="c-student" ${pad}><div class="who">${av(r.initials, r.student)}<div style="min-width:0"><button class="linkbtn" data-act="panel" data-v="grade:${r.id}" title="${esc(r.student)}">${esc(r.student)}</button><div class="meta-2nd">${myGroup() ? '' : r.group + ' · '}${r.submitted} · ${esc(r.assignment)}</div></div></div></td>
         <td class="c-2nd" ${pad}>${trunc(r.assignment, 260)}</td>${myGroup() ? '' : `<td ${pad} class="muted c-2nd">${r.group}</td>`}<td ${pad} class="num c-2nd">${r.submitted}</td><td class="c-status" ${pad}>${tag(subLabel(r.status))}</td>
-        <td ${pad} class="num c-ai" data-label="AI">${r.ai != null ? `<span class="mono" style="background:#F1F2FF;padding:2px 6px;border-radius:6px">${r.ai}</span>` : '<span class="muted">—</span>'}</td>
+        <td ${pad} class="num c-ai" data-label="AI">${r.ai != null ? `<span class="mono" style="background:var(--surface-tint);padding:2px 6px;border-radius:var(--r-sm)">${r.ai}</span>` : '<span class="muted">—</span>'}</td>
         <td ${pad} class="num c-final" data-label="Final" style="font-weight:600">${r.final != null ? r.final : '<span class="muted" style="font-weight:400">—</span>'}</td>
         <td ${pad} class="c-act" style="text-align:right">${dock ? `<button class="iconbtn rowgo" data-act="panel" data-v="grade:${r.id}" aria-label="${r.status === 'graded' ? 'View' : 'Review'} ${esc(r.student)}">${ic('chev', 18)}</button>` : `<button class="btn sm" data-act="panel" data-v="grade:${r.id}">${r.status === 'graded' ? 'View' : 'Review'}</button>`}</td></tr>`).join('');
       const selRows = rows.filter(r => S.sel.has(r.id));
@@ -248,7 +248,7 @@
       const bulk = S.sel.size ? `<div class="bulkbar${bulkEnter ? ' enter' : ''}" role="region" aria-label="Bulk actions"><b>${S.sel.size} selected</b><span class="spacer" style="flex:1"></span>
         ${myGroup() ? '' : '<button class="btn sm" data-act="bulk" data-v="assign">Assign to TA</button>'}<button class="btn sm" data-act="bulk" data-v="return">Return for revision</button>
         ${canRelease ? '<button class="btn sm primary" data-act="bulk" data-v="release">Release grades</button>' : lockBtn('Release grades', 'Release only work you have reviewed. Open each AI draft and check the score first.', 'btn sm')}
-        <button class="iconbtn" style="color:#C9CBD6" aria-label="Clear selection" data-act="clearSel">${ic('x')}</button></div>` : '';
+        <button class="iconbtn" style="color:var(--text-on-dark-2)" aria-label="Clear selection" data-act="clearSel">${ic('x')}</button></div>` : '';
       const metric = (icon, cls, val, label) => `<span class="qm"><span class="qchip ${cls}">${ic(icon, 16)}</span><b class="num">${val}</b>${label}</span>`;
       const stats = `<div class="qsum" role="group" aria-label="Summary">${metric('inbox', 'qc-haze', toReview(), 'to review')}<span class="qdiv"></span>${metric('sparkle', 'qc-ai', counts('ai'), '<span class="hide-m">AI drafts waiting for a decision</span><span class="only-m">AI drafts</span>')}<span class="qdiv"></span>${metric('clock', 'qc-late', counts('late'), 'late')}<span class="spacer" style="flex:1"></span><span class="muted small hide-m">${myGroup() ? `You review ${myGroup()} only · Group B is Ben Okafor’s` : 'Wireframe review is due Oct 2'}</span></div>`;
       const docked = dock && cur;
@@ -540,7 +540,7 @@
     const tools = [['select', 'cursor', 'Select (V)'], ['hand', 'hand', 'Pan (H)'], ['connect', 'connect', 'Link two items (C)'], ['note', 'note', 'Add a note (N)']];
     return `<div class="mapvp tool-${st.tool}" data-mapvp tabindex="0" aria-label="Course map. Use the list view for a text version.">
       <div class="mworld" style="transform:translate(${st.x}px,${st.y}px) scale(${st.k});width:${L.W}px;height:${L.H}px">
-        ${boxes}<svg class="medges" width="${L.W}" height="${L.H}" aria-hidden="true"><defs>${[['g', '#9A9DAB'], ['b', '#2A3BFF'], ['c', '#FF6B3D']].map(([k, c]) => `<marker id="mk-${k}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1,1 L9,5 L1,9" fill="none" stroke="${c}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>`).join('')}</defs>${nextArrows}${edges}</svg>
+        ${boxes}<svg class="medges" width="${L.W}" height="${L.H}" aria-hidden="true"><defs>${[['g', 'var(--canvas-link)'], ['b', 'var(--canvas-link-selected)'], ['c', 'var(--canvas-link-problem)']].map(([k, c]) => `<marker id="mk-${k}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1,1 L9,5 L1,9" fill="none" style="stroke:${c}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>`).join('')}</defs>${nextArrows}${edges}</svg>
         ${cards}${notes}${sofia}</div>
       ${hint ? `<div class="mhint" role="status">${hint}${st.pick || st.from ? '<button data-act="mapCancel">Cancel</button>' : ''}</div>` : '<div class="mhint touch-only">Pinch to zoom · drag to pan</div>'}
       <div class="mlegend"><div><i class="lg-b"></i>Opens after</div><div><i class="lg-g"></i>Next in module</div><div><i class="lg-c"></i>Opens too early</div></div>
@@ -681,7 +681,7 @@
     const chips = ['all', 'Active', 'Invited', 'Paused', 'Dropped', 'Completed'].map(v => `<button class="chip" data-act="eFilter" data-v="${v}" aria-pressed="${S.eFilter === v}">${v === 'all' ? 'All ' + D.enrolments.length : v + ' ' + D.enrolments.filter(e => e.state === v).length}</button>`).join('');
     const allSel = rows.length && rows.every(r => S.eSel.has(r.id));
     const eEnter = S.eSel.size && !S.eBulkShown; S.eBulkShown = !!S.eSel.size;
-    const bulk = S.eSel.size ? `<div class="bulkbar${eEnter ? ' enter' : ''}" role="region" aria-label="Bulk actions"><b>${S.eSel.size} selected</b><span style="flex:1"></span><button class="btn sm" data-act="ebulk" data-v="Paused">Pause</button><button class="btn sm" data-act="ebulk" data-v="move">Move to cohort</button><button class="btn sm" data-act="ebulk" data-v="Dropped">Drop</button><button class="iconbtn" style="color:#C9CBD6" aria-label="Clear selection" data-act="eClear">${ic('x')}</button></div>` : '';
+    const bulk = S.eSel.size ? `<div class="bulkbar${eEnter ? ' enter' : ''}" role="region" aria-label="Bulk actions"><b>${S.eSel.size} selected</b><span style="flex:1"></span><button class="btn sm" data-act="ebulk" data-v="Paused">Pause</button><button class="btn sm" data-act="ebulk" data-v="move">Move to cohort</button><button class="btn sm" data-act="ebulk" data-v="Dropped">Drop</button><button class="iconbtn" style="color:var(--text-on-dark-2)" aria-label="Clear selection" data-act="eClear">${ic('x')}</button></div>` : '';
     return guard({ title: 'Enrolments', errWhat: 'enrolments', deniedWhat: 'Enrolments', deniedWho: 'Only admins can enrol, pause or drop students. Instructors see their own cohorts read-only in the roster.', deniedAlt: '<a class="btn" href="#/instructor/roster" data-act="role" data-v="instructor">Open my roster</a>',
       empty: emptyState('No students enrolled', 'Import a CSV or invite students by email. Autumn 2026 starts Oct 20.', '<button class="btn primary" data-act="modal" data-v="import">Import CSV</button>', 'users') }, () => `
       ${head('Enrolments', `${233 + D.enrolments.length} students in ${D.cohorts.length} cohorts`, '<button class="btn" data-act="modal" data-v="import">' + ic('upload', 16) + 'Import CSV</button><button class="btn primary" data-act="modal" data-v="enrol">' + ic('plus', 16) + 'Enrol students</button>')}
@@ -707,7 +707,7 @@
   const allItems = () => D.course.modules.flatMap((m, mi) => m.items.map((it, ii) => ({ ...it, module: m.title, mi })));
   function steps(current) {
     const items = allItems(); const cur = items.findIndex(i => i.title === current);
-    return `<div class="steps">${items.map((it, i) => `<div class="step ${i < cur ? 'done' : i === cur ? 'now' : i > cur + 1 ? 'lock' : ''}"><span class="dot">${i < cur ? `<span style="color:#fff">${ic('check', 12, 3)}</span>` : i > cur + 1 ? ic('lock', 11, 2) : ''}</span><span style="font-size:13px">${esc(it.title)}</span></div>`).join('')}</div>`;
+    return `<div class="steps">${items.map((it, i) => `<div class="step ${i < cur ? 'done' : i === cur ? 'now' : i > cur + 1 ? 'lock' : ''}"><span class="dot">${i < cur ? `<span style="color:var(--white)">${ic('check', 12, 3)}</span>` : i > cur + 1 ? ic('lock', 11, 2) : ''}</span><span style="font-size:13px">${esc(it.title)}</span></div>`).join('')}</div>`;
   }
   function sHome() {
     // The home follows the student's own progress in this session: finishing a lesson moves the next step.
@@ -742,7 +742,7 @@
     return guard({ title: 'Working with components', errWhat: 'this lesson', deniedWhat: 'this lesson', deniedWho: 'Your enrolment is paused, so lessons are read-only. Contact your school to continue.',
       empty: emptyState('This lesson has no content yet', 'Your instructor is still preparing it. Try another lesson in this module.', '<a class="btn" href="#/student/home">Back to course</a>', 'play') }, () => locked ? `
       ${head('Final case study', 'Module 4 · Delivery', '', '<a href="#/student/home">UX Design Fundamentals</a> / Module 4')}
-      <div class="grid g-main" style="align-items:start"><div class="locked-card"><div class="denied" style="margin:0;max-width:none;text-align:left"><div class="lock" style="margin:0;color:#fff">${ic('lock', 24)}</div></div>
+      <div class="grid g-main" style="align-items:start"><div class="locked-card"><div class="denied" style="margin:0;max-width:none;text-align:left"><div class="lock" style="margin:0;color:var(--white)">${ic('lock', 24)}</div></div>
         <div><h2 style="font-family:var(--font-brand);font-weight:600;letter-spacing:-.02em;margin:0 0 6px">Opens on Oct 14, or after you finish Lesson 4.</h2><p class="muted" style="margin:0 0 14px">You have 2 lessons and 1 assignment left in Module 3.</p><a class="btn primary" href="#/student/lesson">Go to your current lesson</a></div></div>
         <div class="card">${steps('Working with components')}</div></div>` : `
       ${head('Working with components', `Module 3 · Interface · lesson 2 of 3 · 17 min${S.lessonDone ? ' · ' + tag('Completed') : ''}`, '<a class="btn hide-m" href="#/student/lesson/locked">Next: locked lesson</a>', '<a href="#/student/home">UX Design Fundamentals</a> / Module 3')}
