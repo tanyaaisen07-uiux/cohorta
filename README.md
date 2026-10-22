@@ -71,6 +71,10 @@ The **Long data** state swaps the sample data for a stress set: 200 enrolments a
 - At 1024 px secondary columns hide before anything truncates to a few letters.
 - At 390 px tables turn into stacked rows; wide reference tables scroll inside their card, never the page.
 
+## Design tokens
+
+Every colour, spacing and radius in Figma and in `styles.css` comes from a named token, and each token has one meaning. Semantic tokens cover feedback (info, success, warning, error), surface states (tint, hover, table head, highlight), text on dark, placeholder, muted icons, dashed lines, the scrim, skeletons, the course map and the collaborator's presence. Status colours are used only for status tags and status metrics, never borrowed for another meaning. Figma names map to CSS custom properties: `surface/tint` is `--surface-tint`, `feedback/error-bg` is `--fb-error-bg`.
+
 ## Accessibility
 
 Text and status tags meet WCAG AA (status tags 12.6 to 17.2:1, primary button 6.6:1, secondary text 6.2:1). Focus states are visible, hit areas are at least 32 px, and motion respects `prefers-reduced-motion`.
