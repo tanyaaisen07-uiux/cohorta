@@ -19,7 +19,7 @@ The concepts and workflows represent design hypotheses, not findings from primar
 
 ![Cohorta cover](case/cohorta-01.png)
 
-All 12 case images are in [`/case`](case).
+All 14 case images are in [`/case`](case).
 
 ## The problem
 
