@@ -803,3 +803,5 @@ th.check{background:#F6F7FB}
 .side-card section:first-child{padding-top:0;border-top:0}
 .side-card section:last-child{padding-bottom:0}
 .side-card h3{font-size:14px;font-weight:600;margin:0 0 10px}
+.qwrap.docked .rowgo{color:var(--text-2)}
+.qwrap.docked tr.cur .rowgo{color:var(--cobalt)}

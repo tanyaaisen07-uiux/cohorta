@@ -226,14 +226,14 @@
       const allSel = rows.length && rows.every(r => S.sel.has(r.id));
       const pad = S.dense ? 'style="padding-top:5px;padding-bottom:5px"' : '';
       const dock = dockOn();
-      if (dock && !S.panel && !S.dockClosed && rows.length) S.panel = 'grade:' + (rows.find(r => ['ai', 'late', 'submitted'].includes(r.status)) || rows[0]).id;
+      if (dock && !S.panel && !S.dockClosed && rows.length) S.panel = 'grade:' + (rows.find(r => ['ai', 'late', 'submitted'].includes(stOf(r))) || rows[0]).id;
       const cur = S.panel && S.panel.startsWith('grade:') ? S.panel.slice(6) : null;
       const body = rows.map(r => `<tr class="${S.sel.has(r.id) ? 'sel' : ''}${S.flash.has(r.id) ? ' flash' : ''}${cur === r.id ? ' cur' : ''}"><td class="check c-check" ${pad}><label class="hit"><input type="checkbox" aria-label="Select ${esc(r.student)}" data-act="sel" data-v="${r.id}" ${S.sel.has(r.id) ? 'checked' : ''}></label></td>
         <td class="c-student" ${pad}><div class="who">${av(r.initials, r.student)}<div style="min-width:0"><button class="linkbtn" data-act="panel" data-v="grade:${r.id}" title="${esc(r.student)}">${esc(r.student)}</button><div class="meta-2nd">${r.group} · ${r.submitted} · ${esc(r.assignment)}</div></div></div></td>
         <td class="c-2nd" ${pad}>${trunc(r.assignment, 260)}</td><td ${pad} class="muted c-2nd">${r.group}</td><td ${pad} class="num c-2nd">${r.submitted}</td><td class="c-status" ${pad}>${tag(subLabel(r.status))}</td>
         <td ${pad} class="num c-ai" data-label="AI">${r.ai != null ? `<span class="mono" style="background:#F1F2FF;padding:2px 6px;border-radius:6px">${r.ai}</span>` : '<span class="muted">—</span>'}</td>
         <td ${pad} class="num c-final" data-label="Final" style="font-weight:600">${r.final != null ? r.final : '<span class="muted" style="font-weight:400">—</span>'}</td>
-        <td ${pad} class="c-act" style="text-align:right"><button class="btn sm" data-act="panel" data-v="grade:${r.id}">${r.status === 'graded' ? 'View' : 'Review'}</button></td></tr>`).join('');
+        <td ${pad} class="c-act" style="text-align:right">${dock ? `<button class="iconbtn rowgo" data-act="panel" data-v="grade:${r.id}" aria-label="${r.status === 'graded' ? 'View' : 'Review'} ${esc(r.student)}">${ic('chev', 18)}</button>` : `<button class="btn sm" data-act="panel" data-v="grade:${r.id}">${r.status === 'graded' ? 'View' : 'Review'}</button>`}</td></tr>`).join('');
       const selRows = rows.filter(r => S.sel.has(r.id));
       const canRelease = selRows.length && selRows.every(r => readyToRelease(D.subs.find(x => x.id === r.id)));
       const bulkEnter = S.sel.size && !S.bulkShown; S.bulkShown = !!S.sel.size;
@@ -766,7 +766,7 @@
     const dot = (k, n) => `<span class="sdot ${k}">${k === 'done' ? ic('check', 12, 2.4) : k === 'locked' ? ic('lock', 11, 2.2) : n}</span>`;
     return `<ol class="rsteps" aria-label="Release steps"><li class="${s1[0]}">${dot(s1[0], 1)}${s1[1]}</li><li class="line" aria-hidden="true"></li><li class="${s2[0]}">${dot(s2[0], 2)}${s2[1]}${s2[0] === 'locked' ? '<span class="sr"> (locked until step 1 is done)</span>' : ''}</li></ol>`; };
   function gradeBody(id) {
-    const s = D.subs.find(x => x.id === id); const st = aiState(s); const L = mySubs(); const i = L.indexOf(s);
+    const s = D.subs.find(x => x.id === id); const st = aiState(s); const F = filteredSubs().map(r => D.subs.find(x => x.id === r.id)); const L = F.includes(s) ? F : mySubs(); const i = L.indexOf(s);
     const p2 = L[(i - 1 + L.length) % L.length].id, n2 = L[(i + 1) % L.length].id; const done = stOf(s) === 'graded'; const first = esc(s.student.split(' ')[0]);
     const nav = `<div class="qr-nav"><span class="muted small">${i + 1} / ${L.length}</span><button class="iconbtn sm" data-act="panel" data-v="grade:${p2}" aria-label="Previous submission">${ic('up', 16)}</button><button class="iconbtn sm" data-act="panel" data-v="grade:${n2}" aria-label="Next submission">${ic('down', 16)}</button><button class="iconbtn sm" data-act="closeAll" aria-label="Close">${ic('x', 16)}</button></div>`;
     const headHtml = `<div class="qr-head">${av(s.initials, s.student)}<div class="qr-who"><h2 title="${esc(s.student)}">${esc(s.student)}</h2><div class="muted small">${s.group} · ${s.submitted} · ${esc(s.assignment)}</div></div>${nav}</div>`;
