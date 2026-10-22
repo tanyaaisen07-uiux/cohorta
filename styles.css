@@ -396,6 +396,7 @@ tbody tr.flash{animation:rowFlash var(--motion-row) var(--ease-out)}
 @media (max-width:720px){.rtable .who .linkbtn,.rtable .who > div > b{white-space:normal;max-width:none}}
 .trunc{max-width:min(var(--tw,240px),17vw)}
 .who .linkbtn,.who > b,.who > div > b{max-width:min(240px,15vw)}
+.card:not(.tablebox) .who > div > b,.side-card .who > div > b{max-width:none}
 @media (max-width:720px){.rtable .trunc{max-width:100%}.rtable .who .linkbtn,.rtable .who > div > b{max-width:none}}
 /* Secondary numbers in wide admin tables give way first on tablets */
 @media (max-width:1100px){.c-wide{display:none}}
@@ -791,3 +792,58 @@ th.check{background:#F6F7FB}
 .qfilters .chips{display:flex;flex-wrap:wrap;gap:8px;flex:0 1 auto;min-width:0}
 .qfilters .select{width:auto}
 @media (max-width:720px){.qfilters .select{width:100%}}
+/* Student flow: lesson done, file ready, submitted, released grade */
+.lesson-acts{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
+.done-card,.submitted-card{display:flex;flex-direction:column;gap:14px}
+.done-head{display:flex;align-items:center;gap:12px}
+.done-head > div{flex:1;min-width:0}
+.ok-dot{width:36px;height:36px;border-radius:50%;background:var(--s-graded);display:grid;place-items:center;flex:none;color:var(--ink)}
+.next-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-lg);color:var(--ink);background:var(--white)}
+.next-row:hover{border-color:var(--line-2);color:var(--ink)}
+.next-row .grow{display:flex;flex-direction:column;gap:2px;min-width:0}
+.next-row > svg{color:var(--text-3);flex:none}
+.btn.block{display:flex;width:100%;justify-content:center}
+.qc-white{background:var(--white)}
+.file-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--r-lg);background:var(--subtle);margin:12px 0}
+.file-row .grow{min-width:0}
+.file-row b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.tl li{display:flex;gap:12px;align-items:flex-start}
+.tl li > div b{color:var(--text-2)}
+.tl li.done > div b{color:var(--ink)}
+.tl-dot{width:28px;height:28px;border-radius:50%;background:var(--subtle);display:grid;place-items:center;flex:none;font-size:12px;font-weight:600;color:var(--text-2)}
+.tl li.done .tl-dot{background:var(--s-graded);color:var(--ink)}
+.acts2{display:flex;gap:8px}
+.acts2 > *{flex:1;justify-content:center}
+.grade-card{display:flex;flex-direction:column;gap:12px}
+.gc-head{display:flex;align-items:flex-start;gap:8px}
+.gc-head .grow{min-width:0}
+.gc-score{font-family:var(--font-brand);font-weight:600;font-size:32px;line-height:40px;letter-spacing:-.02em}
+.gc-score small{font-size:13px;color:var(--text-3);font-weight:400;letter-spacing:0}
+.gc-rubric{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--text-2)}
+.gc-rubric > div{display:flex;justify-content:space-between;gap:8px}
+.gc-rubric .mono{color:var(--ink)}
+.new-pill{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--cobalt);padding:3px 8px;border-radius:999px;background:var(--s-submitted)}
+.demo-hint{align-self:flex-start;color:var(--cobalt)}
+.mod-lesson .ml-text{flex:1;min-width:0;display:flex;align-items:baseline;gap:12px}
+.mod-lesson .ml-title{flex:1;min-width:0}
+.sk-hero{margin-bottom:16px}
+a.row{color:inherit}
+@media (max-width:720px){
+  .mod-lesson .ml-text{flex-direction:column;align-items:flex-start;gap:2px}
+
+}
+/* Phone: review is a separate step with a clear way back; the queue summary turns into pills */
+.qr-back{display:none}
+@media (max-width:720px){
+  .qr-back{display:inline-flex;align-self:flex-start;margin:-6px 0 8px -10px;padding:0 10px}
+  .qr .qr-nav [data-act="closeAll"]{display:none}
+  .qsum{gap:8px;margin:0 0 14px}
+  .qsum .qdiv{display:none}
+  .qm{background:var(--white);border-radius:999px;padding:4px 12px 4px 4px;gap:6px;font-size:13px}
+  .qm b{font-size:14px}
+  .qm .qchip{width:24px;height:24px;border-radius:50%}
+  .qfilters .select{width:auto;margin-left:auto}
+}
+.only-m{display:none}
+@media (max-width:720px){.only-m{display:inline}}

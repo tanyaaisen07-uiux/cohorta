@@ -13,7 +13,7 @@
     sel: new Set(), qStatus: 'all', q: '', sortDir: 'desc', qSort: 'priority', dense: false,
     eSel: new Set(), eFilter: 'all', cFilter: 'all',
     toast: null, modal: null, panel: null,
-    ai: {}, done: new Set(), ret: new Set(), studentSubmitted: false, order: null, anim: false, focus: null,
+    ai: {}, done: new Set(), ret: new Set(), studentSubmitted: false, studentFile: false, lessonDone: false, order: null, anim: false, focus: null,
     swap: false, flash: new Set(), bulkShown: false, eBulkShown: false,
     lessons: {}, links: null, map: null, sheet: false
   };
@@ -28,7 +28,7 @@
     S.longData = on;
     if (on) { DB_LONG = DB_LONG || window.makeLongDB(DB_BASE); Object.assign(D, DB_LONG); }
     else { Object.assign(D, DB_BASE); delete D.feedback; }
-    S.order = null; S.lessons = {}; S.links = null; S.map = null; S.ai = {}; S.done = new Set(); S.ret = new Set(); S.sel.clear(); S.eSel.clear(); S.flash = new Set(); S.panel = null;
+    S.order = null; S.lessons = {}; S.links = null; S.map = null; S.ai = {}; S.done = new Set(); S.ret = new Set(); S.lessonDone = false; S.studentFile = false; S.studentSubmitted = false; S.sel.clear(); S.eSel.clear(); S.flash = new Set(); S.panel = null;
   }
 
   /* ---------- icons (stroke, 18px) ---------- */
@@ -165,15 +165,16 @@
   /* ---------- shared states ---------- */
   const head = (title, sub = '', actions = '', crumbs = '') => `<div class="page-head"><div>${crumbs ? `<div class="crumbs">${crumbs}</div>` : ''}<h1>${title}</h1>${sub ? `<div class="sub">${sub}</div>` : ''}</div>${actions ? `<div class="actions">${actions}</div>` : ''}</div>`;
   const emptyState = (title, text, action = '', icon = 'inbox') => `<div class="card empty"><div class="ico">${ic(icon, 22)}</div><h3>${title}</h3><p>${text}</p>${action}</div>`;
+  const studentSkeleton = () => `<div class="card sk-hero"><div class="skel" style="width:48px;height:48px;border-radius:12px"></div><div class="skel" style="height:12px;width:40%;margin-top:14px"></div><div class="skel" style="height:22px;width:70%;margin-top:10px"></div><div class="skel" style="height:44px;width:100%;margin-top:16px;border-radius:12px"></div></div><div class="card">${'<div style="display:flex;gap:12px;align-items:center;margin:10px 0"><div class="skel" style="width:36px;height:36px;border-radius:12px"></div><div style="flex:1"><div class="skel" style="height:12px;width:55%"></div><div class="skel" style="height:10px;width:35%;margin-top:8px"></div></div></div>'.repeat(4)}</div>`;
   const skeleton = () => `<div class="grid g-4" style="margin-bottom:16px">${'<div class="card"><div class="skel" style="height:14px;width:60%"></div><div class="skel" style="height:30px;width:40%;margin-top:12px"></div></div>'.repeat(4)}</div>
     <div class="tablebox" style="padding:12px" aria-busy="true" aria-label="Loading">${'<div style="display:flex;gap:16px;padding:12px 4px"><div class="skel" style="width:28px;height:28px;border-radius:50%"></div><div class="skel" style="height:14px;flex:2;margin-top:7px"></div><div class="skel" style="height:14px;flex:1;margin-top:7px"></div><div class="skel" style="height:14px;flex:1;margin-top:7px"></div></div>'.repeat(8)}</div>`;
   const errorBanner = (what) => `<div class="banner error" role="alert">${ic('alert', 20)}<div class="grow"><b>We couldn't load ${what}.</b>Check your connection and try again. Your last changes are saved.</div><button class="btn sm" data-act="demo" data-v="normal">Try again</button></div>`;
   const denied = (what, who, alt) => `<div class="denied card"><div class="lock" style="color:#fff">${ic('lock', 24)}</div><h2 style="font-family:var(--font-brand);font-weight:600;letter-spacing:-.02em;margin:0 0 8px">You can't open ${what}</h2>
     <p class="muted" style="margin:0 0 16px">${who}</p>${alt}</div>`;
   function guard(cfg, render) {
-    if (S.demo === 'loading') return head(cfg.title, cfg.sub) + skeleton();
+    if (S.demo === 'loading') return head(cfg.title, cfg.sub) + (S.role === 'student' ? studentSkeleton() : skeleton());
     if (S.demo === 'denied') return head(cfg.title) + denied(cfg.deniedWhat, cfg.deniedWho, cfg.deniedAlt || '');
-    if (S.demo === 'error') return head(cfg.title, cfg.sub) + errorBanner(cfg.errWhat) + emptyState('Nothing to show yet', 'This page will fill in as soon as the data loads.', '', 'alert');
+    if (S.demo === 'error') return head(cfg.title, cfg.sub) + errorBanner(cfg.errWhat);
     if (S.demo === 'empty') return cfg.empty.startsWith('<div class="page-head"') ? cfg.empty : head(cfg.title, cfg.sub) + cfg.empty;
     return render();
   }
@@ -249,7 +250,7 @@
         ${canRelease ? '<button class="btn sm primary" data-act="bulk" data-v="release">Release grades</button>' : lockBtn('Release grades', 'Release only work you have reviewed. Open each AI draft and check the score first.', 'btn sm')}
         <button class="iconbtn" style="color:#C9CBD6" aria-label="Clear selection" data-act="clearSel">${ic('x')}</button></div>` : '';
       const metric = (icon, cls, val, label) => `<span class="qm"><span class="qchip ${cls}">${ic(icon, 16)}</span><b class="num">${val}</b>${label}</span>`;
-      const stats = `<div class="qsum" role="group" aria-label="Summary">${metric('inbox', 'qc-haze', toReview(), 'to review')}<span class="qdiv"></span>${metric('sparkle', 'qc-ai', counts('ai'), 'AI drafts waiting for a decision')}<span class="qdiv"></span>${metric('clock', 'qc-late', counts('late'), 'late')}<span class="spacer" style="flex:1"></span><span class="muted small hide-m">${myGroup() ? `You review ${myGroup()} only · Group B is Ben Okafor’s` : 'Wireframe review is due Oct 2'}</span></div>`;
+      const stats = `<div class="qsum" role="group" aria-label="Summary">${metric('inbox', 'qc-haze', toReview(), 'to review')}<span class="qdiv"></span>${metric('sparkle', 'qc-ai', counts('ai'), '<span class="hide-m">AI drafts waiting for a decision</span><span class="only-m">AI drafts</span>')}<span class="qdiv"></span>${metric('clock', 'qc-late', counts('late'), 'late')}<span class="spacer" style="flex:1"></span><span class="muted small hide-m">${myGroup() ? `You review ${myGroup()} only · Group B is Ben Okafor’s` : 'Wireframe review is due Oct 2'}</span></div>`;
       const docked = dock && cur;
       return `${head('Grading queue', `UX Design Fundamentals · Spring 2026${myGroup() ? ' · ' + myGroup() : ''}`, '<button class="btn" data-act="dense">' + (S.dense ? 'Comfortable rows' : 'Compact rows') + '</button>')}${stats}
         ${myGroup() ? `<p class="sr">You review ${myGroup()} only. Group B belongs to Ben Okafor. Released grades can be changed by the instructor, Maria Lopez.</p>` : ''}
@@ -709,22 +710,30 @@
     return `<div class="steps">${items.map((it, i) => `<div class="step ${i < cur ? 'done' : i === cur ? 'now' : i > cur + 1 ? 'lock' : ''}"><span class="dot">${i < cur ? `<span style="color:#fff">${ic('check', 12, 3)}</span>` : i > cur + 1 ? ic('lock', 11, 2) : ''}</span><span style="font-size:13px">${esc(it.title)}</span></div>`).join('')}</div>`;
   }
   function sHome() {
+    // The home follows the student's own progress in this session: finishing a lesson moves the next step.
+    const done = S.lessonDone, sub = S.studentSubmitted;
+    const pct = done ? 67 : 58, left = done ? '1 lesson left in Module 3' : '2 lessons left in Module 3';
+    const next = done ? ['States nobody designs', '15 min · lesson 3 of 3', '#/student/home'] : ['Working with components', '17 min · lesson 2 of 3', '#/student/lesson'];
+    const lessons = [['check', 'Layout and hierarchy', '20 min', '', '#/student/home'],
+      done ? ['check', 'Working with components', '17 min · done', '', '#/student/lesson'] : ['play', 'Working with components', '17 min · next', 'next', '#/student/lesson'],
+      done ? ['play', 'States nobody designs', '15 min · next', 'next', '#/student/home'] : ['lock', 'States nobody designs', '15 min · opens after the previous lesson', 'locked', '#/student/lesson/locked'],
+      ['file', 'Usability test report', sub ? 'submitted · in review after Oct 14' : 'due Oct 14', '', '#/student/assignment']];
     return guard({ title: 'Hi, Lucía', errWhat: 'your courses', deniedWhat: 'this course', deniedWho: 'Your enrolment in Spring 2026 is paused. Contact your school to continue.',
       empty: head('Hi, Lucía', 'You are not enrolled in a course yet') + emptyState('No courses yet', 'When your school enrols you in a cohort, it will appear here with its start date.', '', 'book') }, () => `
-      ${head('Hi, Lucía', 'UX Design Fundamentals · Spring 2026 · ends Nov 28', `<span class="pchip">${ic('chart', 16)}2 lessons left in Module 3</span>`)}
-      <div class="card cta-card hero"><span class="hero-play">${ic('play', 24)}</span><div style="flex:1;min-width:0"><div class="muted" style="font-size:12px">Continue · Module 3 · Interface</div><div class="big">Working with components</div><div class="muted" style="font-size:13px">17 min · lesson 2 of 3</div></div><a class="btn primary" href="#/student/lesson">Continue lesson</a></div>
+      ${head('Hi, Lucía', 'UX Design Fundamentals · Spring 2026 · ends Nov 28', `<span class="pchip">${ic('chart', 16)}${left}</span>`)}
+      <div class="card cta-card hero"><span class="hero-play">${ic('play', 24)}</span><div style="flex:1;min-width:0"><div class="muted" style="font-size:12px">Continue · Module 3 · Interface</div><div class="big">${next[0]}</div><div class="muted" style="font-size:13px">${next[1]}</div></div><a class="btn primary" href="${next[2]}">Continue lesson</a></div>
       <div class="grid g-main home-grid">
-        <div class="card"><div class="prog-head"><div><h2 style="margin:0">UX Design Fundamentals</h2><div class="muted small">4 modules · 12 items</div></div><span class="prog-val num">58%</span></div>
-          <div class="prog-bar">${bar(58, 'cobalt')}</div>
-          ${D.course.modules.map((m, i) => { const st = ['Completed', 'Completed', 'In progress', 'Locked'][i]; const sub = ['3 of 3 done', '3 of 3 done', '1 of 3 done · Working with components is next', 'Opens after Module 3'][i];
+        <div class="card"><div class="prog-head"><div><h2 style="margin:0">UX Design Fundamentals</h2><div class="muted small">4 modules · 12 items</div></div><span class="prog-val num">${pct}%</span></div>
+          <div class="prog-bar">${bar(pct, 'cobalt')}</div>
+          ${D.course.modules.map((m, i) => { const st = ['Completed', 'Completed', 'In progress', 'Locked'][i]; const subl = ['3 of 3 done', '3 of 3 done', done ? '2 of 3 done · States nobody designs is next' : '1 of 3 done · Working with components is next', 'Opens after Module 3'][i];
             const mark = st === 'Completed' ? ic('check', 16) : st === 'Locked' ? ic('lock', 16) : `<span class="mono">0${i + 1}</span>`;
-            const lessons = st === 'In progress' ? `<div class="mod-lessons">${[['check', 'Layout and hierarchy', '20 min', ''], ['play', 'Working with components', '17 min · next', 'next'], ['lock', 'States nobody designs', '15 min · opens after the previous lesson', 'locked'], ['file', 'Usability test report', 'due Oct 14', '']].map(([icn, n, meta, k]) => `<a class="mod-lesson ${k}" href="${k === 'locked' ? '#/student/lesson/locked' : k === 'next' ? '#/student/lesson' : '#/student/' + (icn === 'file' ? 'assignment' : 'home')}">${ic(icn, 16)}<span class="grow">${n}</span><span class="muted small">${meta}</span></a>`).join('')}</div>` : '';
-            return `<div class="mod-row"><span class="mod-mark${st === 'In progress' ? ' now' : ''}">${mark}</span><div style="flex:1;min-width:0"><b>${m.title}</b><div class="muted small">${sub}</div></div>${tag(st)}</div>${lessons}`; }).join('')}</div>
+            const ls = st === 'In progress' ? `<div class="mod-lessons">${lessons.map(([icn, n, meta, k, href]) => `<a class="mod-lesson ${k}" href="${href}">${ic(icn, 16)}<span class="ml-text"><span class="ml-title">${n}</span><span class="muted small">${meta}</span></span></a>`).join('')}</div>` : '';
+            return `<div class="mod-row"><span class="mod-mark${st === 'In progress' ? ' now' : ''}">${mark}</span><div style="flex:1;min-width:0"><b>${m.title}</b><div class="muted small">${subl}</div></div>${tag(st)}</div>${ls}`; }).join('')}</div>
         <div class="card side-card"><section><h3>Due next</h3><div class="list">
-            <div class="row"><span class="qchip qc-review">${ic('file', 18)}</span><div style="flex:1"><b>Usability test report</b><div class="muted small">Module 3 · Assignment</div></div><span class="num" style="font-weight:500">Oct 14</span></div>
+            <a class="row" href="#/student/assignment"><span class="qchip qc-review">${ic('file', 18)}</span><div style="flex:1"><b>Usability test report</b><div class="muted small">Module 3 · Assignment</div></div>${sub ? tag('Submitted') : '<span class="num" style="font-weight:500">Oct 14</span>'}</a>
             <div class="row"><span class="qchip qc-sub">${ic('lock', 18)}</span><div style="flex:1"><b>Final case study</b><div class="muted small">Opens after Module 3</div></div><span class="num" style="font-weight:500">Nov 4</span></div></div></section>
-          <section><h3>Latest feedback</h3><div class="who" style="margin-bottom:12px">${av('ML', 'Maria Lopez')}<div style="flex:1"><b>Maria Lopez</b><div class="muted small">User interview plan</div></div><span class="qr-big num">88<small> / 100</small></span></div><div class="feedback-box">Clear goals and a good mix of open questions. Next time, add how you will recruit participants.</div></section>
-          <section><div style="display:flex;align-items:baseline;gap:8px;margin-bottom:12px"><h3 style="margin:0;flex:1">Your group</h3><span class="muted small">Spring 2026 · Group A · 8 students</span></div>
+          <section><h3>Latest feedback</h3><div class="who" style="margin-bottom:12px">${av('ML', 'Maria Lopez')}<div style="flex:1;min-width:0"><b>Maria Lopez</b><div class="muted small">User interview plan</div></div><span class="qr-big num">88<small> / 100</small></span></div><div class="feedback-box">Clear goals and a good mix of open questions. Next time, add how you will recruit participants.</div></section>
+          <section><div style="display:flex;align-items:baseline;gap:8px;margin-bottom:12px"><h3 style="margin:0;flex:1">Your group</h3><span class="muted small">Group A · 8 students</span></div>
             <div class="classmates">${['Hannah Cole', 'Jonas Weber', 'Amira Bensaid', 'Noah Becker', 'Pablo Ruiz'].map(n => av('', n)).join('')}<span class="avatar more">+2</span></div>
             <div class="who" style="margin-top:12px">${av('ML', 'Maria Lopez')}${av('NK', 'Nadia Kowalski')}<span class="muted small">Maria Lopez teaches · Nadia Kowalski reviews</span></div></section></div></div>`);
   }
@@ -736,33 +745,60 @@
       <div class="grid g-main" style="align-items:start"><div class="locked-card"><div class="denied" style="margin:0;max-width:none;text-align:left"><div class="lock" style="margin:0;color:#fff">${ic('lock', 24)}</div></div>
         <div><h2 style="font-family:var(--font-brand);font-weight:600;letter-spacing:-.02em;margin:0 0 6px">Opens on Oct 14, or after you finish Lesson 4.</h2><p class="muted" style="margin:0 0 14px">You have 2 lessons and 1 assignment left in Module 3.</p><a class="btn primary" href="#/student/lesson">Go to your current lesson</a></div></div>
         <div class="card">${steps('Working with components')}</div></div>` : `
-      ${head('Working with components', 'Module 3 · Interface · lesson 2 of 3 · 17 min', '<a class="btn" href="#/student/lesson/locked">Next: locked lesson</a>', '<a href="#/student/home">UX Design Fundamentals</a> / Module 3')}
-      <div class="grid g-main"><div class="lesson"><div class="video">${ic('play', 40)}</div>
+      ${head('Working with components', `Module 3 · Interface · lesson 2 of 3 · 17 min${S.lessonDone ? ' · ' + tag('Completed') : ''}`, '<a class="btn hide-m" href="#/student/lesson/locked">Next: locked lesson</a>', '<a href="#/student/home">UX Design Fundamentals</a> / Module 3')}
+      <div class="grid g-main"><div class="grid" style="align-content:start"><div class="lesson"><div class="video">${ic('play', 40)}</div>
         <p>Components let a team build many screens from a few reliable parts. In this lesson you'll take one card from the course page and turn it into a component with three states: default, loading and locked.</p>
         <p>Watch the walkthrough, then try it in your own file. The usability test in Module 3 will use these components.</p>
-        <div style="display:flex;gap:8px;margin-top:20px"><button class="btn primary" data-act="toast" data-v="Lesson marked as done">${ic('check', 16)}Mark as done</button><a class="btn" href="#/student/assignment">Go to assignment</a></div></div>
-        <div class="card" style="align-self:start"><h3>Your progress</h3>${steps('Working with components')}</div></div>`);
+        ${S.lessonDone ? '' : `<div class="lesson-acts"><button class="btn primary" data-act="lessonDone">${ic('check', 16)}Mark as done</button><a class="btn" href="#/student/assignment">Go to assignment</a></div>`}</div>
+        ${S.lessonDone ? `<div class="card done-card${S.flashDone ? ' flash' : ''}"><div class="done-head"><span class="ok-dot">${ic('check', 16, 2.4)}</span><div><b>Lesson done</b><div class="muted small">2 of 3 lessons in Module 3 are done. Progress is saved.</div></div><button class="linkbtn small" data-act="lessonUndo">Undo</button></div>
+          <div class="overline">Next up</div>
+          ${nextRow('file', 'Usability test report', S.studentSubmitted ? 'Assignment · submitted' : 'Assignment · due Oct 14 · uses this lesson', '#/student/assignment', 'qc-review')}
+          ${nextRow('play', 'States nobody designs', 'Lesson 3 of 3 · 15 min', '#/student/home')}
+          <a class="btn primary block" href="#/student/assignment">Open the assignment</a></div>` : ''}</div>
+        <div class="card" style="align-self:start"><h3>Your progress</h3>${steps(S.lessonDone ? 'States nobody designs' : 'Working with components')}</div></div>`);
   }
+  const nextRow = (icn, title, meta, href, cls = 'qc-sub') => `<a class="next-row" href="${href}"><span class="qchip ${cls}">${ic(icn, 18)}</span><span class="grow"><b>${title}</b><span class="muted small">${meta}</span></span>${ic('chev', 18)}</a>`;
   function sAssignment() {
-    const sub = S.studentSubmitted;
+    // Two deliberate steps: choose a file, then submit it. Submitting shows what happens next.
+    const sub = S.studentSubmitted, file = S.studentFile;
+    const fileRow = (removable) => `<div class="file-row"><span class="qchip qc-white">${ic('file', 18)}</span><div class="grow"><b>usability-report-lucia.pdf</b><div class="muted small">2.4 MB · 6 pages${removable ? ' · checked' : ''}</div></div>${removable ? `<button class="iconbtn" data-act="removeFile" aria-label="Remove file">${ic('x', 18)}</button>` : ''}</div>`;
+    const upload = sub ? `<div class="card submitted-card${S.flashSub ? ' flash' : ''}"><div class="done-head"><span class="ok-dot">${ic('check', 16, 2.4)}</span><div><b>Submitted on Oct 6 at ${sub}</b><div class="muted small">usability-report-lucia.pdf · 2.4 MB</div></div></div>
+          <div class="overline">What happens next</div>
+          <ol class="tl"><li class="done"><span class="tl-dot">${ic('check', 12, 2.4)}</span><div><b>Submitted</b><div class="muted small">Oct 6 · you can replace the file until Oct 14</div></div></li>
+            <li><span class="tl-dot">2</span><div><b>Instructor review</b><div class="muted small">After Oct 14 · Maria Lopez reviews it</div></div></li>
+            <li><span class="tl-dot">3</span><div><b>Grade and feedback</b><div class="muted small">Appear in Grades once released</div></div></li></ol>
+          <div class="acts2"><button class="btn" data-act="replaceFile">Replace file</button><a class="btn primary" href="#/student/grades">See my grades</a></div></div>`
+      : file ? `<div class="card"><h2>Your file</h2>${fileRow(true)}<button class="btn primary block" data-act="submit">Submit for review</button><p class="muted small" style="margin:10px 0 0">You can replace the file until Oct 14. Your instructor opens it after the deadline.</p></div>`
+      : `<div class="drop">${ic('upload', 28)}<h3 style="margin:10px 0 4px">Drop your PDF here</h3><p class="muted" style="margin:0 0 14px">Up to 8 pages, 20 MB</p><button class="btn primary" data-act="chooseFile">Choose file</button></div>`;
     return guard({ title: 'Usability test report', errWhat: 'the assignment', deniedWhat: 'this assignment', deniedWho: 'Submissions closed when the cohort ended. Ask your instructor if you need an extension.',
       empty: emptyState('No assignment here yet', 'Your instructor has not published this assignment. You will get an email when it opens.', '', 'file') }, () => `
       ${head('Usability test report', `Module 3 · due Oct 14 · ${sub ? tag('Submitted') : tag('Not started')}`, '', '<a href="#/student/home">UX Design Fundamentals</a> / Assignment')}
       <div class="grid g-main"><div class="grid" style="align-content:start">
-        <div class="card"><h2>Brief</h2><p style="margin:0">Run a short usability test with 3 people on your wireframes. Report what you saw, what you changed and why. PDF, up to 8 pages.</p></div>
-        ${sub ? `<div class="card"><div class="banner info" style="margin:0 0 12px">${ic('check', 18)}<div class="grow"><b>Submitted on Oct 6.</b>Your instructor will review it after Oct 14. You can replace the file until then.</div></div>
-            <div style="display:flex;align-items:center;gap:12px"><span class="kind" style="width:40px;height:40px;border-radius:10px;background:var(--subtle);display:grid;place-items:center">${ic('file')}</span><div style="flex:1"><b>usability-report-lucia.pdf</b><div class="muted" style="font-size:12px">2.4 MB · attempt 1 of 2</div></div><button class="btn sm" data-act="unsubmit">Replace file</button></div></div>`
-          : `<div class="drop">${ic('upload', 28)}<h3 style="margin:10px 0 4px">Drop your PDF here</h3><p class="muted" style="margin:0 0 14px">Up to 8 pages, 20 MB</p><button class="btn primary" data-act="submit">Choose file</button></div>`}</div>
+        ${sub ? '' : `<div class="card"><h2>Brief</h2><p style="margin:0">Run a short usability test with 3 people on your wireframes. Report what you saw, what you changed and why. PDF, up to 8 pages.</p></div>`}
+        ${upload}
+        ${sub ? `<div class="card"><div class="overline">Next up</div>${nextRow('play', 'States nobody designs', 'Lesson 3 of 3 · 15 min', '#/student/home')}</div>` : ''}</div>
         <div class="card" style="align-self:start"><h2>How it's graded</h2><div class="list" style="font-size:13px">${['Test plan and tasks', 'What you observed', 'Changes you made', 'Clarity of the report'].map(c => `<div class="row"><span style="flex:1">${c}</span><span class="num muted">25</span></div>`).join('')}</div>
           <p class="muted" style="font-size:12px;margin:12px 0 0">Feedback comes from your instructor. AI may help draft it, but a person always reviews your grade.</p></div></div>`);
   }
   function sGrades() {
+    // Lucía's Wireframe review is s1 in the instructor's queue: releasing it there makes it appear here.
+    const s1 = D.subs.find(x => x.student === D.people.student.name) || D.subs[0];
+    const released = stOf(s1) === 'graded' && S.done.has(s1.id);
+    const crit = aiState(s1).crit, names = ['Problem framing', 'Flow and structure', 'States and edge cases', 'Clarity of handoff'];
+    const sub = S.studentSubmitted;
+    const rows = D.studentGrades.map(g => {
+      if (g.title.startsWith('Wireframe review') && released) return { ...g, status: 'Graded', score: finalOf(s1), date: 'released today', feedback: fbFor(aiState(s1)) || g.feedback, rubric: crit, fresh: true };
+      if (g.title.startsWith('Usability test report')) return sub ? { ...g, status: 'Submitted', date: 'submitted Oct 6' } : g;
+      return g; }).sort((a, b) => (b.fresh ? 1 : 0) - (a.fresh ? 1 : 0));
     return guard({ title: 'Grades', errWhat: 'your grades', deniedWhat: 'grades', deniedWho: 'Grades are hidden while your enrolment is paused.',
       empty: emptyState('No grades yet', 'Your grades appear here after your instructor releases them. Your first assignment is due Sep 15.', '', 'chart') }, () => `
       ${head('Grades', 'UX Design Fundamentals · Spring 2026')}
-      <div class="grid" style="max-width:860px">${D.studentGrades.map(g => `<div class="card"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><div style="flex:1;min-width:200px"><b style="font-size:15px">${g.title}</b><div class="muted" style="font-size:13px">${g.module} · ${g.date}</div></div>
-        ${g.status === 'Submitted' && S.studentSubmitted === false ? tag('Submitted') : tag(g.status)}${g.score != null ? `<span class="num" style="font-family:var(--font-brand);font-weight:600;font-size:24px">${g.score}<span class="muted" style="font-size:13px"> / 100</span></span>` : ''}</div>
-        ${g.feedback ? `<div class="feedback" style="margin-top:12px">${g.feedback}</div>` : g.status === 'Submitted' ? '<p class="muted" style="margin:10px 0 0;font-size:13px">Waiting for review. Grades are released after the deadline.</p>' : ''}</div>`).join('')}</div>`);
+      <div class="grid" style="max-width:860px">${rows.map(g => `<div class="card grade-card${g.fresh ? ' flash' : ''}"><div class="gc-head"><div class="grow"><b>${g.title}</b><div class="muted small">${g.module} · ${g.date}</div></div>${g.fresh ? '<span class="new-pill">New</span>' : ''}${tag(g.status)}</div>
+        ${g.score != null ? `<div class="gc-score num">${g.score}<small> / 100</small></div>` : ''}
+        ${g.feedback ? `<div class="feedback-box">${esc(g.feedback)}</div>` : ''}
+        ${g.rubric ? `<div class="gc-rubric">${g.rubric.map((v, i) => `<div><span>${names[i]}</span><span class="mono">${v} / 25</span></div>`).join('')}</div><div class="who small muted">${av('ML', 'Maria Lopez')}<span>Reviewed and released by Maria Lopez</span></div>` : ''}
+        ${g.status === 'Submitted' ? `<p class="muted small" style="margin:0">Waiting for review. Grades are released after the deadline${g.title.startsWith('Wireframe') ? '.' : ', Oct 14.'}</p>${g.title.startsWith('Wireframe') ? `<button class="linkbtn small demo-hint" data-act="demoRelease" data-v="${s1.id}">Demo: release it as the instructor</button>` : ''}` : ''}
+        ${g.status === 'Not started' ? `<a class="btn sm" href="#/student/assignment">Open the assignment</a>` : ''}</div>`).join('')}</div>`);
   }
 
   /* ---------- overlays ---------- */
@@ -780,7 +816,7 @@
     const s = D.subs.find(x => x.id === id); const st = aiState(s); const F = filteredSubs().map(r => D.subs.find(x => x.id === r.id)); const L = F.includes(s) ? F : mySubs(); const i = L.indexOf(s);
     const p2 = L[(i - 1 + L.length) % L.length].id, n2 = L[(i + 1) % L.length].id; const done = stOf(s) === 'graded'; const first = esc(s.student.split(' ')[0]);
     const nav = `<div class="qr-nav"><span class="muted small">${i + 1} / ${L.length}</span><button class="iconbtn sm" data-act="panel" data-v="grade:${p2}" aria-label="Previous submission">${ic('up', 16)}</button><button class="iconbtn sm" data-act="panel" data-v="grade:${n2}" aria-label="Next submission">${ic('down', 16)}</button><button class="iconbtn sm" data-act="closeAll" aria-label="Close">${ic('x', 16)}</button></div>`;
-    const headHtml = `<div class="qr-head">${av(s.initials, s.student)}<div class="qr-who"><h2 title="${esc(s.student)}">${esc(s.student)}</h2><div class="muted small">${s.group} · ${s.submitted} · ${esc(s.assignment)}</div></div>${nav}</div>`;
+    const headHtml = `<button class="btn ghost qr-back" data-act="closeAll">${ic('back', 18)}Queue</button><div class="qr-head">${av(s.initials, s.student)}<div class="qr-who"><h2 title="${esc(s.student)}">${esc(s.student)}</h2><div class="muted small">${s.group} · ${s.submitted} · ${esc(s.assignment)}</div></div>${nav}</div>`;
     const draft = !done && st.mode === 'draft';
     const decided = ['accept', 'edit'].includes(st.mode);
     // What the AI proposes: tinted, never what the student gets.
@@ -863,6 +899,7 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
     S.anim = false; S.swap = false;
     // A row highlight plays once, on the render that follows the action.
     if (S.flash.size) S.flash = new Set();
+    S.flashDone = S.flashSub = false;
     if (S.focus) { const f = document.querySelector(S.focus); if (f) { f.focus(); if (f.setSelectionRange) f.setSelectionRange(f.value.length, f.value.length); } S.focus = null; }
     if (S.focusCE) { const el = document.querySelector(S.focusCE); if (el) { el.focus(); const r = document.createRange(); r.selectNodeContents(el); r.collapse(false); const sl = window.getSelection(); sl.removeAllRanges(); sl.addRange(r); } S.focusCE = null; }
     if (S.scrollTo) { const el = document.querySelector(S.scrollTo); if (el && el.scrollIntoView) { const r = el.getBoundingClientRect(); if (r.top < 120 || r.bottom > innerHeight - 120) el.scrollIntoView({ block: 'center', behavior: reduceMotion() ? 'auto' : 'smooth' }); } S.scrollTo = null; }
@@ -1049,8 +1086,13 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
       case 'closeAll': if (t.dataset.toast) toast(t.dataset.toast); if (dockOn() && S.panel && S.panel.startsWith('grade:')) { S.dockClosed = true; S.panel = null; render(); return; } closeOverlays(); return;
       case 'scrim': S.modal = null; break;
       case 'toast': toast(v); break;
-      case 'submit': S.studentSubmitted = true; toast('Submitted. You can replace the file until Oct 14.'); break;
-      case 'unsubmit': S.studentSubmitted = false; break;
+      case 'lessonDone': S.lessonDone = true; S.flashDone = true; toast('Lesson marked as done'); break;
+      case 'lessonUndo': S.lessonDone = false; break;
+      case 'chooseFile': S.studentFile = true; break;
+      case 'removeFile': S.studentFile = false; break;
+      case 'submit': S.studentSubmitted = new Date().toTimeString().slice(0, 5); S.flashSub = true; toast('Submitted. You can replace the file until Oct 14.'); break;
+      case 'replaceFile': S.studentSubmitted = false; S.studentFile = false; break;
+      case 'demoRelease': route('#/instructor/queue'); S.panel = 'grade:' + v; S.dockClosed = false; S.anim = true; render(); return;
       default: return;
     }
     render();
