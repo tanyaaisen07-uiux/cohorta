@@ -31,14 +31,14 @@ Online schools run the same course for several cohorts at once. Students, instru
 |---|---|
 | Student | Course home with the next step, lesson, locked lesson, assignment upload, grades |
 | Instructor | Grading queue with filters and bulk actions, quick review panel, full grading view with AI draft, course builder, assignment editor, roster |
-| Teaching assistant | The same grading tools scoped to Group A: queue, quick review, grading view, group roster. Work from other groups opens as No access, and a released grade is locked with a note that only the instructor can change it |
+| Teaching assistant | The same grading tools scoped to Group A, in a simpler view: queue without the Group column, quick review over the queue, grading view, group roster. Work from other groups opens as No access, and a released grade is locked with a note that only the instructor can change it |
 | Admin | Overview, course review and publishing, cohort scheduling, enrolments with bulk pause and undo, users and roles with an audit log |
 
 Use the bar at the top to switch role and page state: normal, empty, loading, error, no access, long data.
 
 ## Key UX decisions
 
-- **Queue first, not inbox.** Instructors grade from one queue sorted by risk and due date, with a quick review panel so they never lose their place.
+- **Queue first, not inbox.** Instructors grade from one queue sorted by Priority (late work first, then whatever has waited longest), with a quick review panel so they never lose their place.
 - **AI drafts a grade, a person releases it.** The AI draft is visibly marked, can be accepted, edited or discarded, and nothing reaches a student without a human release. Release stays locked until the draft is accepted, edited or discarded, a discarded draft takes its score with it, and every release says in the audit log whether AI helped. A release can be undone for a few seconds.
 - **Versions protect running cohorts.** Course edits go into a new version; a running cohort keeps its version until an admin pushes the update.
 - **Every sensitive action is logged.** Role changes, pushes and bulk actions land in the audit log; bulk actions have undo.
@@ -50,7 +50,7 @@ Motion appears only where it explains an action or a state: the review panel sli
 
 ## Visual layer
 
-The original white sidebar with the cobalt logo, content on a light canvas, and white cards with a barely visible shadow. People are drawn as illustrated, faceless avatars generated from their names, so long-data names get a stable drawing too. On screens 1400 px and wider the quick review is a column next to the grading queue: any row opens in one click and the queue is never dimmed. Below 1400 px it slides over the queue, and on a phone review is a separate step.
+The original white sidebar with the cobalt logo, content on a light canvas, and white cards with a barely visible shadow. People are drawn as illustrated, faceless avatars generated from their names, so long-data names get a stable drawing too. For instructors on screens 1400 px and wider the quick review is a column next to the grading queue: any row opens in one click and the queue is never dimmed. Below 1400 px, and always for a teaching assistant, it slides over the queue; on a phone review is a separate step. Release has three visible states: locked until a decision on the AI draft, ready with a preview of what the student will see, and released with a few seconds to undo.
 
 ## Long content
 
