@@ -10,7 +10,7 @@
 
   const S = {
     role: 'instructor', page: 'home', param: null, demo: 'normal',
-    sel: new Set(), qStatus: 'all', q: '', sortDir: 'desc', dense: false,
+    sel: new Set(), qStatus: 'all', q: '', sortDir: 'desc', qSort: 'priority', dense: false,
     eSel: new Set(), eFilter: 'all', cFilter: 'all',
     toast: null, modal: null, panel: null,
     ai: {}, done: new Set(), ret: new Set(), studentSubmitted: false, order: null, anim: false, focus: null,
@@ -212,7 +212,10 @@
     if (S.qStatus !== 'all') rows = rows.filter(r => r.status === S.qStatus);
     if (S.q) rows = rows.filter(r => r.student.toLowerCase().includes(S.q.toLowerCase()));
     const ord = d => { const [m, day] = d.split(' '); return (m === 'Sep' ? 0 : 100) + +day; };
-    rows.sort((a, b) => S.sortDir === 'desc' ? ord(b.submitted) - ord(a.submitted) : ord(a.submitted) - ord(b.submitted));
+    // Priority: late work first, then whatever has waited longest; returned and graded work sinks to the bottom.
+    const rank = { late: 0, ai: 1, submitted: 1, returned: 2, graded: 3 };
+    if (S.qSort === 'priority') rows.sort((a, b) => (rank[a.status] ?? 1) - (rank[b.status] ?? 1) || ord(a.submitted) - ord(b.submitted));
+    else rows.sort((a, b) => S.qSort === 'newest' ? ord(b.submitted) - ord(a.submitted) : ord(a.submitted) - ord(b.submitted));
     return rows;
   }
   function iQueue() {
@@ -229,8 +232,8 @@
       if (dock && !S.panel && !S.dockClosed && rows.length) S.panel = 'grade:' + (rows.find(r => ['ai', 'late', 'submitted'].includes(stOf(r))) || rows[0]).id;
       const cur = S.panel && S.panel.startsWith('grade:') ? S.panel.slice(6) : null;
       const body = rows.map(r => `<tr class="${S.sel.has(r.id) ? 'sel' : ''}${S.flash.has(r.id) ? ' flash' : ''}${cur === r.id ? ' cur' : ''}"><td class="check c-check" ${pad}><label class="hit"><input type="checkbox" aria-label="Select ${esc(r.student)}" data-act="sel" data-v="${r.id}" ${S.sel.has(r.id) ? 'checked' : ''}></label></td>
-        <td class="c-student" ${pad}><div class="who">${av(r.initials, r.student)}<div style="min-width:0"><button class="linkbtn" data-act="panel" data-v="grade:${r.id}" title="${esc(r.student)}">${esc(r.student)}</button><div class="meta-2nd">${r.group} · ${r.submitted} · ${esc(r.assignment)}</div></div></div></td>
-        <td class="c-2nd" ${pad}>${trunc(r.assignment, 260)}</td><td ${pad} class="muted c-2nd">${r.group}</td><td ${pad} class="num c-2nd">${r.submitted}</td><td class="c-status" ${pad}>${tag(subLabel(r.status))}</td>
+        <td class="c-student" ${pad}><div class="who">${av(r.initials, r.student)}<div style="min-width:0"><button class="linkbtn" data-act="panel" data-v="grade:${r.id}" title="${esc(r.student)}">${esc(r.student)}</button><div class="meta-2nd">${myGroup() ? '' : r.group + ' · '}${r.submitted} · ${esc(r.assignment)}</div></div></div></td>
+        <td class="c-2nd" ${pad}>${trunc(r.assignment, 260)}</td>${myGroup() ? '' : `<td ${pad} class="muted c-2nd">${r.group}</td>`}<td ${pad} class="num c-2nd">${r.submitted}</td><td class="c-status" ${pad}>${tag(subLabel(r.status))}</td>
         <td ${pad} class="num c-ai" data-label="AI">${r.ai != null ? `<span class="mono" style="background:#F1F2FF;padding:2px 6px;border-radius:6px">${r.ai}</span>` : '<span class="muted">—</span>'}</td>
         <td ${pad} class="num c-final" data-label="Final" style="font-weight:600">${r.final != null ? r.final : '<span class="muted" style="font-weight:400">—</span>'}</td>
         <td ${pad} class="c-act" style="text-align:right">${dock ? `<button class="iconbtn rowgo" data-act="panel" data-v="grade:${r.id}" aria-label="${r.status === 'graded' ? 'View' : 'Review'} ${esc(r.student)}">${ic('chev', 18)}</button>` : `<button class="btn sm" data-act="panel" data-v="grade:${r.id}">${r.status === 'graded' ? 'View' : 'Review'}</button>`}</td></tr>`).join('');
@@ -242,17 +245,19 @@
         ${canRelease ? '<button class="btn sm primary" data-act="bulk" data-v="release">Release grades</button>' : lockBtn('Release grades', 'Release only work you have reviewed. Open each AI draft and check the score first.', 'btn sm')}
         <button class="iconbtn" style="color:#C9CBD6" aria-label="Clear selection" data-act="clearSel">${ic('x')}</button></div>` : '';
       const metric = (icon, cls, val, label) => `<span class="qm"><span class="qchip ${cls}">${ic(icon, 16)}</span><b class="num">${val}</b>${label}</span>`;
-      const stats = `<div class="qsum" role="group" aria-label="Summary">${metric('inbox', 'qc-haze', toReview(), 'to review')}<span class="qdiv"></span>${metric('sparkle', 'qc-ai', counts('ai'), 'AI drafts waiting for a decision')}<span class="qdiv"></span>${metric('clock', 'qc-late', counts('late'), 'late')}<span class="spacer" style="flex:1"></span><span class="muted small hide-m">Wireframe review is due Oct 2</span></div>`;
+      const stats = `<div class="qsum" role="group" aria-label="Summary">${metric('inbox', 'qc-haze', toReview(), 'to review')}<span class="qdiv"></span>${metric('sparkle', 'qc-ai', counts('ai'), 'AI drafts waiting for a decision')}<span class="qdiv"></span>${metric('clock', 'qc-late', counts('late'), 'late')}<span class="spacer" style="flex:1"></span><span class="muted small hide-m">${myGroup() ? `You review ${myGroup()} only · Group B is Ben Okafor’s` : 'Wireframe review is due Oct 2'}</span></div>`;
       const docked = dock && cur;
       return `${head('Grading queue', `UX Design Fundamentals · Spring 2026${myGroup() ? ' · ' + myGroup() : ''}`, '<button class="btn" data-act="dense">' + (S.dense ? 'Comfortable rows' : 'Compact rows') + '</button>')}${stats}
-        ${myGroup() ? `<div class="banner info">${ic('users', 18)}<div class="grow"><b>You review ${myGroup()} only.</b>Group B belongs to Ben Okafor. Released grades can be changed by the instructor, Maria Lopez.</div></div>` : ''}
+        ${myGroup() ? `<p class="sr">You review ${myGroup()} only. Group B belongs to Ben Okafor. Released grades can be changed by the instructor, Maria Lopez.</p>` : ''}
         <div class="qwrap${docked ? ' docked' : ''}"><div class="qmain"><div class="toolbar"><label class="search">${ic('search', 16)}<span class="sr">Search students</span><input data-act="q" value="${esc(S.q)}" placeholder="Search students"></label>
           <select class="select" aria-label="Cohort"><option>Spring 2026</option><option>Autumn 2026</option></select>
           <select class="select" aria-label="Assignment"><option>All assignments</option><option>Wireframe review</option><option>User interview plan</option></select></div>
-        <div class="toolbar" role="group" aria-label="Filter by status">${chips}</div>
-        <div class="tablebox"><table class="rtable"><thead><tr><th class="check"><label class="hit"><input type="checkbox" aria-label="Select all" data-act="selAll" ${allSel ? 'checked' : ''}></label></th><th>Student</th><th class="c-2nd">Assignment</th><th class="c-2nd">Group</th>
-          <th class="sortable c-2nd" data-act="sort" aria-sort="${S.sortDir === 'desc' ? 'descending' : 'ascending'}">Submitted ${S.sortDir === 'desc' ? '↓' : '↑'}</th><th>Status</th><th>AI score</th><th>Final score</th><th></th></tr></thead>
-          <tbody>${body || `<tr><td colspan="9"><div class="empty" style="padding:32px"><h3>No matches</h3><p>No submissions with this status. Clear the filter to see all ${mySubs().length}.</p><button class="btn sm" data-act="qStatus" data-v="all">Clear filter</button></div></td></tr>`}</tbody></table></div>${bulk}</div>${docked ? `<aside class="panel docked qr" aria-label="Quick review">${gradeBody(cur)}</aside>` : ''}</div>`;
+        <div class="toolbar qfilters"><div class="chips" role="group" aria-label="Filter by status">${chips}</div><span class="spacer" style="flex:1"></span>
+          <span class="muted small hide-m">${S.qSort === 'priority' ? 'Late first, then longest waiting' : S.qSort === 'newest' ? 'Newest submissions first' : 'Oldest submissions first'}</span>
+          <select class="select" data-act="qSort" aria-label="Sort queue"><option value="priority" ${S.qSort === 'priority' ? 'selected' : ''}>Sort: Priority</option><option value="oldest" ${S.qSort === 'oldest' ? 'selected' : ''}>Sort: Oldest first</option><option value="newest" ${S.qSort === 'newest' ? 'selected' : ''}>Sort: Newest first</option></select></div>
+        <div class="tablebox"><table class="rtable"><thead><tr><th class="check"><label class="hit"><input type="checkbox" aria-label="Select all" data-act="selAll" ${allSel ? 'checked' : ''}></label></th><th>Student</th><th class="c-2nd">Assignment</th>${myGroup() ? '' : '<th class="c-2nd">Group</th>'}
+          <th class="sortable c-2nd" data-act="sort" ${S.qSort === 'priority' ? '' : `aria-sort="${S.qSort === 'newest' ? 'descending' : 'ascending'}"`}>Submitted${S.qSort === 'priority' ? '' : S.qSort === 'newest' ? ' ↓' : ' ↑'}</th><th>Status</th><th>AI score</th><th>Final score</th><th></th></tr></thead>
+          <tbody>${body || `<tr><td colspan="${myGroup() ? 8 : 9}"><div class="empty" style="padding:32px"><h3>No matches</h3><p>No submissions with this status. Clear the filter to see all ${mySubs().length}.</p><button class="btn sm" data-act="qStatus" data-v="all">Clear filter</button></div></td></tr>`}</tbody></table></div>${bulk}</div>${docked ? `<aside class="panel docked qr" aria-label="Quick review">${gradeBody(cur)}</aside>` : ''}</div>`;
     });
   }
 
@@ -757,7 +762,7 @@
   /* ---------- overlays ---------- */
 
   /* Quick review. On wide screens (≥1400 px) it is a column next to the queue; below that it slides over the queue. */
-  const dockOn = () => S.page === 'queue' && innerWidth >= 1400 && (S.demo === 'normal' || S.demo === 'long');
+  const dockOn = () => S.page === 'queue' && S.role !== 'ta' && innerWidth >= 1400 && (S.demo === 'normal' || S.demo === 'long');
   const rubricList = st => `<div class="qr-rubric">${[['Problem framing', 25], ['Flow and structure', 25], ['States and edge cases', 25], ['Clarity of handoff', 25]].map(([n, max], i) => { const v = +st.crit[i] || 0; return `<div class="r"><span>${n}</span><span class="bar"><span style="width:${Math.round(100 * v / max)}%"></span></span><span class="mono">${st.crit[i] === '' ? '—' : v} / ${max}</span></div>`; }).join('')}</div>`;
   // Two steps make the lock and its reason visible: decide on the AI draft, then release.
   const relSteps = (s, released) => { const first = esc(s.student.split(' ')[0]); const st = aiState(s);
@@ -928,7 +933,7 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
       case 'qStatus': S.qStatus = v; S.sel.clear(); break;
       case 'cFilter': S.cFilter = v; break;
       case 'eFilter': S.eFilter = v; S.eSel.clear(); break;
-      case 'sort': S.sortDir = S.sortDir === 'desc' ? 'asc' : 'desc'; break;
+      case 'sort': S.qSort = S.qSort === 'newest' ? 'oldest' : 'newest'; break;
       case 'dense': S.dense = !S.dense; break;
       case 'clearSel': leaveBulk(() => S.sel.clear()); return;
       case 'eClear': leaveBulk(() => S.eSel.clear()); return;
@@ -1048,6 +1053,7 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
     const t = e.target; const a = t.dataset.act; if (!a) return;
     if (['bfield', 'lessonTitle', 'aiPrompt', 'itemTitle', 'decorative', 'itemModule'].includes(a)) return;
     if (a === 'sel') { t.checked ? S.sel.add(t.dataset.v) : S.sel.delete(t.dataset.v); }
+    if (a === 'qSort') S.qSort = t.value;
     if (a === 'selAll') { const rows = filteredSubs(); rows.forEach(r => t.checked ? S.sel.add(r.id) : S.sel.delete(r.id)); }
     if (a === 'eSel') { t.checked ? S.eSel.add(t.dataset.v) : S.eSel.delete(t.dataset.v); }
     if (a === 'eSelAll') { D.enrolments.filter(r => S.eFilter === 'all' || r.state === S.eFilter).forEach(r => t.checked ? S.eSel.add(r.id) : S.eSel.delete(r.id)); }

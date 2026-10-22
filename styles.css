@@ -786,3 +786,8 @@ th.check{background:#F6F7FB}
 .side-card h3{font-size:14px;font-weight:600;margin:0 0 10px}
 .qwrap.docked .rowgo{color:var(--text-2)}
 .qwrap.docked tr.cur .rowgo{color:var(--cobalt)}
+/* Queue: status chips on the left, the chosen sort on the right */
+.qfilters{align-items:center}
+.qfilters .chips{display:flex;flex-wrap:wrap;gap:8px;flex:0 1 auto;min-width:0}
+.qfilters .select{width:auto}
+@media (max-width:720px){.qfilters .select{width:100%}}
