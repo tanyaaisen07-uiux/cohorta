@@ -111,7 +111,11 @@
   };
   const stOf = s => S.done.has(s.id) ? 'graded' : S.ret.has(s.id) ? 'returned' : s.status;
   // A submission with an AI draft starts from the AI's rubric split; one without starts empty, so no score appears that nobody gave.
-  const aiState = s => S.ai[s.id] || (S.ai[s.id] = { mode: s.ai ? 'draft' : 'none', final: null, crit: s.ai ? (() => { const t = s.ai; const a = [Math.round(t * .26), Math.round(t * .25), Math.round(t * .24)].map(x => Math.min(25, x)); a.push(Math.max(0, Math.min(25, t - a[0] - a[1] - a[2]))); return a; })() : ['', '', '', ''] });
+  const split4 = t => { const a = [Math.round(t * .26), Math.round(t * .25), Math.round(t * .24)].map(x => Math.min(25, x)); a.push(Math.max(0, Math.min(25, t - a[0] - a[1] - a[2]))); return a; };
+  // Work graded before the demo opens: the rubric adds up to the released score, and the AI draft counts as edited.
+  const aiState = s => S.ai[s.id] || (S.ai[s.id] = s.final != null
+    ? { mode: s.ai ? 'edit' : 'none', final: null, crit: split4(s.final) }
+    : { mode: s.ai ? 'draft' : 'none', final: null, crit: s.ai ? split4(s.ai) : ['', '', '', ''] });
   const scoreOf = s => { const st = aiState(s); return st.final != null ? st.final : st.crit.reduce((x, y) => x + (+y || 0), 0); };
   // Release rule: a grade leaves only after a person has looked at it.
   const emptyScore = st => st.final == null && st.crit.every(x => x === '' || x == null);
@@ -263,6 +267,8 @@
 
   const FB = 'Strong flow from sign-up to first course. The empty states are thought through. Two things to fix: the enrolment screen hides the cohort dates, and the error on a failed upload does not say what to do next.';
   function aiCard(s, st) {
+    // Once a grade is released the draft is history: show how it was used, never the actions.
+    if (stOf(s) === 'graded' && s.ai != null) return `<div class="banner info" style="margin:0">${ic('sparkle', 18)}<div class="grow"><b>${howGraded(s) === 'graded by hand' ? 'Graded by hand.' : howGraded(s) === 'AI draft edited' ? 'AI draft edited before release.' : 'AI draft accepted before release.'}</b>AI suggested ${s.ai}. The released grade is ${finalOf(s)}.</div></div>`;
     if (st.mode === 'draft') return `<div class="ai" aria-label="AI draft"><div class="head">${ic('sparkle', 16)}<b>AI draft</b>${tag('AI draft ready')}<span class="spacer" style="flex:1"></span><span class="mono">Suggested ${s.ai}</span></div>
         <div style="font-size:14px;color:var(--text-2)">${D.feedback || FB}</div><div class="muted" style="font-size:12px">Based on the rubric. Check it before you send; students see only what you release.</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm primary" data-act="ai" data-v="accept" data-id="${s.id}">Accept draft</button><button class="btn sm" data-act="ai" data-v="edit" data-id="${s.id}">Edit</button><button class="btn sm ghost" data-act="ai" data-v="discard" data-id="${s.id}">Discard</button></div></div>`;
