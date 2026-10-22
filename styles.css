@@ -623,7 +623,7 @@ tbody tr.flash{animation:rowFlash var(--motion-row) var(--ease-out)}
 .minsp .overline{margin:4px 0 -4px}
 .ordrow{display:flex;align-items:center;gap:6px}
 .ordrow .grow{flex:1}
-.sees{display:flex;gap:8px;align-items:flex-start;background:#F1F2FF;border:1px solid var(--haze);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--text-2)}
+.sees{display:flex;gap:8px;align-items:flex-start;padding:4px 0;font-size:13px;color:var(--text-2)}
 .sees svg{color:var(--cobalt);flex:none;margin-top:1px}
 .mprob{display:flex;gap:10px;align-items:flex-start;background:#FDE3E1;border:1px solid #F6C6C1;border-radius:10px;padding:12px;font-size:13px}
 .mprob>svg{color:var(--s-error);flex:none;margin-top:1px}
