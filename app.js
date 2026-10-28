@@ -127,7 +127,7 @@
   const releaseRow = (s, act, extra = '') => {
     const label = `Release grade${scoreText(s) ? ' ' + scoreText(s) : ''}`;
     const btn = needsReview(s) ? lockBtn(label, lockWhy(s), 'btn') : `<button class="btn primary" data-act="${act}" data-v="${s.id}"${extra}>${label}</button>`;
-    return `<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="returnOne" data-v="${s.id}">Return for revision</button><span class="spacer" style="flex:1"></span>${btn}</div>`
+    return `<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="returnOne" data-v="${s.id}">Return for revision</button><span class="spacer u-grow"></span>${btn}</div>`
       + (needsReview(s) ? `<p class="muted release-hint">${aiState(s).mode === 'draft' ? 'Release unlocks after you accept, edit or discard the AI draft.' : 'Release unlocks once there is a score.'}</p>` : '');
   };
   const finalOf = s => { const k = stOf(s); if (k === 'graded') return S.done.has(s.id) ? scoreOf(s) : s.final; if (k === 'returned') return S.ret.has(s.id) ? scoreOf(s) : s.final; return null; };
@@ -149,7 +149,7 @@
     }).join('');
     const ctx = S.role === 'student' ? 'UXF · Spring 2026' : S.role === 'instructor' ? 'UXF · Spring 2026' : S.role === 'ta' ? `UXF · Spring 2026 · ${myGroup()}` : 'Cohorta School';
     return `<aside class="side" aria-label="Main">${lockup()}<div><div class="nav-label">${esc(ctx)}</div><nav class="nav">${items}</nav></div>
-      <div class="me" title="${esc(me.name)} · ${me.role}">${av(me.initials, me.name)}<div class="me-txt"><div style="font-weight:600">${esc(me.name)}</div><div class="muted" style="font-size:12px">${me.role}</div></div></div></aside>`;
+      <div class="me" title="${esc(me.name)} · ${me.role}">${av(me.initials, me.name)}<div class="me-txt"><div class="u-strong">${esc(me.name)}</div><div class="muted u-small">${me.role}</div></div></div></aside>`;
   }
   function mobileChrome() {
     const items = NAV[S.role].slice(0, 4).map(([p, l, i]) => `<a href="#/${S.role}/${p}" ${S.page === p || (p === 'builder' && S.page === 'lesson') ? 'aria-current="page"' : ''}>${ic(i, 20)}<span>${l.split(' ')[0]}</span></a>`).join('');
@@ -158,18 +158,18 @@
   function demoBar() {
     const seg = (key, opts) => `<div class="seg" role="group">${opts.map(([v, l]) => `<button type="button" data-act="${key}" data-v="${v}" aria-pressed="${S[key] === v}">${l}</button>`).join('')}</div>`;
     return `<div class="demo" role="region" aria-label="Demo controls"><b>Cohorta demo</b><span class="show-m dhint">Demo controls · sample data</span><a class="dsite" href="#/">Product site</a><span class="dgrp"><span class="dlab">View as</span>${seg('role', [['student', 'Student'], ['instructor', 'Instructor'], ['ta', 'TA'], ['admin', 'Admin']])}</span>
-      <span class="dgrp"><span class="dlab">State</span>${seg('demo', [['normal', 'Normal'], ['empty', 'Empty'], ['loading', 'Loading'], ['error', 'Error'], ['denied', 'No access'], ['long', 'Long data']])}</span>
-      <span class="spacer"></span><span class="hide-m">Self-initiated case study · sample data · UX/UI by Tania Aisen</span></div>`;
+      <span class="dsep" aria-hidden="true"></span><span class="dgrp"><span class="dlab">State</span>${seg('demo', [['normal', 'Normal'], ['empty', 'Empty'], ['loading', 'Loading'], ['error', 'Error'], ['denied', 'No access'], ['long', 'Long data']])}</span>
+      <span class="spacer"></span><span class="dnote">Self-initiated case study · sample data · UX/UI by Tania Aisen</span></div>`;
   }
 
   /* ---------- shared states ---------- */
   const head = (title, sub = '', actions = '', crumbs = '') => `<div class="page-head"><div>${crumbs ? `<div class="crumbs">${crumbs}</div>` : ''}<h1>${title}</h1>${sub ? `<div class="sub">${sub}</div>` : ''}</div>${actions ? `<div class="actions">${actions}</div>` : ''}</div>`;
   const emptyState = (title, text, action = '', icon = 'inbox') => `<div class="card empty"><div class="ico">${ic(icon, 22)}</div><h3>${title}</h3><p>${text}</p>${action}</div>`;
-  const studentSkeleton = () => `<div class="card sk-hero"><div class="skel" style="width:48px;height:48px;border-radius:var(--r-md)"></div><div class="skel" style="height:12px;width:40%;margin-top:14px"></div><div class="skel" style="height:22px;width:70%;margin-top:10px"></div><div class="skel" style="height:44px;width:100%;margin-top:16px;border-radius:var(--r-md)"></div></div><div class="card">${'<div style="display:flex;gap:12px;align-items:center;margin:10px 0"><div class="skel" style="width:36px;height:36px;border-radius:var(--r-md)"></div><div style="flex:1"><div class="skel" style="height:12px;width:55%"></div><div class="skel" style="height:10px;width:35%;margin-top:8px"></div></div></div>'.repeat(4)}</div>`;
-  const skeleton = () => `<div class="grid g-4" style="margin-bottom:16px">${'<div class="card"><div class="skel" style="height:14px;width:60%"></div><div class="skel" style="height:30px;width:40%;margin-top:12px"></div></div>'.repeat(4)}</div>
+  const studentSkeleton = () => `<div class="card sk-hero"><div class="skel" style="width:48px;height:48px;border-radius:var(--r-md)"></div><div class="skel" style="height:12px;width:40%;margin-top:14px"></div><div class="skel" style="height:22px;width:70%;margin-top:10px"></div><div class="skel" style="height:44px;width:100%;margin-top:16px;border-radius:var(--r-md)"></div></div><div class="card">${'<div style="display:flex;gap:12px;align-items:center;margin:10px 0"><div class="skel" style="width:36px;height:36px;border-radius:var(--r-md)"></div><div class="u-grow"><div class="skel" style="height:12px;width:55%"></div><div class="skel" style="height:10px;width:35%;margin-top:8px"></div></div></div>'.repeat(4)}</div>`;
+  const skeleton = () => `<div class="grid g-4 u-mb4">${'<div class="card"><div class="skel" style="height:14px;width:60%"></div><div class="skel" style="height:30px;width:40%;margin-top:12px"></div></div>'.repeat(4)}</div>
     <div class="tablebox" style="padding:12px" aria-busy="true" aria-label="Loading">${'<div style="display:flex;gap:16px;padding:12px 4px"><div class="skel" style="width:28px;height:28px;border-radius:50%"></div><div class="skel" style="height:14px;flex:2;margin-top:7px"></div><div class="skel" style="height:14px;flex:1;margin-top:7px"></div><div class="skel" style="height:14px;flex:1;margin-top:7px"></div></div>'.repeat(8)}</div>`;
   const errorBanner = (what) => `<div class="banner error" role="alert">${ic('alert', 20)}<div class="grow"><b>We couldn't load ${what}.</b>Check your connection and try again. Your last changes are saved.</div><button class="btn sm" data-act="demo" data-v="normal">Try again</button></div>`;
-  const denied = (what, who, alt) => `<div class="denied card"><div class="lock" style="color:var(--white)">${ic('lock', 24)}</div><h2 style="font-family:var(--font-brand);font-weight:600;letter-spacing:-.02em;margin:0 0 8px">You can't open ${what}</h2>
+  const denied = (what, who, alt) => `<div class="denied card"><div class="lock">${ic('lock', 24)}</div><h2>You can't open ${what}</h2>
     <p class="muted" style="margin:0 0 16px">${who}</p>${alt}</div>`;
   function guard(cfg, render) {
     if (S.demo === 'loading') return head(cfg.title, cfg.sub) + (S.role === 'student' ? studentSkeleton() : skeleton());
@@ -184,11 +184,11 @@
   function iHome() {
     const n = toReview(); const late = D.subs.filter(s => stOf(s) === 'late').length;
     return guard({ title: 'Good afternoon, Maria', sub: 'UX Design Fundamentals · 2 cohorts', errWhat: 'your dashboard', deniedWhat: 'this dashboard', deniedWho: 'Your instructor access ended on Sep 30. Ask an admin to renew it.',
-      empty: `<div class="grid g-main"><div>${emptyState('No submissions yet', 'Your next review will appear here when students submit work for Spring 2026.', '<a class="btn" href="#/instructor/builder">Open course builder</a>')}</div><div class="card" style="align-self:start"><h2>Upcoming deadlines</h2><p class="muted" style="margin:0">No deadlines in the next 14 days.</p></div></div>` }, () => `
+      empty: `<div class="grid g-main"><div>${emptyState('No submissions yet', 'Your next review will appear here when students submit work for Spring 2026.', '<a class="btn" href="#/instructor/builder">Open course builder</a>')}</div><div class="card u-start"><h2>Upcoming deadlines</h2><p class="muted u-m0">No deadlines in the next 14 days.</p></div></div>` }, () => `
       ${head('Good afternoon, Maria', 'UX Design Fundamentals · Spring 2026 and Autumn 2026')}
-      <div class="card cta-card" style="margin-bottom:16px"><div style="flex:1"><div class="big">${pl(n, 'submission', 'submissions')} to review</div><div class="muted">${late === 1 ? '1 is late' : late + ' are late'} · AI drafts are ready for ${D.subs.filter(s => stOf(s) === 'ai').length}. You always confirm the grade.</div></div>
+      <div class="card cta-card u-mb4"><div class="u-grow"><div class="big">${pl(n, 'submission', 'submissions')} to review</div><div class="muted">${late === 1 ? '1 is late' : late + ' are late'} · AI drafts are ready for ${D.subs.filter(s => stOf(s) === 'ai').length}. You always confirm the grade.</div></div>
         <a class="btn primary" href="#/instructor/queue">Review ${pl(n, 'submission', 'submissions')}</a></div>
-      <div class="grid g-4" style="margin-bottom:16px">
+      <div class="grid g-4 u-mb4">
         <div class="card stat"><div class="label">Active cohorts</div><div class="val num">2</div><div class="hint">96 students</div></div>
         <div class="card stat"><div class="label">To review</div><div class="val num">${n}</div><div class="hint">Oldest from Sep 29</div></div>
         <div class="card stat alert"><div class="label">Students at risk</div><div class="val num">12</div><div class="hint">No activity in 7+ days</div></div>
@@ -197,17 +197,17 @@
       <div class="grid g-main">
         <div class="card"><h2>Students at risk</h2><div class="list">
           ${[['Mateo Silva', 'MS', 'No activity for 15 days', 'Paused'], ['Amira Bensaid', 'AB', '2 assignments late', 'Late'], ['Tom Walsh', 'TW', 'Stuck on Module 2 for 11 days', 'Late'], ['Elena Popescu', 'EP', 'Last login Sep 24', 'Paused'], ['Noah Becker', 'NB', 'Wireframe review returned twice', 'Returned']]
-            .map(([nm, i, why, t]) => `<div class="row">${av(i, nm)}<div style="flex:1"><div style="font-weight:600">${nm}</div><div class="muted" style="font-size:13px">${why}</div></div>${tag(t)}<a class="btn sm" href="#/instructor/roster">Open</a></div>`).join('')}
+            .map(([nm, i, why, t]) => `<div class="row">${av(i, nm)}<div class="u-grow"><div class="u-strong">${nm}</div><div class="muted u-meta">${why}</div></div>${tag(t)}<a class="btn sm" href="#/instructor/roster">Open</a></div>`).join('')}
           </div></div>
         <div class="grid">
           <div class="card"><h2>Upcoming deadlines</h2><div class="list">
-            <div class="row"><div style="flex:1"><b>Usability test report</b><div class="muted" style="font-size:13px">Spring 2026 · 48 students</div></div><span class="num">Oct 14</span></div>
-            <div class="row"><div style="flex:1"><b>Cohort starts</b><div class="muted" style="font-size:13px">Autumn 2026</div></div><span class="num">Oct 20</span></div>
-            <div class="row"><div style="flex:1"><b>Final case study</b><div class="muted" style="font-size:13px">Spring 2026</div></div><span class="num">Nov 4</span></div></div></div>
-          <div class="card"><h2>Recent activity</h2><div class="list" style="font-size:13px">
-            <div class="row"><span style="flex:1">Leo Rossi submitted Wireframe review</span><span class="muted">2 h</span></div>
-            <div class="row"><span style="flex:1">Nadia Kowalski graded 4 submissions</span><span class="muted">5 h</span></div>
-            <div class="row"><span style="flex:1">Course v2 pushed to Spring 2026</span><span class="muted">1 d</span></div></div></div>
+            <div class="row"><div class="u-grow"><b>Usability test report</b><div class="muted u-meta">Spring 2026 · 48 students</div></div><span class="num">Oct 14</span></div>
+            <div class="row"><div class="u-grow"><b>Cohort starts</b><div class="muted u-meta">Autumn 2026</div></div><span class="num">Oct 20</span></div>
+            <div class="row"><div class="u-grow"><b>Final case study</b><div class="muted u-meta">Spring 2026</div></div><span class="num">Nov 4</span></div></div></div>
+          <div class="card"><h2>Recent activity</h2><div class="list u-meta">
+            <div class="row"><span class="u-grow">Leo Rossi submitted Wireframe review</span><span class="muted">2 h</span></div>
+            <div class="row"><span class="u-grow">Nadia Kowalski graded 4 submissions</span><span class="muted">5 h</span></div>
+            <div class="row"><span class="u-grow">Course v2 pushed to Spring 2026</span><span class="muted">1 d</span></div></div></div>
         </div>
       </div>`);
   }
@@ -232,32 +232,32 @@
       const chips = [['all', `All ${mySubs().length}`], ['ai', `AI draft ready ${counts('ai')}`], ['submitted', `Submitted ${counts('submitted')}`], ['late', `Late ${counts('late')}`], ['graded', `Graded ${counts('graded')}`], ['returned', `Returned ${counts('returned')}`]]
         .map(([v, l]) => `<button class="chip" data-act="qStatus" data-v="${v}" aria-pressed="${S.qStatus === v}">${l}</button>`).join('');
       const allSel = rows.length && rows.every(r => S.sel.has(r.id));
-      const pad = S.dense ? 'style="padding-top:5px;padding-bottom:5px"' : '';
+      const pad = S.dense ? 'data-dense' : '';
       const dock = dockOn();
       if (dock && !S.panel && !S.dockClosed && rows.length) S.panel = 'grade:' + (rows.find(r => ['ai', 'late', 'submitted'].includes(stOf(r))) || rows[0]).id;
       const cur = S.panel && S.panel.startsWith('grade:') ? S.panel.slice(6) : null;
       const body = rows.map(r => `<tr class="${S.sel.has(r.id) ? 'sel' : ''}${S.flash.has(r.id) ? ' flash' : ''}${cur === r.id ? ' cur' : ''}"><td class="check c-check" ${pad}><label class="hit"><input type="checkbox" aria-label="Select ${esc(r.student)}" data-act="sel" data-v="${r.id}" ${S.sel.has(r.id) ? 'checked' : ''}></label></td>
-        <td class="c-student" ${pad}><div class="who">${av(r.initials, r.student)}<div style="min-width:0"><button class="linkbtn" data-act="panel" data-v="grade:${r.id}" title="${esc(r.student)}">${esc(r.student)}</button><div class="meta-2nd">${myGroup() ? '' : r.group + ' · '}${r.submitted} · ${esc(r.assignment)}</div></div></div></td>
+        <td class="c-student" ${pad}><div class="who">${av(r.initials, r.student)}<div class="u-grow"><button class="linkbtn" data-act="panel" data-v="grade:${r.id}" title="${esc(r.student)}">${esc(r.student)}</button><div class="meta-2nd">${myGroup() ? '' : r.group + ' · '}${r.submitted} · ${esc(r.assignment)}</div></div></div></td>
         <td class="c-2nd" ${pad}>${trunc(r.assignment, 260)}</td>${myGroup() ? '' : `<td ${pad} class="muted c-2nd">${r.group}</td>`}<td ${pad} class="num c-2nd">${r.submitted}</td><td class="c-status" ${pad}>${tag(subLabel(r.status))}</td>
         <td ${pad} class="num c-ai" data-label="AI">${r.ai != null ? `<span class="mono" style="background:var(--surface-tint);padding:2px 6px;border-radius:var(--r-sm)">${r.ai}</span>` : '<span class="muted">—</span>'}</td>
-        <td ${pad} class="num c-final" data-label="Final" style="font-weight:600">${r.final != null ? r.final : '<span class="muted" style="font-weight:400">—</span>'}</td>
-        <td ${pad} class="c-act" style="text-align:right">${dock ? `<button class="iconbtn rowgo" data-act="panel" data-v="grade:${r.id}" aria-label="${r.status === 'graded' ? 'View' : 'Review'} ${esc(r.student)}">${ic('chev', 18)}</button>` : `<button class="btn sm" data-act="panel" data-v="grade:${r.id}">${r.status === 'graded' ? 'View' : 'Review'}</button>`}</td></tr>`).join('');
+        <td ${pad} class="num c-final u-strong" data-label="Final">${r.final != null ? r.final : '<span class="muted u-regular">—</span>'}</td>
+        <td ${pad} class="c-act u-right">${dock ? `<button class="iconbtn rowgo" data-act="panel" data-v="grade:${r.id}" aria-label="${r.status === 'graded' ? 'View' : 'Review'} ${esc(r.student)}">${ic('chev', 18)}</button>` : `<button class="btn sm" data-act="panel" data-v="grade:${r.id}">${r.status === 'graded' ? 'View' : 'Review'}</button>`}</td></tr>`).join('');
       const selRows = rows.filter(r => S.sel.has(r.id));
       const canRelease = selRows.length && selRows.every(r => readyToRelease(D.subs.find(x => x.id === r.id)));
       const bulkEnter = S.sel.size && !S.bulkShown; S.bulkShown = !!S.sel.size;
-      const bulk = S.sel.size ? `<div class="bulkbar${bulkEnter ? ' enter' : ''}" role="region" aria-label="Bulk actions"><b>${S.sel.size} selected</b><span class="spacer" style="flex:1"></span>
+      const bulk = S.sel.size ? `<div class="bulkbar${bulkEnter ? ' enter' : ''}" role="region" aria-label="Bulk actions"><b>${S.sel.size} selected</b><span class="spacer u-grow"></span>
         ${myGroup() ? '' : '<button class="btn sm" data-act="bulk" data-v="assign">Assign to TA</button>'}<button class="btn sm" data-act="bulk" data-v="return">Return for revision</button>
         ${canRelease ? '<button class="btn sm primary" data-act="bulk" data-v="release">Release grades</button>' : lockBtn('Release grades', 'Release only work you have reviewed. Open each AI draft and check the score first.', 'btn sm')}
-        <button class="iconbtn" style="color:var(--text-on-dark-2)" aria-label="Clear selection" data-act="clearSel">${ic('x')}</button></div>` : '';
+        <button class="iconbtn on-dark" aria-label="Clear selection" data-act="clearSel">${ic('x')}</button></div>` : '';
       const metric = (icon, cls, val, label) => `<span class="qm"><span class="qchip ${cls}">${ic(icon, 16)}</span><b class="num">${val}</b>${label}</span>`;
-      const stats = `<div class="qsum" role="group" aria-label="Summary">${metric('inbox', 'qc-haze', toReview(), 'to review')}<span class="qdiv"></span>${metric('sparkle', 'qc-ai', counts('ai'), '<span class="hide-m">AI drafts waiting for a decision</span><span class="only-m">AI drafts</span>')}<span class="qdiv"></span>${metric('clock', 'qc-late', counts('late'), 'late')}<span class="spacer" style="flex:1"></span><span class="muted small hide-m">${myGroup() ? `You review ${myGroup()} only · Group B is Ben Okafor’s` : 'Wireframe review is due Oct 2'}</span></div>`;
+      const stats = `<div class="qsum" role="group" aria-label="Summary">${metric('inbox', 'qc-haze', toReview(), 'to review')}<span class="qdiv"></span>${metric('sparkle', 'qc-ai', counts('ai'), '<span class="hide-m">AI drafts waiting for a decision</span><span class="only-m">AI drafts</span>')}<span class="qdiv"></span>${metric('clock', 'qc-late', counts('late'), 'late')}<span class="spacer u-grow"></span><span class="muted small hide-m">${myGroup() ? `You review ${myGroup()} only · Group B is Ben Okafor’s` : 'Wireframe review is due Oct 2'}</span></div>`;
       const docked = dock && cur;
       return `${head('Grading queue', `UX Design Fundamentals · Spring 2026${myGroup() ? ' · ' + myGroup() : ''}`, '<button class="btn" data-act="dense">' + (S.dense ? 'Comfortable rows' : 'Compact rows') + '</button>')}${stats}
         ${myGroup() ? `<p class="sr">You review ${myGroup()} only. Group B belongs to Ben Okafor. Released grades can be changed by the instructor, Maria Lopez.</p>` : ''}
         <div class="qwrap${docked ? ' docked' : ''}"><div class="qmain"><div class="toolbar"><label class="search">${ic('search', 16)}<span class="sr">Search students</span><input data-act="q" value="${esc(S.q)}" placeholder="Search students"></label>
           <select class="select" aria-label="Cohort"><option>Spring 2026</option><option>Autumn 2026</option></select>
           <select class="select" aria-label="Assignment"><option>All assignments</option><option>Wireframe review</option><option>User interview plan</option></select></div>
-        <div class="toolbar qfilters"><div class="chips" role="group" aria-label="Filter by status">${chips}</div><span class="spacer" style="flex:1"></span>
+        <div class="toolbar qfilters"><div class="chips" role="group" aria-label="Filter by status">${chips}</div><span class="spacer u-grow"></span>
           <span class="muted small hide-m">${S.qSort === 'priority' ? 'Late first, then longest waiting' : S.qSort === 'newest' ? 'Newest submissions first' : 'Oldest submissions first'}</span>
           <select class="select" data-act="qSort" aria-label="Sort queue"><option value="priority" ${S.qSort === 'priority' ? 'selected' : ''}>Sort: Priority</option><option value="oldest" ${S.qSort === 'oldest' ? 'selected' : ''}>Sort: Oldest first</option><option value="newest" ${S.qSort === 'newest' ? 'selected' : ''}>Sort: Newest first</option></select></div>
         <div class="tablebox"><table class="rtable"><thead><tr><th class="check"><label class="hit"><input type="checkbox" aria-label="Select all" data-act="selAll" ${allSel ? 'checked' : ''}></label></th><th>Student</th><th class="c-2nd">Assignment</th>${myGroup() ? '' : '<th class="c-2nd">Group</th>'}
@@ -269,19 +269,19 @@
   const FB = 'Strong flow from sign-up to first course. The empty states are thought through. Two things to fix: the enrolment screen hides the cohort dates, and the error on a failed upload does not say what to do next.';
   function aiCard(s, st) {
     // Once a grade is released the draft is history: show how it was used, never the actions.
-    if (stOf(s) === 'graded' && s.ai != null) return `<div class="banner info" style="margin:0">${ic('sparkle', 18)}<div class="grow"><b>${howGraded(s) === 'graded by hand' ? 'Graded by hand.' : howGraded(s) === 'AI draft edited' ? 'AI draft edited before release.' : 'AI draft accepted before release.'}</b>AI suggested ${s.ai}. The released grade is ${finalOf(s)}.</div></div>`;
-    if (st.mode === 'draft') return `<div class="ai" aria-label="AI draft"><div class="head">${ic('sparkle', 16)}<b>AI draft</b>${tag('AI draft ready')}<span class="spacer" style="flex:1"></span><span class="mono">Suggested ${s.ai}</span></div>
-        <div style="font-size:14px;color:var(--text-2)">${D.feedback || FB}</div><div class="muted" style="font-size:12px">Based on the rubric. Check it before you send; students see only what you release.</div>
+    if (stOf(s) === 'graded' && s.ai != null) return `<div class="banner info u-m0">${ic('sparkle', 18)}<div class="grow"><b>${howGraded(s) === 'graded by hand' ? 'Graded by hand.' : howGraded(s) === 'AI draft edited' ? 'AI draft edited before release.' : 'AI draft accepted before release.'}</b>AI suggested ${s.ai}. The released grade is ${finalOf(s)}.</div></div>`;
+    if (st.mode === 'draft') return `<div class="ai" aria-label="AI draft"><div class="head">${ic('sparkle', 16)}<b>AI draft</b>${tag('AI draft ready')}<span class="spacer u-grow"></span><span class="mono">Suggested ${s.ai}</span></div>
+        <div class="ai-text">${D.feedback || FB}</div><div class="muted u-small">Based on the rubric. Check it before you send; students see only what you release.</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm primary" data-act="ai" data-v="accept" data-id="${s.id}">Accept draft</button><button class="btn sm" data-act="ai" data-v="edit" data-id="${s.id}">Edit</button><button class="btn sm ghost" data-act="ai" data-v="discard" data-id="${s.id}">Discard</button></div></div>`;
-    if (st.mode === 'none') return `<div class="banner info" style="margin:0">${ic('clock', 18)}<div class="grow"><b>AI draft is not ready yet.</b>It usually takes a minute after submission. You can grade without it.</div></div>`;
-    if (st.mode === 'discard') return `<div class="banner info" style="margin:0">${ic('x', 18)}<div class="grow"><b>AI draft discarded.</b>Grade with the rubric.</div><button class="btn sm" data-act="ai" data-v="restore" data-id="${s.id}">Undo</button></div>`;
-    if (st.mode === 'accept') return `<div class="banner info" style="margin:0">${ic('check', 18)}<div class="grow"><b>AI draft accepted as a starting point.</b>Score and feedback are filled in. Check them, then release.</div></div>`;
-    if (st.mode === 'edit') return `<div class="banner info" style="margin:0">${ic('edit', 18)}<div class="grow"><b>Editing the AI draft.</b>Your version replaces the draft; the student sees only what you release.</div></div>`;
+    if (st.mode === 'none') return `<div class="banner info u-m0">${ic('clock', 18)}<div class="grow"><b>AI draft is not ready yet.</b>It usually takes a minute after submission. You can grade without it.</div></div>`;
+    if (st.mode === 'discard') return `<div class="banner info u-m0">${ic('x', 18)}<div class="grow"><b>AI draft discarded.</b>Grade with the rubric.</div><button class="btn sm" data-act="ai" data-v="restore" data-id="${s.id}">Undo</button></div>`;
+    if (st.mode === 'accept') return `<div class="banner info u-m0">${ic('check', 18)}<div class="grow"><b>AI draft accepted as a starting point.</b>Score and feedback are filled in. Check them, then release.</div></div>`;
+    if (st.mode === 'edit') return `<div class="banner info u-m0">${ic('edit', 18)}<div class="grow"><b>Editing the AI draft.</b>Your version replaces the draft; the student sees only what you release.</div></div>`;
     return '';
   }
   const fbFor = st => (st.mode === 'accept' || st.mode === 'edit') ? (st.fb != null ? st.fb : (D.feedback || FB)) : (st.fb || '');
-  const stateBanner = s => stOf(s) === 'graded' ? `<div class="banner info" style="margin:0">${ic('check', 18)}<div class="grow"><b>Graded and released.</b>${myGroup() ? 'Only the instructor can change a released grade. Ask Maria Lopez if it needs a correction.' : 'You can change the grade within 7 days; every change is logged.'}</div></div>`
-    : stOf(s) === 'returned' ? `<div class="banner warn" style="margin:0">${ic('back', 18)}<div class="grow"><b>Returned for revision.</b>${esc(s.student.split(' ')[0])} can submit attempt 2 of 2.</div></div>` : '';
+  const stateBanner = s => stOf(s) === 'graded' ? `<div class="banner info u-m0">${ic('check', 18)}<div class="grow"><b>Graded and released.</b>${myGroup() ? 'Only the instructor can change a released grade. Ask Maria Lopez if it needs a correction.' : 'You can change the grade within 7 days; every change is logged.'}</div></div>`
+    : stOf(s) === 'returned' ? `<div class="banner warn u-m0">${ic('back', 18)}<div class="grow"><b>Returned for revision.</b>${esc(s.student.split(' ')[0])} can submit attempt 2 of 2.</div></div>` : '';
   // A locked action stays visible, with one line on why and who can do it.
   const releasedRow = () => myGroup() ? `<div style="display:flex;justify-content:flex-end">${lockBtn('Change grade', 'Only the instructor can change a released grade.', 'btn')}</div><p class="muted release-hint">Locked for teaching assistants after release. Every change by the instructor is logged.</p>` : '';
   function iGrade(id) {
@@ -298,11 +298,11 @@
       empty: emptyState('Nothing submitted', `${s.student} has not submitted ${s.assignment} yet. You'll get a notification when they do.`, `<a class="btn" href="#/${S.role}/queue">Back to queue</a>`, 'file') }, () => `
       ${head(esc(s.student), `${esc(s.assignment)} · ${s.group} · submitted ${s.submitted}`, `<a class="btn" href="#/${S.role}/grade/${prev}" aria-label="Previous submission">${ic('back', 16)}<span class="kbd">K</span></a><a class="btn" href="#/${S.role}/grade/${next}" aria-label="Next submission"><span class="kbd">J</span>${ic('chev', 16)}</a>`,
         `<a href="#/${S.role}/queue">Grading queue</a> / ${esc(s.assignment)}`)}
-      ${stateBanner(s) ? `<div style="margin-bottom:16px">${stateBanner(s)}</div>` : ''}
+      ${stateBanner(s) ? `<div class="u-mb4">${stateBanner(s)}</div>` : ''}
       <div class="gtabs" role="tablist" aria-label="Grading workspace"><button role="tab" aria-selected="${(S.gtab || 'doc') === 'doc'}" data-act="gtab" data-v="doc">Document</button><button role="tab" aria-selected="${S.gtab === 'assess'}" data-act="gtab" data-v="assess">Assessment · ${total}</button></div>
       <div class="split show-${S.gtab || 'doc'}">
         <div class="doc"><div class="mono muted">wireframe-review-${s.initials.toLowerCase()}.pdf · 6 pages</div>
-          <h2 style="font-family:var(--font-brand);font-weight:600;letter-spacing:-.02em;margin:12px 0 4px">Enrolment flow: wireframes v2</h2><div class="muted">Submitted ${s.submitted}, 2026 · attempt 1 of 2</div>
+          <h2 class="h-doc">Enrolment flow: wireframes v2</h2><div class="muted">Submitted ${s.submitted}, 2026 · attempt 1 of 2</div>
           <div class="frame">Page 1 · Sign-up and course choice</div>
           <p>I mapped the flow from the course page to the first lesson. The main change from v1 is a single step for choosing the cohort, so students see dates before they pay.</p>
           <div class="frame">Page 2 · Cohort choice and confirmation</div>
@@ -310,7 +310,7 @@
         <div class="grid assess" style="gap:12px">${aiCard(s, st)}
           <div class="card rubric"><h2 style="margin-bottom:4px">Rubric</h2>
             ${[['Problem framing', 25], ['Flow and structure', 25], ['States and edge cases', 25], ['Clarity of handoff', 25]].map(([n, max], i) => `<div class="r"><label for="c${i}">${n}<span class="muted"> / ${max}</span></label><input id="c${i}" class="score-input num" inputmode="numeric" data-act="crit" data-id="${s.id}" data-v="${i}" value="${st.crit[i]}" ${locked ? 'disabled' : ''}></div>`).join('')}
-            <div class="r" style="font-weight:600"><span>Final score</span><span class="num" style="font-family:var(--font-brand);font-weight:600;font-size:24px">${total}<span class="muted" style="font-size:14px"> / 100</span></span></div></div>
+            <div class="r u-strong"><span>Final score</span><span class="num gc-score">${total}<small> / 100</small></span></div></div>
           <div class="card"><div class="field"><label for="fb">Feedback to ${esc(s.student.split(' ')[0])}</label><textarea id="fb" placeholder="Write feedback the student can act on" data-act="fbtext" data-id="${s.id}" ${locked ? 'disabled' : ''}>${esc(fbFor(st))}</textarea><span class="help">Students see feedback only after you release it.</span></div>
             <div style="margin-top:12px">${stOf(s) === 'graded' ? releasedRow() : releaseRow(s, 'release', ` data-next="${next}"`)}</div></div>
         </div></div>`);
@@ -324,22 +324,22 @@
       ${head('UX Design Fundamentals', `${tag('Published')} <span class="mono" style="margin-left:6px">v2</span> · 4 modules · 15 items · owner Maria Lopez`, `${presence()}${viewSeg()}<button class="btn primary" data-act="modal" data-v="publish">Send v3 for review</button>`, '<a href="#/instructor/home">Dashboard</a> / Course builder')}
       <div class="banner warn">${ic('alert', 18)}<div class="grow"><b>You're editing a draft of v3.</b>Spring 2026 keeps v2 until an admin pushes the update, so students never see content change mid-lesson.</div></div>
       <div class="grid g-main">
-        <div>${mods.map((m, mi) => `<section class="module"><div class="module-head"><span class="handle">${ic('grip', 16)}</span><b>Module ${mi + 1} · ${esc(m.title)}</b><span class="muted" style="font-size:13px">${m.items.length} items</span><span class="spacer" style="flex:1"></span>
+        <div>${mods.map((m, mi) => `<section class="module"><div class="module-head"><span class="handle">${ic('grip', 16)}</span><b>Module ${mi + 1} · ${esc(m.title)}</b><span class="muted u-meta">${m.items.length} items</span><span class="spacer u-grow"></span>
             <button class="iconbtn" aria-label="Move module up" data-act="mv" data-v="${mi},-1" ${mi === 0 ? 'disabled' : ''}>${ic('up', 16)}</button><button class="iconbtn" aria-label="Move module down" data-act="mv" data-v="${mi},1" ${mi === mods.length - 1 ? 'disabled' : ''}>${ic('down', 16)}</button></div>
-            ${m.items.map(it => `<div class="item"><span class="handle">${ic('grip', 16)}</span><span class="kind">${kindIc(it.kind)}</span><div class="grow"><div style="font-weight:500">${esc(it.title)}</div><div class="muted" style="font-size:12px">${it.kind === 'lesson' ? 'Lesson · ' + it.len : 'Assignment · due ' + it.due}</div></div>
+            ${m.items.map(it => `<div class="item"><span class="handle">${ic('grip', 16)}</span><span class="kind">${kindIc(it.kind)}</span><div class="grow"><div class="u-medium">${esc(it.title)}</div><div class="muted u-small">${it.kind === 'lesson' ? 'Lesson · ' + it.len : 'Assignment · due ' + it.due}</div></div>
               ${it.kind === 'assignment' ? '<a class="btn sm" href="#/instructor/editor">Edit</a>' : `<a class="btn sm" href="#/instructor/lesson/${it.id}">Edit</a>`}</div>`).join('')}
-            ${m.items.length ? '' : '<div class="item muted" style="font-size:13px">No items yet. Add a lesson or an assignment to start this module.</div>'}
+            ${m.items.length ? '' : '<div class="item muted u-meta">No items yet. Add a lesson or an assignment to start this module.</div>'}
             <div class="add-row"><button class="btn sm add" data-act="addItem" data-v="${mi},lesson">${ic('plus', 14)}Add lesson</button><button class="btn sm add" data-act="addItem" data-v="${mi},assignment">${ic('plus', 14)}Add assignment</button></div></section>`).join('')}
           <button class="btn add add-module" data-act="addModule">${ic('plus', 16)}Add module</button></div>
-        <div class="grid" style="align-content:start">
-          <div class="card"><h2>Versions</h2><div class="list" style="font-size:13px">
-            <div class="row"><span style="flex:1"><b>v3</b> · draft</span>${tag('Draft')}</div>
-            <div class="row"><span style="flex:1"><b>v2</b> · Spring 2026</span>${tag('Published')}</div>
-            <div class="row"><span style="flex:1"><b>v1</b> · Summer 2026</span>${tag('Archived')}</div></div></div>
-          <div class="card"><h2>Who can do what</h2><div class="list" style="font-size:13px">
-            <div class="row"><span style="flex:1">Edit draft</span><span>You, admins</span></div>
-            <div class="row"><span style="flex:1">Publish</span><span>Admins</span></div>
-            <div class="row"><span style="flex:1">Push to running cohorts</span><span>Admins</span></div></div>
+        <div class="grid u-top">
+          <div class="card"><h2>Versions</h2><div class="list u-meta">
+            <div class="row"><span class="u-grow"><b>v3</b> · draft</span>${tag('Draft')}</div>
+            <div class="row"><span class="u-grow"><b>v2</b> · Spring 2026</span>${tag('Published')}</div>
+            <div class="row"><span class="u-grow"><b>v1</b> · Summer 2026</span>${tag('Archived')}</div></div></div>
+          <div class="card"><h2>Who can do what</h2><div class="list u-meta">
+            <div class="row"><span class="u-grow">Edit draft</span><span>You, admins</span></div>
+            <div class="row"><span class="u-grow">Publish</span><span>Admins</span></div>
+            <div class="row"><span class="u-grow">Push to running cohorts</span><span>Admins</span></div></div>
             <div style="margin-top:12px">${lockBtn('Publish now', 'Only admins can publish courses. Send this draft for review instead.')}</div></div>
         </div></div>`);
   }
@@ -349,19 +349,19 @@
       empty: emptyState('No assignments yet', 'Add an assignment to a module to set a brief, a due date and a rubric.', '<a class="btn" href="#/instructor/builder">Open course builder</a>', 'edit') }, () => `
       ${head('Wireframe review', 'Module 2 · Structure · used in 2 cohorts', '<button class="btn" data-load data-act="toast" data-v="Draft saved">Save draft</button>', '<a href="#/instructor/builder">Course builder</a> / Assignment')}
       <div class="grid g-main">
-        <div class="grid" style="align-content:start">
+        <div class="grid u-top">
           <div class="card grid" style="gap:14px"><div class="field"><label for="t">Title</label><input id="t" value="Wireframe review"></div>
             <div class="field"><label for="b">Brief</label><textarea id="b">Wireframe the enrolment flow from the course page to the first lesson. Show at least one empty state and one error state. Upload a PDF of 4 to 8 pages.</textarea></div>
             <div class="grid g-2"><div class="field"><label for="d">Due</label><select id="d"><option>4 weeks after cohort start</option><option>5 weeks after cohort start</option></select><span class="help">Spring 2026: Oct 2 · Autumn 2026: Nov 17</span></div>
               <div class="field"><label for="a">Attempts</label><select id="a"><option>2 attempts</option><option>1 attempt</option><option>Unlimited</option></select></div></div></div>
-          <div class="card"><h2>Rubric</h2><div class="scrollx"><table><thead><tr><th>Criterion</th><th>What a full score looks like</th><th style="text-align:right">Points</th></tr></thead><tbody>
+          <div class="card"><h2>Rubric</h2><div class="scrollx"><table><thead><tr><th>Criterion</th><th>What a full score looks like</th><th class="u-right">Points</th></tr></thead><tbody>
             ${[['Problem framing', 'States who the flow is for and what they need to finish', 25], ['Flow and structure', 'Every step has one clear next action', 25], ['States and edge cases', 'Empty, error and locked states are designed', 25], ['Clarity of handoff', 'Annotations a developer can build from', 25]]
-              .map(([a, b, c]) => `<tr><td style="font-weight:500">${a}</td><td class="muted" style="white-space:normal">${b}</td><td class="num" style="text-align:right">${c}</td></tr>`).join('')}
-            <tr><td><b>Total</b></td><td></td><td class="num" style="text-align:right"><b>100</b></td></tr></tbody></table></div></div></div>
-        <div class="grid" style="align-content:start">
-          <div class="card"><h2>AI drafts</h2><label style="display:flex;gap:10px;align-items:flex-start"><input type="checkbox" checked style="margin-top:3px"><span><b>Prepare an AI draft for each submission</b><br><span class="muted" style="font-size:13px">A suggested score and feedback based on this rubric. Instructors and TAs always confirm before students see anything.</span></span></label></div>
-          <div class="card"><h2>Used in</h2><div class="list" style="font-size:13px"><div class="row"><span style="flex:1">Spring 2026</span>${tag('Running')}</div><div class="row"><span style="flex:1">Autumn 2026</span>${tag('Scheduled')}</div></div>
-            <p class="muted" style="font-size:12px;margin:10px 0 0">Changes apply to new submissions. Work already graded keeps its rubric.</p></div></div></div>`);
+              .map(([a, b, c]) => `<tr><td class="u-medium">${a}</td><td class="muted" style="white-space:normal">${b}</td><td class="num u-right">${c}</td></tr>`).join('')}
+            <tr><td><b>Total</b></td><td></td><td class="num u-right"><b>100</b></td></tr></tbody></table></div></div></div>
+        <div class="grid u-top">
+          <div class="card"><h2>AI drafts</h2><label style="display:flex;gap:10px;align-items:flex-start"><input type="checkbox" checked style="margin-top:3px"><span><b>Prepare an AI draft for each submission</b><br><span class="muted u-meta">A suggested score and feedback based on this rubric. Instructors and TAs always confirm before students see anything.</span></span></label></div>
+          <div class="card"><h2>Used in</h2><div class="list u-meta"><div class="row"><span class="u-grow">Spring 2026</span>${tag('Running')}</div><div class="row"><span class="u-grow">Autumn 2026</span>${tag('Scheduled')}</div></div>
+            <p class="muted u-small note">Changes apply to new submissions. Work already graded keeps its rubric.</p></div></div></div>`);
   }
 
 
@@ -436,7 +436,7 @@
       const pre = links().filter(l => l[1] === S.param).map(l => findItem(l[0])).filter(Boolean);
       body = `<div class="field"><label for="lt">Title</label><input id="lt" value="${esc(f.it.title)}" data-act="lessonTitle"></div>
         <div class="kv"><span>Estimated time</span><b>${L.blocks.length ? 'about ' + minutes(L) + ' min' : 'Fills in as you add content'}</b></div><div class="kv"><span>Blocks</span><b>${L.blocks.length}</b></div><div class="kv"><span>Module</span><b>${f.mi + 1} · ${esc(f.m.title)}</b></div>
-        <div class="overline" style="margin-top:6px">Opens after</div>${pre.length ? pre.map(p => `<div class="linkrow">${ic(p.it.kind === 'lesson' ? 'play' : 'file', 14)}<span class="grow">${esc(p.it.title)}</span></div>`).join('') : '<p class="muted small" style="margin:0">Opens right away for students in this module.</p>'}
+        <div class="overline" style="margin-top:6px">Opens after</div>${pre.length ? pre.map(p => `<div class="linkrow">${ic(p.it.kind === 'lesson' ? 'play' : 'file', 14)}<span class="grow">${esc(p.it.title)}</span></div>`).join('') : '<p class="muted small u-m0">Opens right away for students in this module.</p>'}
         <a class="linkbtn small" href="#/instructor/builder/map" data-act="mapFocus" data-v="${S.param}">${ic('map', 14)}Edit order on the course map</a>
         <div class="ai-tip">${ic('sparkle', 14)}<span>AI uses the lesson title and the module around it. Add a line about what students should be able to do, and the draft gets sharper.</span></div>`;
     } else if (L.tab === 'block') {
@@ -550,8 +550,8 @@
   function mapInspector() {
     const st = mapState(); const bad = conflicts();
     const prob = bad.length ? `<div class="mprob">${ic('alert', 17)}<div class="grow"><b>${pl(bad.length, 'problem', 'problems')} on the map</b>${bad.map(([p, t]) => `<span>${esc(findItem(t).it.title)} opens before its prerequisite, ${esc(findItem(p).it.title)}.</span>`).join('')}</div><button class="btn sm" data-act="mapShow" data-v="${bad[0][1]}">Show</button></div>` : '';
-    if (!st.sel) return `<aside class="card minsp"><div class="ihead"><span class="kind">${ic('map', 15)}</span><b>Course map</b></div><p class="muted small" style="margin:0">${pl(mods().length, 'module', 'modules')} · ${pl(flatItems().length, 'item', 'items')} · ${pl(links().length, 'link', 'links')}</p>
-      <p class="small" style="margin:0">Click an item to see what opens it. Press <span class="kbd">C</span> to link two items, <span class="kbd">N</span> to leave a note. Drag the background or hold space to pan.</p>${prob}</aside>`;
+    if (!st.sel) return `<aside class="card minsp"><div class="ihead"><span class="kind">${ic('map', 15)}</span><b>Course map</b></div><p class="muted small u-m0">${pl(mods().length, 'module', 'modules')} · ${pl(flatItems().length, 'item', 'items')} · ${pl(links().length, 'link', 'links')}</p>
+      <p class="small u-m0">Click an item to see what opens it. Press <span class="kbd">C</span> to link two items, <span class="kbd">N</span> to leave a note. Drag the background or hold space to pan.</p>${prob}</aside>`;
     const f = findItem(st.sel); const it = f.it; const o = orderIdx();
     const pre = links().filter(l => l[1] === it.id); const nxt = links().filter(l => l[0] === it.id);
     const row = (id, l) => { const x = findItem(id).it; const c = isConflict(l[0], l[1]); return `<div class="linkrow${c ? ' bad' : ''}">${ic(x.kind === 'lesson' ? 'play' : 'file', 14)}<span class="grow">${esc(x.title)}${c ? '<small>Comes later in the course</small>' : ''}</span><button class="iconbtn sm" aria-label="Remove link" data-act="unlink" data-v="${l[0]},${l[1]}">${ic('x', 14)}</button></div>`; };
@@ -561,16 +561,16 @@
       <div class="field"><label for="mt">Title</label><input id="mt" value="${esc(it.title)}" data-act="itemTitle" data-v="${it.id}"></div>
       <div class="field"><label for="mm">Module</label><select id="mm" data-act="itemModule" data-v="${it.id}">${mods().map((m, i) => `<option value="${i}" ${i === f.mi ? 'selected' : ''}>Module ${i + 1} · ${esc(m.title)}</option>`).join('')}</select></div>
       <div class="ordrow"><span class="muted small">Order in module</span><span class="grow"></span><button class="btn sm" aria-label="Move earlier" data-act="itemMove" data-v="-1" ${f.ii === 0 ? 'disabled' : ''}>${ic('up', 14)}</button><button class="btn sm" aria-label="Move later" data-act="itemMove" data-v="1" ${f.ii === f.m.items.length - 1 ? 'disabled' : ''}>${ic('down', 14)}</button></div>
-      <div class="overline">Opens after</div>${pre.map(l => row(l[0], l)).join('') || '<p class="muted small" style="margin:0">Nothing. It opens with the module.</p>'}
+      <div class="overline">Opens after</div>${pre.map(l => row(l[0], l)).join('') || '<p class="muted small u-m0">Nothing. It opens with the module.</p>'}
       <button class="linkbtn small" data-act="mapPick" data-v="${it.id}">${ic('plus', 14)}Add prerequisite</button>
-      <div class="overline">Opens next</div>${nxt.map(l => row(l[1], l)).join('') || '<p class="muted small" style="margin:0">Nothing waits for it.</p>'}
+      <div class="overline">Opens next</div>${nxt.map(l => row(l[1], l)).join('') || '<p class="muted small u-m0">Nothing waits for it.</p>'}
       <div class="sees">${ic('eye', 15)}<span>Students see: “${esc(sees)}”</span></div>
       <a class="btn" href="${it.kind === 'lesson' ? '#/instructor/lesson/' + it.id : '#/instructor/editor'}">${ic('edit', 15)}Edit ${it.kind}</a>${prob}</aside>`;
   }
   function mapSheet() {
-    const st = mapState(); if (!st.sel) return `<div class="msheet"><span class="sheet-grab"></span><p class="muted small" style="margin:0">Tap an item to see what opens it.${conflicts().length ? ` <button class="linkbtn small" data-act="mapShow" data-v="${conflicts()[0][1]}">${pl(conflicts().length, 'problem', 'problems')} on the map</button>` : ''}</p></div>`;
+    const st = mapState(); if (!st.sel) return `<div class="msheet"><span class="sheet-grab"></span><p class="muted small u-m0">Tap an item to see what opens it.${conflicts().length ? ` <button class="linkbtn small" data-act="mapShow" data-v="${conflicts()[0][1]}">${pl(conflicts().length, 'problem', 'problems')} on the map</button>` : ''}</p></div>`;
     const it = findItem(st.sel).it; const names = links().filter(l => l[1] === it.id).map(l => findItem(l[0]).it.title);
-    return `<div class="msheet"><span class="sheet-grab"></span><div class="who"><span class="kind">${ic(it.kind === 'lesson' ? 'play' : 'file', 15)}</span><div style="min-width:0"><b>${esc(it.title)}</b><div class="muted small">${names.length ? 'Opens after ' + esc(names.join(' and ')) : 'Opens with the module'}</div></div></div>
+    return `<div class="msheet"><span class="sheet-grab"></span><div class="who"><span class="kind">${ic(it.kind === 'lesson' ? 'play' : 'file', 15)}</span><div class="u-grow"><b>${esc(it.title)}</b><div class="muted small">${names.length ? 'Opens after ' + esc(names.join(' and ')) : 'Opens with the module'}</div></div></div>
       <div class="row-btns"><button class="btn" data-act="mapPick" data-v="${it.id}">${ic('connect', 15)}Edit links</button><a class="btn primary" href="${it.kind === 'lesson' ? '#/instructor/lesson/' + it.id : '#/instructor/editor'}">${ic('edit', 15)}Open</a></div></div>`;
   }
   const presence = () => `<span class="presence hide-m">${av('ML', 'Maria Lopez')}${av('SR', 'Sofia Rossi')}<span class="muted small">Sofia is viewing</span></span>`;
@@ -630,11 +630,11 @@
     return guard({ title: 'Cohort roster', errWhat: 'the roster', deniedWhat: 'this roster', deniedWho: 'You are not an instructor or TA of Autumn 2026 yet. Access starts when the cohort is scheduled for you.',
       empty: emptyState('No students yet', 'Students appear here when an admin enrols them in Autumn 2026. The cohort starts Oct 20.', '', 'users') }, () => `
       ${head(myGroup() ? 'Group roster' : 'Cohort roster', myGroup() ? `UX Design Fundamentals · Spring 2026 · ${myGroup()} · ${rows.length} students` : 'UX Design Fundamentals · Spring 2026 · 48 students, showing 16', '<button class="btn" data-act="toast" data-v="Message drafted to 5 students at risk">Message students at risk</button>')}
-      <div class="grid g-4" style="margin-bottom:16px"><div class="card stat"><div class="label">Average progress</div><div class="val num">${statAvg}</div></div><div class="card stat"><div class="label">On track</div><div class="val num">${statOn}</div></div>
+      <div class="grid g-4 u-mb4"><div class="card stat"><div class="label">Average progress</div><div class="val num">${statAvg}</div></div><div class="card stat"><div class="label">On track</div><div class="val num">${statOn}</div></div>
         <div class="card stat alert"><div class="label">Behind</div><div class="val num">${statBehind}</div></div><div class="card stat"><div class="label">Completed</div><div class="val num">0</div><div class="hint">Course ends Nov 28</div></div></div>
       <div class="tablebox"><table><thead><tr><th>Student</th><th>Group</th><th>Progress</th><th>Assignments</th><th>Last active</th><th>Status</th></tr></thead><tbody>
-        ${rows.map((r, i) => `<tr><td><div class="who">${av(r.initials, r.student)}<b style="font-weight:600" title="${esc(r.student)}">${esc(r.student)}</b></div></td><td class="muted">${r.group}</td>
-          <td><div style="display:flex;align-items:center;gap:10px">${bar(r.progress)}<span class="num muted" style="width:36px">${r.progress}%</span></div></td><td class="num">${r.done} / 4</td><td class="num">${r.last}</td>
+        ${rows.map((r, i) => `<tr><td><div class="who">${av(r.initials, r.student)}<b class="u-strong" title="${esc(r.student)}">${esc(r.student)}</b></div></td><td class="muted">${r.group}</td>
+          <td><div class="u-row">${bar(r.progress)}<span class="num muted" style="width:36px">${r.progress}%</span></div></td><td class="num">${r.done} / 4</td><td class="num">${r.last}</td>
           <td>${r.risk ? tag(r.state === 'Active' ? 'Late' : r.state) : tag(r.state)}</td></tr>`).join('')}</tbody></table></div>`);
   }
 
@@ -643,23 +643,23 @@
     return guard({ title: 'Overview', errWhat: 'the overview', deniedWhat: 'the school overview', deniedWho: 'Only admins see school-wide numbers. Ask Alex Morgan if you need a report.',
       empty: head('Welcome to Cohorta', 'Set up your school in three steps') + `<div class="grid g-3">${[['1', 'Invite your staff', 'Add instructors and TAs, then set what each can reach.'], ['2', 'Publish a course', 'Approve a course draft so it can run.'], ['3', 'Schedule a cohort', 'Pick dates, staff and capacity, then enrol students.']].map(([n, t, d]) => `<div class="card" style="display:flex;flex-direction:column"><div class="mono muted">Step ${n}</div><h2 style="margin-top:6px">${t}</h2><p class="muted" style="margin:0 0 16px">${d}</p><button class="btn sm" style="margin-top:auto;align-self:flex-start" data-act="start" data-v="${n === '1' ? '#/admin/users' : n === '2' ? '#/admin/catalogue' : '#/admin/enrolments'}">Start</button></div>`).join('')}</div>` }, () => `
       ${head('Overview', 'Cohorta School · 6 cohorts this term')}
-      ${inReview().length ? `<div class="card cta-card" style="margin-bottom:16px"><div style="flex:1"><div class="big">${inReview().length} course${inReview().length > 1 ? 's' : ''} waiting for review</div><div class="muted">${inReview().map(c => esc(c.title)).join(' · ')}</div></div><a class="btn primary" href="#/admin/catalogue">Review ${inReview().length} course${inReview().length > 1 ? 's' : ''}</a></div>`
-        : `<div class="card" style="margin-bottom:16px;display:flex;align-items:center;gap:12px">${ic('check', 20)}<div style="flex:1"><b>No courses waiting for review.</b> <span class="muted">New drafts from instructors will appear here.</span></div></div>`}
-      <div class="grid g-4" style="margin-bottom:16px">
+      ${inReview().length ? `<div class="card cta-card u-mb4"><div class="u-grow"><div class="big">${inReview().length} course${inReview().length > 1 ? 's' : ''} waiting for review</div><div class="muted">${inReview().map(c => esc(c.title)).join(' · ')}</div></div><a class="btn primary" href="#/admin/catalogue">Review ${inReview().length} course${inReview().length > 1 ? 's' : ''}</a></div>`
+        : `<div class="card" style="margin-bottom:16px;display:flex;align-items:center;gap:12px">${ic('check', 20)}<div class="u-grow"><b>No courses waiting for review.</b> <span class="muted">New drafts from instructors will appear here.</span></div></div>`}
+      <div class="grid g-4 u-mb4">
         <div class="card stat"><div class="label">Active cohorts</div><div class="val num">4</div><div class="hint">1 scheduled, 1 completed</div></div>
         <div class="card stat"><div class="label">Total students</div><div class="val num">257</div><div class="hint">+48 in Autumn 2026</div></div>
         <div class="card stat"><div class="label">Submissions pending</div><div class="val num">41</div><div class="hint">Across 4 cohorts</div></div>
         <div class="card stat alert"><div class="label">At-risk cohorts</div><div class="val num">2</div><div class="hint">More than 25% behind</div></div></div>
       <div class="grid g-main">
         <div class="card"><h2>Cohorts</h2><div class="scrollx"><table><thead><tr><th>Cohort</th><th>Status</th><th>Progress</th><th>Behind</th><th>Ends</th></tr></thead><tbody>
-          ${D.cohorts.map(c => `<tr><td><b style="font-weight:600">${trunc(c.course, 260)}</b><div class="muted" style="font-size:12px">${c.name} · ${c.students} students</div></td><td>${tag(c.state)}</td>
-            <td><div style="display:flex;align-items:center;gap:10px">${bar(c.progress)}<span class="num muted">${c.progress}%</span></div></td><td class="num" ${c.behind / c.students > .25 ? 'style="color:var(--s-error);font-weight:600"' : ''}>${c.behind}</td><td class="num">${c.end}</td></tr>`).join('')}</tbody></table></div></div>
-        <div class="grid" style="align-content:start">
+          ${D.cohorts.map(c => `<tr><td><b class="u-strong">${trunc(c.course, 260)}</b><div class="muted u-small">${c.name} · ${c.students} students</div></td><td>${tag(c.state)}</td>
+            <td><div class="u-row">${bar(c.progress)}<span class="num muted">${c.progress}%</span></div></td><td class="num" ${c.behind / c.students > .25 ? 'style="color:var(--s-error);font-weight:600"' : ''}>${c.behind}</td><td class="num">${c.end}</td></tr>`).join('')}</tbody></table></div></div>
+        <div class="grid u-top">
           <div class="card"><h2>System alerts</h2>
-            <div class="banner error" style="margin-bottom:10px">${ic('alert', 18)}<div class="grow"><b>18 students not imported</b><span style="font-size:13px">Autumn 2026 import, rows need a valid email.</span></div><a class="btn sm" href="#/admin/enrolments">Fix</a></div>
-            <div class="banner warn" style="margin:0">${ic('users', 18)}<div class="grow"><b>Autumn 2026 has no TA</b><span style="font-size:13px">Starts Oct 20 with 48 students.</span></div><a class="btn sm" href="#/admin/users">Assign</a></div></div>
-          <div class="card"><h2>Recent activity</h2><div class="list" style="font-size:13px">${D.audit.slice(0, 4).map(a => `<div class="row" style="align-items:flex-start"><span style="flex:1">${esc(a.what)}</span><span class="muted" style="white-space:nowrap">${a.when.split(' · ')[0].replace(', 2026', '')}</span></div>`).join('')}</div>
-            <a href="#/admin/users" style="display:inline-block;margin-top:8px;font-weight:600">Open audit log</a></div></div></div>`);
+            <div class="banner error" style="margin-bottom:10px">${ic('alert', 18)}<div class="grow"><b>18 students not imported</b><span class="u-meta">Autumn 2026 import, rows need a valid email.</span></div><a class="btn sm" href="#/admin/enrolments">Fix</a></div>
+            <div class="banner warn u-m0">${ic('users', 18)}<div class="grow"><b>Autumn 2026 has no TA</b><span class="u-meta">Starts Oct 20 with 48 students.</span></div><a class="btn sm" href="#/admin/users">Assign</a></div></div>
+          <div class="card"><h2>Recent activity</h2><div class="list u-meta">${D.audit.slice(0, 4).map(a => `<div class="row" style="align-items:flex-start"><span class="u-grow">${esc(a.what)}</span><span class="muted u-nowrap">${a.when.split(' · ')[0].replace(', 2026', '')}</span></div>`).join('')}</div>
+            <a href="#/admin/users" class="card-link">Open audit log</a></div></div></div>`);
   }
 
   function aCatalogue() {
@@ -667,13 +667,13 @@
     const chips = ['all', 'In review', 'Published', 'Draft', 'Archived'].map(v => `<button class="chip" data-act="cFilter" data-v="${v}" aria-pressed="${S.cFilter === v}">${v === 'all' ? 'All 8' : v + ' ' + D.catalogue.filter(c => c.state === v).length}</button>`).join('');
     const act = c => c.state === 'In review' ? `<button class="btn sm primary" data-act="panel" data-v="review:${c.id}">Review</button>`
       : c.state === 'Published' ? `<button class="btn sm" data-act="panel" data-v="cohort:${c.id}">Schedule cohort</button>${c.id === 'uxf' ? ' <button class="btn sm" data-act="modal" data-v="push">Push v2</button>' : ''}`
-      : c.state === 'Archived' ? lockBtn('Edit', 'Archived courses are read-only for everyone.', 'btn sm') : `<span class="muted" style="font-size:13px">Owner is editing</span>`;
+      : c.state === 'Archived' ? lockBtn('Edit', 'Archived courses are read-only for everyone.', 'btn sm') : `<span class="muted u-meta">Owner is editing</span>`;
     return guard({ title: 'Courses', errWhat: 'courses', deniedWhat: 'the course catalogue', deniedWho: 'Instructors see only the courses they own. Your courses are in the course builder.', deniedAlt: '<a class="btn" href="#/instructor/builder" data-act="role" data-v="instructor">Open course builder</a>',
       empty: emptyState('No courses yet', 'Instructors create drafts, you review and publish them. Invite an instructor to start.', '<a class="btn primary" href="#/admin/users">Invite an instructor</a>', 'grid') }, () => `
       ${head('Courses', 'A course is the template; a cohort is one dated run of it', '<button class="btn primary" data-act="newCourse">' + ic('plus', 16) + 'New course</button>')}
       <div class="toolbar">${chips}</div>
       <div class="tablebox"><table><thead><tr><th>Course</th><th>Status</th><th>Version</th><th>Owner</th><th class="c-wide">Cohorts</th><th class="c-wide">Students</th><th class="c-wide">Updated</th><th></th></tr></thead><tbody>
-        ${list.map(c => `<tr><td><b style="font-weight:600">${trunc(c.title, 320)}</b></td><td>${tag(c.state)}</td><td class="mono">${c.version}</td><td>${trunc(c.owner, 200)}</td><td class="num c-wide">${c.cohorts}</td><td class="num c-wide">${c.students}</td><td class="num muted c-wide">${c.updated}</td><td style="text-align:right">${act(c)}</td></tr>`).join('')}</tbody></table></div>`);
+        ${list.map(c => `<tr><td><b class="u-strong">${trunc(c.title, 320)}</b></td><td>${tag(c.state)}</td><td class="mono">${c.version}</td><td>${trunc(c.owner, 200)}</td><td class="num c-wide">${c.cohorts}</td><td class="num c-wide">${c.students}</td><td class="num muted c-wide">${c.updated}</td><td class="u-right">${act(c)}</td></tr>`).join('')}</tbody></table></div>`);
   }
 
   function aEnrol() {
@@ -681,15 +681,15 @@
     const chips = ['all', 'Active', 'Invited', 'Paused', 'Dropped', 'Completed'].map(v => `<button class="chip" data-act="eFilter" data-v="${v}" aria-pressed="${S.eFilter === v}">${v === 'all' ? 'All ' + D.enrolments.length : v + ' ' + D.enrolments.filter(e => e.state === v).length}</button>`).join('');
     const allSel = rows.length && rows.every(r => S.eSel.has(r.id));
     const eEnter = S.eSel.size && !S.eBulkShown; S.eBulkShown = !!S.eSel.size;
-    const bulk = S.eSel.size ? `<div class="bulkbar${eEnter ? ' enter' : ''}" role="region" aria-label="Bulk actions"><b>${S.eSel.size} selected</b><span style="flex:1"></span><button class="btn sm" data-act="ebulk" data-v="Paused">Pause</button><button class="btn sm" data-act="ebulk" data-v="move">Move to cohort</button><button class="btn sm" data-act="ebulk" data-v="Dropped">Drop</button><button class="iconbtn" style="color:var(--text-on-dark-2)" aria-label="Clear selection" data-act="eClear">${ic('x')}</button></div>` : '';
+    const bulk = S.eSel.size ? `<div class="bulkbar${eEnter ? ' enter' : ''}" role="region" aria-label="Bulk actions"><b>${S.eSel.size} selected</b><span class="u-grow"></span><button class="btn sm" data-act="ebulk" data-v="Paused">Pause</button><button class="btn sm" data-act="ebulk" data-v="move">Move to cohort</button><button class="btn sm" data-act="ebulk" data-v="Dropped">Drop</button><button class="iconbtn on-dark" aria-label="Clear selection" data-act="eClear">${ic('x')}</button></div>` : '';
     return guard({ title: 'Enrolments', errWhat: 'enrolments', deniedWhat: 'Enrolments', deniedWho: 'Only admins can enrol, pause or drop students. Instructors see their own cohorts read-only in the roster.', deniedAlt: '<a class="btn" href="#/instructor/roster" data-act="role" data-v="instructor">Open my roster</a>',
       empty: emptyState('No students enrolled', 'Import a CSV or invite students by email. Autumn 2026 starts Oct 20.', '<button class="btn primary" data-act="modal" data-v="import">Import CSV</button>', 'users') }, () => `
       ${head('Enrolments', `${233 + D.enrolments.length} students in ${D.cohorts.length} cohorts`, '<button class="btn" data-act="modal" data-v="import">' + ic('upload', 16) + 'Import CSV</button><button class="btn primary" data-act="modal" data-v="enrol">' + ic('plus', 16) + 'Enrol students</button>')}
       <div class="toolbar"><label class="search">${ic('search', 16)}<span class="sr">Search</span><input placeholder="Search name or email"></label><select class="select" aria-label="Cohort"><option>All cohorts</option><option>UXF · Spring 2026</option><option>Service Design · Spring 2026</option></select></div>
       <div class="toolbar">${chips}</div>
       <div class="tablebox"><table class="rtable"><thead><tr><th class="check"><label class="hit"><input type="checkbox" aria-label="Select all" data-act="eSelAll" ${allSel ? 'checked' : ''}></label></th><th>Student</th><th class="c-2nd">Email</th><th class="c-2nd">Cohort</th><th>Status</th><th>Progress</th><th>Last active</th></tr></thead><tbody>
-        ${rows.map(r => `<tr class="${S.eSel.has(r.id) ? 'sel' : ''}${S.flash.has(r.id) ? ' flash' : ''}"><td class="check c-check"><label class="hit"><input type="checkbox" aria-label="Select ${esc(r.student)}" data-act="eSel" data-v="${r.id}" ${S.eSel.has(r.id) ? 'checked' : ''}></label></td><td class="c-student"><div class="who">${av(r.initials, r.student)}<div style="min-width:0"><b style="font-weight:600" title="${esc(r.student)}">${esc(r.student)}</b><div class="meta-2nd">${esc(r.email)} · ${esc(r.cohort)}</div></div></div></td>
-          <td class="muted c-2nd">${trunc(r.email, 210)}</td><td class="c-2nd">${trunc(r.cohort, 190)}</td><td class="c-status">${tag(r.state)}</td><td class="c-ai" data-label="Progress"><div style="display:flex;align-items:center;gap:10px">${bar(r.progress)}<span class="num muted" style="width:36px">${r.progress}%</span></div></td><td class="num c-final" data-label="Last active">${r.last}</td></tr>`).join('')}</tbody></table></div>${bulk}`);
+        ${rows.map(r => `<tr class="${S.eSel.has(r.id) ? 'sel' : ''}${S.flash.has(r.id) ? ' flash' : ''}"><td class="check c-check"><label class="hit"><input type="checkbox" aria-label="Select ${esc(r.student)}" data-act="eSel" data-v="${r.id}" ${S.eSel.has(r.id) ? 'checked' : ''}></label></td><td class="c-student"><div class="who">${av(r.initials, r.student)}<div class="u-grow"><b class="u-strong" title="${esc(r.student)}">${esc(r.student)}</b><div class="meta-2nd">${esc(r.email)} · ${esc(r.cohort)}</div></div></div></td>
+          <td class="muted c-2nd">${trunc(r.email, 210)}</td><td class="c-2nd">${trunc(r.cohort, 190)}</td><td class="c-status">${tag(r.state)}</td><td class="c-ai" data-label="Progress"><div class="u-row">${bar(r.progress)}<span class="num muted" style="width:36px">${r.progress}%</span></div></td><td class="num c-final" data-label="Last active">${r.last}</td></tr>`).join('')}</tbody></table></div>${bulk}`);
   }
 
   function aUsers() {
@@ -698,16 +698,16 @@
       ${head('Users and roles', 'Role sets the action · scope sets the reach · state can lock it', '<button class="btn primary" data-act="modal" data-v="invite">' + ic('plus', 16) + 'Invite people</button>')}
       <div class="grid g-main">
         <div class="tablebox"><table class="utable"><thead><tr><th>Person</th><th>Role</th><th>Scope</th><th>Last active</th><th></th></tr></thead><tbody>
-          ${D.staff.map((u, i) => `<tr><td class="u-who"><div class="who">${av(u.initials, u.name)}<div><b style="font-weight:600" title="${esc(u.name)}">${esc(u.name)}</b><div class="muted" style="font-size:12px">${trunc(u.email, 220)}</div></div></div></td><td class="u-role" data-last="${esc(u.last)}">${esc(u.role)}</td><td class="muted u-scope" style="white-space:normal;max-width:220px">${esc(u.scope)}</td><td class="num u-last">${u.last}</td>
-            <td class="u-act" style="text-align:right"><button class="btn sm" data-act="panel" data-v="user:${i}">Open</button></td></tr>`).join('')}</tbody></table></div>
-        <div class="card" style="align-self:start"><h2>Audit log</h2><div class="list" style="font-size:13px">${D.audit.map(a => `<div class="row" style="align-items:flex-start;flex-direction:column;gap:2px"><span>${esc(a.what)}</span><span class="muted">${esc(a.who)} · ${a.when}</span></div>`).join('')}</div></div></div>`);
+          ${D.staff.map((u, i) => `<tr><td class="u-who"><div class="who">${av(u.initials, u.name)}<div><b class="u-strong" title="${esc(u.name)}">${esc(u.name)}</b><div class="muted u-small">${trunc(u.email, 220)}</div></div></div></td><td class="u-role" data-last="${esc(u.last)}">${esc(u.role)}</td><td class="muted u-scope" style="white-space:normal;max-width:220px">${esc(u.scope)}</td><td class="num u-last">${u.last}</td>
+            <td class="u-act u-right"><button class="btn sm" data-act="panel" data-v="user:${i}">Open</button></td></tr>`).join('')}</tbody></table></div>
+        <div class="card u-start"><h2>Audit log</h2><div class="list u-meta">${D.audit.map(a => `<div class="row" style="align-items:flex-start;flex-direction:column;gap:2px"><span>${esc(a.what)}</span><span class="muted">${esc(a.who)} · ${a.when}</span></div>`).join('')}</div></div></div>`);
   }
 
   /* ================= STUDENT ================= */
   const allItems = () => D.course.modules.flatMap((m, mi) => m.items.map((it, ii) => ({ ...it, module: m.title, mi })));
   function steps(current) {
     const items = allItems(); const cur = items.findIndex(i => i.title === current);
-    return `<div class="steps">${items.map((it, i) => `<div class="step ${i < cur ? 'done' : i === cur ? 'now' : i > cur + 1 ? 'lock' : ''}"><span class="dot">${i < cur ? `<span style="color:var(--white)">${ic('check', 12, 3)}</span>` : i > cur + 1 ? ic('lock', 11, 2) : ''}</span><span style="font-size:13px">${esc(it.title)}</span></div>`).join('')}</div>`;
+    return `<div class="steps">${items.map((it, i) => `<div class="step ${i < cur ? 'done' : i === cur ? 'now' : i > cur + 1 ? 'lock' : ''}"><span class="dot">${i < cur ? `<span style="color:var(--white)">${ic('check', 12, 3)}</span>` : i > cur + 1 ? ic('lock', 11, 2) : ''}</span><span class="u-meta">${esc(it.title)}</span></div>`).join('')}</div>`;
   }
   function sHome() {
     // The home follows the student's own progress in this session: finishing a lesson moves the next step.
@@ -721,19 +721,19 @@
     return guard({ title: 'Hi, Lucía', errWhat: 'your courses', deniedWhat: 'this course', deniedWho: 'Your enrolment in Spring 2026 is paused. Contact your school to continue.',
       empty: head('Hi, Lucía', 'You are not enrolled in a course yet') + emptyState('No courses yet', 'When your school enrols you in a cohort, it will appear here with its start date.', '', 'book') }, () => `
       ${head('Hi, Lucía', 'UX Design Fundamentals · Spring 2026 · ends Nov 28', `<span class="pchip">${ic('chart', 16)}${left}</span>`)}
-      <div class="card cta-card hero"><span class="hero-play">${ic('play', 24)}</span><div style="flex:1;min-width:0"><div class="muted" style="font-size:12px">Continue · Module 3 · Interface</div><div class="big">${next[0]}</div><div class="muted" style="font-size:13px">${next[1]}</div></div><a class="btn primary" href="${next[2]}">Continue lesson</a></div>
+      <div class="card cta-card hero"><span class="hero-play">${ic('play', 24)}</span><div class="u-grow"><div class="muted u-small">Continue · Module 3 · Interface</div><div class="big">${next[0]}</div><div class="muted u-meta">${next[1]}</div></div><a class="btn primary" href="${next[2]}">Continue lesson</a></div>
       <div class="grid g-main home-grid">
-        <div class="card"><div class="prog-head"><div><h2 style="margin:0">UX Design Fundamentals</h2><div class="muted small">4 modules · 12 items</div></div><span class="prog-val num">${pct}%</span></div>
+        <div class="card"><div class="prog-head"><div><h2 class="u-m0">UX Design Fundamentals</h2><div class="muted small">4 modules · 12 items</div></div><span class="prog-val num">${pct}%</span></div>
           <div class="prog-bar">${bar(pct, 'cobalt')}</div>
           ${D.course.modules.map((m, i) => { const st = ['Completed', 'Completed', 'In progress', 'Locked'][i]; const subl = ['3 of 3 done', '3 of 3 done', done ? '2 of 3 done · States nobody designs is next' : '1 of 3 done · Working with components is next', 'Opens after Module 3'][i];
             const mark = st === 'Completed' ? ic('check', 16) : st === 'Locked' ? ic('lock', 16) : `<span class="mono">0${i + 1}</span>`;
             const ls = st === 'In progress' ? `<div class="mod-lessons">${lessons.map(([icn, n, meta, k, href]) => `<a class="mod-lesson ${k}" href="${href}">${ic(icn, 16)}<span class="ml-text"><span class="ml-title">${n}</span><span class="muted small">${meta}</span></span></a>`).join('')}</div>` : '';
-            return `<div class="mod-row"><span class="mod-mark${st === 'In progress' ? ' now' : ''}">${mark}</span><div style="flex:1;min-width:0"><b>${m.title}</b><div class="muted small">${subl}</div></div>${tag(st)}</div>${ls}`; }).join('')}</div>
+            return `<div class="mod-row"><span class="mod-mark${st === 'In progress' ? ' now' : ''}">${mark}</span><div class="u-grow"><b>${m.title}</b><div class="muted small">${subl}</div></div>${tag(st)}</div>${ls}`; }).join('')}</div>
         <div class="card side-card"><section><h3>Due next</h3><div class="list">
-            <a class="row" href="#/student/assignment"><span class="qchip qc-review">${ic('file', 18)}</span><div style="flex:1"><b>Usability test report</b><div class="muted small">Module 3 · Assignment</div></div>${sub ? tag('Submitted') : '<span class="num" style="font-weight:500">Oct 14</span>'}</a>
-            <div class="row"><span class="qchip qc-sub">${ic('lock', 18)}</span><div style="flex:1"><b>Final case study</b><div class="muted small">Opens after Module 3</div></div><span class="num" style="font-weight:500">Nov 4</span></div></div></section>
-          <section><h3>Latest feedback</h3><div class="who" style="margin-bottom:12px">${av('ML', 'Maria Lopez')}<div style="flex:1;min-width:0"><b>Maria Lopez</b><div class="muted small">User interview plan</div></div><span class="qr-big num">88<small> / 100</small></span></div><div class="feedback-box">Clear goals and a good mix of open questions. Next time, add how you will recruit participants.</div></section>
-          <section><div style="display:flex;align-items:baseline;gap:8px;margin-bottom:12px"><h3 style="margin:0;flex:1">Your group</h3><span class="muted small">Group A · 8 students</span></div>
+            <a class="row" href="#/student/assignment"><span class="qchip qc-review">${ic('file', 18)}</span><div class="u-grow"><b>Usability test report</b><div class="muted small">Module 3 · Assignment</div></div>${sub ? tag('Submitted') : '<span class="num u-medium">Oct 14</span>'}</a>
+            <div class="row"><span class="qchip qc-sub">${ic('lock', 18)}</span><div class="u-grow"><b>Final case study</b><div class="muted small">Opens after Module 3</div></div><span class="num u-medium">Nov 4</span></div></div></section>
+          <section><h3>Latest feedback</h3><div class="who" style="margin-bottom:12px">${av('ML', 'Maria Lopez')}<div class="u-grow"><b>Maria Lopez</b><div class="muted small">User interview plan</div></div><span class="qr-big num">88<small> / 100</small></span></div><div class="feedback-box">Clear goals and a good mix of open questions. Next time, add how you will recruit participants.</div></section>
+          <section><div style="display:flex;align-items:baseline;gap:8px;margin-bottom:12px"><h3 class="u-m0 u-grow">Your group</h3><span class="muted small">Group A · 8 students</span></div>
             <div class="classmates">${['Hannah Cole', 'Jonas Weber', 'Amira Bensaid', 'Noah Becker', 'Pablo Ruiz'].map(n => av('', n)).join('')}<span class="avatar more">+2</span></div>
             <div class="who" style="margin-top:12px">${av('ML', 'Maria Lopez')}${av('NK', 'Nadia Kowalski')}<span class="muted small">Maria Lopez teaches · Nadia Kowalski reviews</span></div></section></div></div>`);
   }
@@ -742,11 +742,11 @@
     return guard({ title: 'Working with components', errWhat: 'this lesson', deniedWhat: 'this lesson', deniedWho: 'Your enrolment is paused, so lessons are read-only. Contact your school to continue.',
       empty: emptyState('This lesson has no content yet', 'Your instructor is still preparing it. Try another lesson in this module.', '<a class="btn" href="#/student/home">Back to course</a>', 'play') }, () => locked ? `
       ${head('Final case study', 'Module 4 · Delivery', '', '<a href="#/student/home">UX Design Fundamentals</a> / Module 4')}
-      <div class="grid g-main" style="align-items:start"><div class="locked-card"><div class="denied" style="margin:0;max-width:none;text-align:left"><div class="lock" style="margin:0;color:var(--white)">${ic('lock', 24)}</div></div>
-        <div><h2 style="font-family:var(--font-brand);font-weight:600;letter-spacing:-.02em;margin:0 0 6px">Opens on Oct 14, or after you finish Lesson 4.</h2><p class="muted" style="margin:0 0 14px">You have 2 lessons and 1 assignment left in Module 3.</p><a class="btn primary" href="#/student/lesson">Go to your current lesson</a></div></div>
+      <div class="grid g-main u-items-start"><div class="locked-card"><div class="lock-mark">${ic('lock', 24)}</div>
+        <div><h2 class="h-panel">Opens on Oct 14, or after you finish Lesson 4.</h2><p class="muted lead-gap">You have 2 lessons and 1 assignment left in Module 3.</p><a class="btn primary" href="#/student/lesson">Go to your current lesson</a></div></div>
         <div class="card">${steps('Working with components')}</div></div>` : `
       ${head('Working with components', `Module 3 · Interface · lesson 2 of 3 · 17 min${S.lessonDone ? ' · ' + tag('Completed') : ''}`, '<a class="btn hide-m" href="#/student/lesson/locked">Next: locked lesson</a>', '<a href="#/student/home">UX Design Fundamentals</a> / Module 3')}
-      <div class="grid g-main"><div class="grid" style="align-content:start"><div class="lesson"><div class="video">${ic('play', 40)}</div>
+      <div class="grid g-main"><div class="grid u-top"><div class="lesson"><div class="video">${ic('play', 40)}</div>
         <p>Components let a team build many screens from a few reliable parts. In this lesson you'll take one card from the course page and turn it into a component with three states: default, loading and locked.</p>
         <p>Watch the walkthrough, then try it in your own file. The usability test in Module 3 will use these components.</p>
         ${S.lessonDone ? '' : `<div class="lesson-acts"><button class="btn primary" data-act="lessonDone">${ic('check', 16)}Mark as done</button><a class="btn" href="#/student/assignment">Go to assignment</a></div>`}</div>
@@ -755,7 +755,7 @@
           ${nextRow('file', 'Usability test report', S.studentSubmitted ? 'Assignment · submitted' : 'Assignment · due Oct 14 · uses this lesson', '#/student/assignment', 'qc-review')}
           ${nextRow('play', 'States nobody designs', 'Lesson 3 of 3 · 15 min', '#/student/home')}
           <a class="btn primary block" href="#/student/assignment">Open the assignment</a></div>` : ''}</div>
-        <div class="card" style="align-self:start"><h3>Your progress</h3>${steps(S.lessonDone ? 'States nobody designs' : 'Working with components')}</div></div>`);
+        <div class="card u-start"><h3>Your progress</h3>${steps(S.lessonDone ? 'States nobody designs' : 'Working with components')}</div></div>`);
   }
   const nextRow = (icn, title, meta, href, cls = 'qc-sub') => `<a class="next-row" href="${href}"><span class="qchip ${cls}">${ic(icn, 18)}</span><span class="grow"><b>${title}</b><span class="muted small">${meta}</span></span>${ic('chev', 18)}</a>`;
   function sAssignment() {
@@ -773,12 +773,12 @@
     return guard({ title: 'Usability test report', errWhat: 'the assignment', deniedWhat: 'this assignment', deniedWho: 'Submissions closed when the cohort ended. Ask your instructor if you need an extension.',
       empty: emptyState('No assignment here yet', 'Your instructor has not published this assignment. You will get an email when it opens.', '', 'file') }, () => `
       ${head('Usability test report', `Module 3 · due Oct 14 · ${sub ? tag('Submitted') : tag('Not started')}`, '', '<a href="#/student/home">UX Design Fundamentals</a> / Assignment')}
-      <div class="grid g-main"><div class="grid" style="align-content:start">
-        ${sub ? '' : `<div class="card"><h2>Brief</h2><p style="margin:0">Run a short usability test with 3 people on your wireframes. Report what you saw, what you changed and why. PDF, up to 8 pages.</p></div>`}
+      <div class="grid g-main"><div class="grid u-top">
+        ${sub ? '' : `<div class="card"><h2>Brief</h2><p class="u-m0">Run a short usability test with 3 people on your wireframes. Report what you saw, what you changed and why. PDF, up to 8 pages.</p></div>`}
         ${upload}
         ${sub ? `<div class="card"><div class="overline">Next up</div>${nextRow('play', 'States nobody designs', 'Lesson 3 of 3 · 15 min', '#/student/home')}</div>` : ''}</div>
-        <div class="card" style="align-self:start"><h2>How it's graded</h2><div class="list" style="font-size:13px">${['Test plan and tasks', 'What you observed', 'Changes you made', 'Clarity of the report'].map(c => `<div class="row"><span style="flex:1">${c}</span><span class="num muted">25</span></div>`).join('')}</div>
-          <p class="muted" style="font-size:12px;margin:12px 0 0">Feedback comes from your instructor. AI may help draft it, but a person always reviews your grade.</p></div></div>`);
+        <div class="card u-start"><h2>How it's graded</h2><div class="list u-meta">${['Test plan and tasks', 'What you observed', 'Changes you made', 'Clarity of the report'].map(c => `<div class="row"><span class="u-grow">${c}</span><span class="num muted">25</span></div>`).join('')}</div>
+          <p class="muted u-small note">Feedback comes from your instructor. AI may help draft it, but a person always reviews your grade.</p></div></div>`);
   }
   function sGrades() {
     // Lucía's Wireframe review is s1 in the instructor's queue: releasing it there makes it appear here.
@@ -797,7 +797,7 @@
         ${g.score != null ? `<div class="gc-score num">${g.score}<small> / 100</small></div>` : ''}
         ${g.feedback ? `<div class="feedback-box">${esc(g.feedback)}</div>` : ''}
         ${g.rubric ? `<div class="gc-rubric">${g.rubric.map((v, i) => `<div><span>${names[i]}</span><span class="mono">${v} / 25</span></div>`).join('')}</div><div class="who small muted">${av('ML', 'Maria Lopez')}<span>Reviewed and released by Maria Lopez</span></div>` : ''}
-        ${g.status === 'Submitted' ? `<p class="muted small" style="margin:0">Waiting for review. Grades are released after the deadline${g.title.startsWith('Wireframe') ? '.' : ', Oct 14.'}</p>${g.title.startsWith('Wireframe') ? `<button class="linkbtn small demo-hint" data-act="demoRelease" data-v="${s1.id}">Demo: release it as the instructor</button>` : ''}` : ''}
+        ${g.status === 'Submitted' ? `<p class="muted small u-m0">Waiting for review. Grades are released after the deadline${g.title.startsWith('Wireframe') ? '.' : ', Oct 14.'}</p>${g.title.startsWith('Wireframe') ? `<button class="linkbtn small demo-hint" data-act="demoRelease" data-v="${s1.id}">Demo: release it as the instructor</button>` : ''}` : ''}
         ${g.status === 'Not started' ? `<a class="btn sm" href="#/student/assignment">Open the assignment</a>` : ''}</div>`).join('')}</div>`);
   }
 
@@ -821,12 +821,12 @@
     const decided = ['accept', 'edit'].includes(st.mode);
     // What the AI proposes: tinted, never what the student gets.
     const aiBlock = s.ai == null ? (done ? '' : aiCard(s, st)) : st.mode === 'discard' && !done ? aiCard(s, st)
-      : `<section class="qr-ai${draft ? '' : ' compact'}" aria-label="AI suggestion"><div class="head">${ic(draft ? 'sparkle' : 'check', 16)}<b>${draft ? 'AI suggestion' : 'AI suggestion ' + (st.mode === 'edit' ? 'edited' : 'accepted')}</b><span class="spacer" style="flex:1"></span><span class="${draft ? 'qr-big' : 'qr-mid'} num">${s.ai}<small> / 100</small></span>${!draft && !done ? `<button class="linkbtn small" data-act="ai" data-v="restore" data-id="${s.id}">Undo</button>` : ''}</div>
+      : `<section class="qr-ai${draft ? '' : ' compact'}" aria-label="AI suggestion"><div class="head">${ic(draft ? 'sparkle' : 'check', 16)}<b>${draft ? 'AI suggestion' : 'AI suggestion ' + (st.mode === 'edit' ? 'edited' : 'accepted')}</b><span class="spacer u-grow"></span><span class="${draft ? 'qr-big' : 'qr-mid'} num">${s.ai}<small> / 100</small></span>${!draft && !done ? `<button class="linkbtn small" data-act="ai" data-v="restore" data-id="${s.id}">Undo</button>` : ''}</div>
         ${draft ? `<p class="qr-sum">Clear flow and well-handled empty states. Fix the hidden cohort dates and the missing next step after a failed upload.</p>${rubricList(st)}<div class="muted small">Based on the rubric. ${first} does not see this.</div>` : `<div class="muted small">${done ? 'Used as the starting point for the released grade.' : 'Score and feedback below start from the suggestion. Change anything before release.'}</div>`}</section>`;
     // The teacher's decision: actions first, then what will be sent.
     const decision = draft ? `<div class="qr-dec"><div class="overline">Your decision</div><div class="qr-acts"><button class="btn primary" data-act="ai" data-v="accept" data-id="${s.id}">Accept ${s.ai}</button><button class="btn" data-act="ai" data-v="edit" data-id="${s.id}">Edit</button><button class="btn ghost" data-act="ai" data-v="discard" data-id="${s.id}">Discard</button></div>
         <div class="field"><label for="fb" class="sr">Feedback to ${first}</label><textarea id="fb" data-act="fbtext" data-id="${s.id}" placeholder="Feedback to ${first}: what to fix next">${esc(fbFor(st))}</textarea></div></div>`
-      : `<div class="qr-dec"><div class="overline">Your decision</div><div class="qr-score"><label for="qs">Final score</label><span class="spacer" style="flex:1"></span><input id="qs" class="score-input num" style="width:72px" inputmode="numeric" data-act="qscore" data-id="${s.id}" value="${scoreText(s)}" placeholder="—" ${done ? 'disabled' : ''}><span class="muted">/ 100</span></div>
+      : `<div class="qr-dec"><div class="overline">Your decision</div><div class="qr-score"><label for="qs">Final score</label><span class="spacer u-grow"></span><input id="qs" class="score-input num" style="width:72px" inputmode="numeric" data-act="qscore" data-id="${s.id}" value="${scoreText(s)}" placeholder="—" ${done ? 'disabled' : ''}><span class="muted">/ 100</span></div>
         <div class="field"><label for="fb" class="sr">Feedback to ${first}</label><textarea id="fb" data-act="fbtext" data-id="${s.id}" placeholder="Feedback to ${first}: what to fix next" ${done ? 'disabled' : ''}>${esc(fbFor(st))}</textarea></div>
         ${!done && !needsReview(s) ? `<div class="qr-preview">${ic('eye', 16)}<div><div class="muted small">${first} will see after release</div><b>${esc(s.assignment)} · ${scoreText(s)} / 100 · the feedback above</b></div></div>` : ''}</div>`;
     const jr = S.justReleased && S.justReleased.id === s.id ? S.justReleased : null; const nx = pending()[0];
@@ -839,29 +839,29 @@
     if (S.panel && !(dockOn() && S.panel.startsWith('grade:'))) {
       const [k, v] = S.panel.split(':');
       let body = '';
-      if (k === 'review') { const c = D.catalogue.find(x => x.id === v); body = `<div class="crumbs">Review course</div><h2 style="font-family:var(--font-brand);font-weight:600;letter-spacing:-.02em;margin:0">${esc(c.title)}</h2><div>${tag(c.state)} <span class="mono">${c.version}</span> · owner ${esc(c.owner)}</div>
-          <div class="card" style="padding:14px"><h3>What changed</h3><ul style="margin:0;padding-left:18px;color:var(--text-2)"><li>New module: Accessibility checks</li><li>Rubric updated for 2 assignments</li><li>3 lessons rewritten</li></ul></div>
+      if (k === 'review') { const c = D.catalogue.find(x => x.id === v); body = `<div class="crumbs">Review course</div><h2 class="h-panel">${esc(c.title)}</h2><div>${tag(c.state)} <span class="mono">${c.version}</span> · owner ${esc(c.owner)}</div>
+          <div class="card" style="padding:14px"><h3>What changed</h3><ul class="plain-list"><li>New module: Accessibility checks</li><li>Rubric updated for 2 assignments</li><li>3 lessons rewritten</li></ul></div>
           <div class="field"><label for="note">Note to ${esc(c.owner.split(' ')[0])}</label><textarea id="note" placeholder="Optional. Required if you request changes."></textarea></div>
           <div style="display:flex;gap:8px"><button class="btn" data-load data-act="review" data-v="changes:${c.id}">Request changes</button><button class="btn primary" data-load data-act="review" data-v="approve:${c.id}">Approve and publish</button></div>`; }
-      if (k === 'cohort') { const c = D.catalogue.find(x => x.id === v); body = `<div class="crumbs">Schedule cohort</div><h2 style="font-family:var(--font-brand);font-weight:600;letter-spacing:-.02em;margin:0">${esc(c.title)} · ${c.version}</h2><p class="muted" style="margin:0">The cohort runs this version. Content edits on the course won't reach it until you push an update.</p>
+      if (k === 'cohort') { const c = D.catalogue.find(x => x.id === v); body = `<div class="crumbs">Schedule cohort</div><h2 class="h-panel">${esc(c.title)} · ${c.version}</h2><p class="muted u-m0">The cohort runs this version. Content edits on the course won't reach it until you push an update.</p>
           <div class="field"><label for="cn">Cohort name</label><input id="cn" value="Winter 2027"></div><div class="grid g-2"><div class="field"><label for="cs">Starts</label><input id="cs" value="Jan 12, 2027"></div><div class="field"><label for="ce">Ends</label><input id="ce" value="Apr 9, 2027"></div></div>
           <div class="field"><label for="ci">Instructors</label><select id="ci"><option>${esc(c.owner)}</option></select></div><div class="field"><label for="ct">Teaching assistants</label><select id="ct"><option>Nadia Kowalski · Group A</option><option>Ben Okafor · Group B</option></select></div>
           <div class="grid g-2"><div class="field"><label for="cg">Groups</label><input id="cg" value="2" inputmode="numeric"></div><div class="field"><label for="cc">Capacity</label><input id="cc" value="48" inputmode="numeric"><span class="help">Max 24 per group</span></div></div>
           <button class="btn primary" data-load data-act="schedule" data-v="${c.id}">Schedule cohort</button>`; }
-      if (k === 'user') { const u = D.staff[+v]; const log = D.audit.filter(a => a.what.includes(u.name.split(' ')[0]) || a.who === u.name); body = `<div class="crumbs">User</div><div class="who" style="gap:12px">${av(u.initials, u.name)}<div><h2 style="font-family:var(--font-brand);font-weight:600;letter-spacing:-.02em;margin:0">${esc(u.name)}</h2><div class="muted">${esc(u.email)}</div></div></div>
+      if (k === 'user') { const u = D.staff[+v]; const log = D.audit.filter(a => a.what.includes(u.name.split(' ')[0]) || a.who === u.name); body = `<div class="crumbs">User</div><div class="who" style="gap:12px">${av(u.initials, u.name)}<div><h2 class="h-panel">${esc(u.name)}</h2><div class="muted">${esc(u.email)}</div></div></div>
           <div class="field"><label for="ur">Role</label><select id="ur">${['Admin', 'Instructor', 'Admin + Instructor', 'Teaching assistant'].map(r => `<option ${r === u.role ? 'selected' : ''}>${r}</option>`).join('')}</select></div>
           <div class="field"><label for="us">Scope</label><input id="us" value="${esc(u.scope)}"><span class="help">Where the role applies: whole school, a course, a cohort or a group.</span></div>
           <button class="btn primary" data-load data-act="saveRole" data-v="${v}">Save changes</button>
-          <div><h3 style="margin:8px 0">Activity</h3><div class="list" style="font-size:13px">${(log.length ? log : [{ what: 'Signed in', who: u.name, when: u.last }]).map(a => `<div class="row" style="flex-direction:column;align-items:flex-start;gap:2px"><span>${esc(a.what)}</span><span class="muted">${esc(a.who)} · ${esc(a.when)}</span></div>`).join('')}</div></div>`; }
+          <div><h3 style="margin:8px 0">Activity</h3><div class="list u-meta">${(log.length ? log : [{ what: 'Signed in', who: u.name, when: u.last }]).map(a => `<div class="row" style="flex-direction:column;align-items:flex-start;gap:2px"><span>${esc(a.what)}</span><span class="muted">${esc(a.who)} · ${esc(a.when)}</span></div>`).join('')}</div></div>`; }
       if (k === 'grade') body = gradeBody(v);
       // First open slides the panel in; moving to another submission only fades the content.
       out += `<div class="scrim panel-scrim${S.anim ? ' enter' : ''}" data-act="closeAll"></div><aside class="panel${S.anim ? ' enter' : S.swap ? ' swap' : ''}${k === 'grade' ? ' qr' : ''}" role="dialog" aria-modal="true" aria-label="Details">${k === 'grade' ? '' : `<button class="iconbtn" style="align-self:flex-end" aria-label="Close" data-act="closeAll">${ic('x')}</button>`}${body}</aside>`;
     }
     if (S.modal) {
       const M = {
-        publish: `<h2>Send v3 for review?</h2><p class="muted" style="margin:0">Alex Morgan will review it. Spring 2026 keeps v2 until the update is pushed.</p><div class="field"><label for="m1">What changed</label><textarea id="m1">New lesson on component states. Rubric for Wireframe review now asks for an error state.</textarea></div><div class="foot"><button class="btn" data-act="closeAll">Cancel</button><button class="btn primary" data-load data-act="closeAll" data-toast="Sent to Alex Morgan for review">Send for review</button></div>`,
-        push: `<h2>Push v2 to running cohorts?</h2><p class="muted" style="margin:0">Spring 2026 (48 students) will switch to v2 tonight. Progress and grades are kept. Students see a note about what changed.</p><label style="display:flex;gap:8px"><input type="checkbox" checked>Notify students and staff</label><div class="foot"><button class="btn" data-act="closeAll">Cancel</button><button class="btn primary" data-load data-act="push">Push update</button></div>`,
-        import: `<h2>182 of 200 students imported</h2><div class="banner error" style="margin:0">${ic('alert', 18)}<div class="grow"><b>We couldn't import 18 students.</b>Review the rows below and try again.</div></div>
+        publish: `<h2>Send v3 for review?</h2><p class="muted u-m0">Alex Morgan will review it. Spring 2026 keeps v2 until the update is pushed.</p><div class="field"><label for="m1">What changed</label><textarea id="m1">New lesson on component states. Rubric for Wireframe review now asks for an error state.</textarea></div><div class="foot"><button class="btn" data-act="closeAll">Cancel</button><button class="btn primary" data-load data-act="closeAll" data-toast="Sent to Alex Morgan for review">Send for review</button></div>`,
+        push: `<h2>Push v2 to running cohorts?</h2><p class="muted u-m0">Spring 2026 (48 students) will switch to v2 tonight. Progress and grades are kept. Students see a note about what changed.</p><label style="display:flex;gap:8px"><input type="checkbox" checked>Notify students and staff</label><div class="foot"><button class="btn" data-act="closeAll">Cancel</button><button class="btn primary" data-load data-act="push">Push update</button></div>`,
+        import: `<h2>182 of 200 students imported</h2><div class="banner error u-m0">${ic('alert', 18)}<div class="grow"><b>We couldn't import 18 students.</b>Review the rows below and try again.</div></div>
           <div class="tablebox" style="max-height:200px"><table><thead><tr><th>Row</th><th>Value</th><th>Problem</th></tr></thead><tbody>${[[14, 'jonas.weber@', 'Email is incomplete'], [27, 'priya nair@mail.com', 'Email has a space'], [41, '', 'Email is missing'], [58, 'leo.rossi@mail', 'Domain is incomplete'], [77, 'sara@mail.com', 'Already enrolled in this cohort']].map(r => `<tr><td class="num">${r[0]}</td><td class="mono">${esc(r[1] || '—')}</td><td>${r[2]}</td></tr>`).join('')}<tr><td colspan="3" class="muted">and 13 more</td></tr></tbody></table></div>
           <div class="foot"><button class="btn" data-act="closeAll" data-toast="18 rows downloaded as CSV">Download 18 rows</button><button class="btn primary" data-act="closeAll">Done</button></div>`,
         enrol: `<h2>Enrol students</h2><div class="field"><label for="ec">Cohort</label><select id="ec"><option>UX Design Fundamentals · Autumn</option><option>Service Design 101 · Winter</option></select><span class="help">Autumn 2026 starts Oct 20 · 48 seats</span></div>
@@ -870,7 +870,7 @@ theo.laurent@mail.com
 nina.berg@mail.com</textarea><span class="help">Each person gets an invite and counts as enrolled once they accept.</span></div><div class="foot"><button class="btn" data-act="closeAll">Cancel</button><button class="btn primary" data-load data-act="doEnrol">Send invites</button></div>`,
         invite: `<h2>Invite people</h2><div class="field"><label for="in">Name</label><input id="in" value="Irene Duarte"></div><div class="field"><label for="ie">Email</label><input id="ie" value="irene.duarte@cohorta.school"></div>
           <div class="grid g-2"><div class="field"><label for="ir">Role</label><select id="ir"><option>Teaching assistant</option><option>Instructor</option><option>Admin</option></select></div><div class="field"><label for="is">Scope</label><select id="is"><option>UXF Autumn 2026 · Group A</option><option>UX Design Fundamentals</option><option>Whole school</option></select></div></div>
-          <p class="muted" style="margin:0;font-size:13px">Role sets what they can do, scope sets where. You can change both later; every change is logged.</p><div class="foot"><button class="btn" data-act="closeAll">Cancel</button><button class="btn primary" data-load data-act="doInvite">Send invite</button></div>`,
+          <p class="muted u-m0 u-meta">Role sets what they can do, scope sets where. You can change both later; every change is logged.</p><div class="foot"><button class="btn" data-act="closeAll">Cancel</button><button class="btn primary" data-load data-act="doInvite">Send invite</button></div>`,
         move: `<h2>Move ${pl(S.eSel.size, 'student', 'students')}</h2><div class="field"><label for="mv">To cohort</label><select id="mv"><option>UX Design Fundamentals · Autumn 2026</option><option>Service Design 101 · Winter 2026</option></select><span class="help">Progress moves with them. Grades stay in the old cohort's record.</span></div><div class="foot"><button class="btn" data-act="closeAll">Cancel</button><button class="btn primary" data-load data-act="doMove">Move students</button></div>`
       };
       out += `<div class="scrim" data-act="scrim"><div class="modal" role="dialog" aria-modal="true">${M[S.modal]}</div></div>`;

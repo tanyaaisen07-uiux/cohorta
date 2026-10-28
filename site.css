@@ -132,12 +132,6 @@
 .s-demo-alt span{color:var(--text-3)}
 .s-roles{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 
-/* Demo bar link back to the site (demo chrome, not product) */
-.demo .dsite{color:var(--paper);font-weight:600;padding:4px 8px;border:1px solid var(--line-on-dark);border-radius:var(--r-sm)}
-.demo .dsite:hover{background:var(--ink-raised);color:var(--white)}
-.demo .dsite{order:10}
-@media (max-width:720px){.demo .dsite{order:0;font-size:11px;padding:2px 6px;flex:none}}
-
 /* Responsive */
 @media (max-width:1024px){
   .s-hero h1{font-size:46px;line-height:52px}
