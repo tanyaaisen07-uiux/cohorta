@@ -61,16 +61,28 @@
     cursor: 'M5 3l14 7-6 2-2 6z', connect: 'M6 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM7.5 15.5l9-8',
     note: 'M5 4h14v10l-6 6H5zM13 20v-6h6', fit: 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5', map: 'M9 4 3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14'
   };
-  const ic = (n, s = 18, w = 1.8) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${P[n]}"/></svg>`;
+  /* One outline family: sizes snap to 12 / 16 / 18 / 20 / 24, stroke 1.75 (2.25 at 12 px so small checks stay legible). */
+  const ICON_SIZES = [12, 16, 18, 20, 24];
+  const ic = (n, s = 18) => { const z = s > 24 ? s : ICON_SIZES.find(v => v >= s) || 24; const w = z <= 12 ? 2.25 : 1.75;
+    return `<svg width="${z}" height="${z}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${P[n]}"/></svg>`; };
 
   const symbol = (h = 22, mid = '#0B0D17', out = '#2A3BFF') => `<svg width="${Math.round(h * 52 / 48)}" height="${h}" viewBox="6 8 52 48" aria-hidden="true"><rect x="6" y="8" width="52" height="13" rx="6.5" fill="${out}"/><rect x="6" y="25.5" width="24" height="13" rx="6.5" fill="${mid}"/><rect x="6" y="43" width="52" height="13" rx="6.5" fill="${out}"/></svg>`;
   const wordmark = (h = 18) => `<svg width="${Math.round(h * 4.71)}" height="${h}" overflow="visible" viewBox="${LOGO.vb}" fill="currentColor" role="img" aria-label="cohorta">${LOGO.wm}</svg>`;
   const lockup = () => `<a href="#/${S.role}/home" class="brand">${symbol(22)}${wordmark(19)}</a>`;
 
-  const tagClass = s => ({ 'Draft': 't-draft', 'In review': 't-review', 'Published': 't-published', 'Archived': 't-archived', 'Running': 't-running', 'Scheduled': 't-scheduled',
-    'Completed': 't-completed', 'Active': 't-active', 'Invited': 't-invited', 'Paused': 't-paused', 'Dropped': 't-dropped', 'Graded': 't-graded', 'Submitted': 't-submitted',
-    'Returned': 't-returned', 'Late': 't-late', 'AI draft ready': 't-ai', 'Locked': 't-locked', 'Not started': 't-draft', 'In progress': 't-invited', 'Error': 't-error' }[s] || 't-draft');
+  /* Status → meaning. Five families, one colour each: danger (overdue, failed), warning (needs a decision),
+     info (in motion, AI draft waiting), success (live or done well), neutral (no action needed). */
+  const STATUS = {
+    'Late': 'danger', 'Error': 'danger',
+    'Paused': 'warning', 'In review': 'warning',
+    'AI draft ready': 'info', 'Invited': 'info', 'In progress': 'info', 'Scheduled': 'info',
+    'Graded': 'success', 'Published': 'success', 'Running': 'success', 'Active': 'success',
+    'Draft': 'neutral', 'Not started': 'neutral', 'Submitted': 'neutral', 'Returned': 'neutral', 'Archived': 'neutral', 'Completed': 'neutral', 'Dropped': 'neutral', 'Locked': 'neutral'
+  };
+  const tagClass = s => 'st-' + (STATUS[s] || 'neutral');
   const tag = s => `<span class="tag ${tagClass(s)}">${esc(s)}</span>`;
+  // Person row: avatar, name, one line of context, status, action. Same grid in every list of people.
+  const personRow = (avatar, name, meta, status = '', action = '') => `<div class="row prow">${avatar}<div class="prow-txt"><div class="prow-name" title="${esc(name)}">${esc(name)}</div><div class="prow-meta">${meta}</div></div><span class="prow-status">${status}</span>${action}</div>`;
   const subLabel = s => ({ ai: 'AI draft ready', submitted: 'Submitted', late: 'Late', graded: 'Graded', returned: 'Returned' }[s]);
   /* Illustrated, faceless avatars. The same drawing function builds the Avatar/<name> components in Figma. */
   const AV_PEOPLE = {
@@ -84,8 +96,11 @@
   const AV_BG = ['#C9CDFF', '#FFE2C2', '#E3F2E8', '#FDE3E1', '#FFF1C2', '#E6E8FF'], AV_HAIR = ['short', 'side', 'bob', 'long', 'bun', 'curly', 'buzz'], AV_HC = ['#111111', '#2B2118', '#4A2C1C', '#7A4B2A', '#B58B57', '#C9A06A', '#A0522D'], AV_SHIRT = ['#2A3BFF', '#0B0D17', '#FF6B3D', '#3A3D4A'];
   const hashOf = t => { let h = 2166136261; for (const ch of String(t)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
   const avParams = name => AV_PEOPLE[name] || (h => [AV_BG[h % 6], 'abcde'[(h >> 3) % 5], AV_HAIR[(h >> 6) % 7], AV_HC[(h >> 9) % 7], AV_SHIRT[(h >> 12) % 4]])(hashOf(name));
+  // Muted avatar palette. Each original colour maps to one token, so every person keeps their own drawing.
+  const AV_TOKEN = { '#C9CDFF': 'var(--av-bg-1)', '#FFE2C2': 'var(--av-bg-2)', '#E3F2E8': 'var(--av-bg-3)', '#FDE3E1': 'var(--av-bg-4)', '#FFF1C2': 'var(--av-bg-5)', '#E6E8FF': 'var(--av-bg-6)',
+    '#2A3BFF': 'var(--av-shirt-1)', '#0B0D17': 'var(--av-shirt-2)', '#FF6B3D': 'var(--av-shirt-3)', '#3A3D4A': 'var(--av-shirt-4)' };
   function avatarSVG(name) {
-    const [bg, sk, hair, hc, shirt] = avParams(name);
+    const [bg0, sk, hair, hc, shirt0] = avParams(name); const bg = AV_TOKEN[bg0] || bg0, shirt = AV_TOKEN[shirt0] || shirt0;
     const skin = { a: '#F3D2B8', b: '#E3B08E', c: '#C98B62', d: '#8D5A3B', e: '#5E3A26' }[sk];
     const top = 'M21.5 29c-1-9 4.5-14 11-14s11.5 4.6 10.5 12.5c-2.5-3.6-6.8-5.6-11.5-5-4.3.6-7.7 2.9-10 6.5z';
     const H = { short: `<path d="${top}" fill="${hc}"/>`, side: `<path d="M21 30c-1.5-10 4.5-15.5 11.5-15.5 7.2 0 12 5 11 13-4-1.5-9-4.6-12-8.6-2 4.4-6 8.2-10.5 11.1z" fill="${hc}"/>`,
@@ -197,7 +212,7 @@
       <div class="grid g-main">
         <div class="card"><h2>Students at risk</h2><div class="list">
           ${[['Mateo Silva', 'MS', 'No activity for 15 days', 'Paused'], ['Amira Bensaid', 'AB', '2 assignments late', 'Late'], ['Tom Walsh', 'TW', 'Stuck on Module 2 for 11 days', 'Late'], ['Elena Popescu', 'EP', 'Last login Sep 24', 'Paused'], ['Noah Becker', 'NB', 'Wireframe review returned twice', 'Returned']]
-            .map(([nm, i, why, t]) => `<div class="row">${av(i, nm)}<div class="u-grow"><div class="u-strong">${nm}</div><div class="muted u-meta">${why}</div></div>${tag(t)}<a class="btn sm" href="#/instructor/roster">Open</a></div>`).join('')}
+            .map(([nm, i, why, t]) => personRow(av(i, nm), nm, why, tag(t), `<a class="btn sm" href="#/instructor/roster" aria-label="Open ${esc(nm)} in the roster">Open</a>`)).join('')}
           </div></div>
         <div class="grid">
           <div class="card"><h2>Upcoming deadlines</h2><div class="list">
@@ -417,11 +432,11 @@
     if (b.type === 'callout') inner = `<div class="b-callout">${ic('callout', 16)}${ce(b, 'text', 'grow', 'div', 'A tip students should not miss')}</div>`;
     if (b.type === 'divider') inner = '<hr class="b-hr">';
     if (b.type === 'video') inner = `<div class="b-video"><span class="play">${ic('play', 18)}</span><div class="cap"><b>${esc(b.text)}</b><span>${esc(b.len || '0:00')} · Captions on</span></div></div>`;
-    if (b.type === 'image') inner = `<figure class="b-img"><div class="ph">${needsAlt(b) ? '<span class="tag t-late noalt">No alt text</span>' : ''}${ic('image', 20)}<span>${esc(b.file || 'image.png')}</span></div>${ce(b, 'caption', 'figcap', 'figcaption', 'Add a caption')}</figure>`;
+    if (b.type === 'image') inner = `<figure class="b-img"><div class="ph">${needsAlt(b) ? '<span class="tag st-danger noalt">No alt text</span>' : ''}${ic('image', 20)}<span>${esc(b.file || 'image.png')}</span></div>${ce(b, 'caption', 'figcap', 'figcaption', 'Add a caption')}</figure>`;
     if (b.type === 'quiz') inner = `<div class="b-quiz"><div class="overline">Quiz · question ${qi + 1} of ${quizN.length}</div>${ce(b, 'q', 'q', 'div', 'Question')}
-      ${b.options.map((o, i) => `<div class="opt${b.correct === i ? ' ok' : ''}"><button type="button" class="radio" role="radio" aria-checked="${b.correct === i}" aria-label="Mark as the correct answer" data-act="qCorrect" data-v="${b.id},${i}"></button>${ce({ id: b.id, ['o' + i]: o }, 'o' + i, 'grow', 'div', 'Answer')}${b.correct === i ? '<span class="tag t-graded">Correct</span>' : ''}</div>`).join('')}
+      ${b.options.map((o, i) => `<div class="opt${b.correct === i ? ' ok' : ''}"><button type="button" class="radio" role="radio" aria-checked="${b.correct === i}" aria-label="Mark as the correct answer" data-act="qCorrect" data-v="${b.id},${i}"></button>${ce({ id: b.id, ['o' + i]: o }, 'o' + i, 'grow', 'div', 'Answer')}${b.correct === i ? '<span class="tag st-success">Correct</span>' : ''}</div>`).join('')}
       <div class="why"><span>Why:</span> ${ce(b, 'why', 'grow', 'span', 'Explain the answer')}</div></div>`;
-    const aiHead = b.ai ? `<div class="ai-head">${ic('sparkle', 14)}<span class="tag t-ai" data-badge="${b.id}">${b.ai === 'edited' ? 'AI draft · edited by you' : 'AI draft'}</span><span class="grow"></span><button class="btn sm ghost" data-act="aiBlock" data-v="discard,${b.id}">Discard</button><button class="btn sm primary" data-act="aiBlock" data-v="accept,${b.id}">${ic('check', 14)}Accept</button></div>` : '';
+    const aiHead = b.ai ? `<div class="ai-head">${ic('sparkle', 14)}<span class="tag st-info" data-badge="${b.id}">${b.ai === 'edited' ? 'AI draft · edited by you' : 'AI draft'}</span><span class="grow"></span><button class="btn sm ghost" data-act="aiBlock" data-v="discard,${b.id}">Discard</button><button class="btn sm primary" data-act="aiBlock" data-v="accept,${b.id}">${ic('check', 14)}Accept</button></div>` : '';
     const tools = sel ? `<div class="blk-tools" role="toolbar" aria-label="Block actions"><button class="iconbtn" aria-label="Move up" data-act="blk" data-v="up">${ic('up', 15)}</button><button class="iconbtn" aria-label="Move down" data-act="blk" data-v="down">${ic('down', 15)}</button><button class="iconbtn" aria-label="Duplicate" data-act="blk" data-v="dup">${ic('copy', 15)}</button><button class="iconbtn" aria-label="Delete" data-act="blk" data-v="del">${ic('trash', 15)}</button></div>` : '';
     return `<div class="blk${sel ? ' is-sel' : ''}${b.ai ? ' is-ai' : ''}" id="blk-${b.id}" data-act="selBlock" data-v="${b.id}" data-block="${b.id}">
       <span class="grip" draggable="true" data-drag="move:${b.id}" title="Drag to move" aria-hidden="true">${ic('grip', 14)}</span>${tools}${aiHead}${inner}</div>`;

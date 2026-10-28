@@ -51,7 +51,7 @@ Motion appears only where it explains an action or a state: the review panel sli
 
 ## Visual layer
 
-White sidebar, a cool off-white canvas (`#F7F8FA`) and white surfaces separated by a 1 px line (`#E5E7EB`), not a shadow. Text is `#191D27`, secondary text `#667085`. Cobalt is an accent, not a surface: the primary action, the current page in the sidebar, focus, links and selected filters and tabs. The one card on each home that says what to do next sits on a faint blue tint (`#F0F2FF`) and its primary button carries the colour. Red is kept for errors, late work and real risk. Status tags are 20 px, 4 px radius and light; a locked item is a neutral outlined tag, not a black one. Shadows are kept only for things that float above the page: toasts, popovers, the bulk bar, the slide-over review panel and bottom sheets.
+White sidebar, a cool off-white canvas (`#F7F8FA`) and white surfaces separated by a 1 px line (`#E5E7EB`), not a shadow. Text is `#191D27`, secondary text `#667085`. Cobalt is an accent, not a surface: the primary action, the current page in the sidebar, focus, links and selected filters and tabs. The one card on each home that says what to do next sits on a faint blue tint (`#F0F2FF`) and its primary button carries the colour. Red is kept for errors, late work and real risk. Status badges are 22 px, 4 px radius, with five meanings and no more: red only for late or failed work, amber for something that needs a decision, blue for work in motion, green for live or graded, grey for everything that needs no action. Lists of people share one row component: avatar, name (14 px medium) and one line of context (12 px), the status in its own column so badges line up, then the action. Shadows are kept only for things that float above the page: toasts, popovers, the bulk bar, the slide-over review panel and bottom sheets.
 
 People are drawn as illustrated, faceless avatars generated from their names, so long-data names get a stable drawing too. For instructors on screens 1400 px and wider the quick review is a column next to the grading queue: any row opens in one click and the queue is never dimmed. Below 1400 px, and always for a teaching assistant, it slides over the queue; on a phone review is a separate step. Release has three visible states: locked until a decision on the AI draft, ready with a preview of what the student will see, and released with a few seconds to undo.
 
@@ -114,11 +114,14 @@ Every Figma container says how it grows, so a longer label, a translation or an 
 | Group | Tokens |
 |---|---|
 | Colour | brand `--cobalt` (hover, pressed), neutrals `--ink`, `--text-2`, `--text-3`, `--line`, `--line-2`, `--subtle`, surfaces `--canvas`, `--surface`, `--surface-tint`, `--surface-hover`, `--surface-table-head` |
-| Status and feedback | `--s-*` for status tags only, `--fb-info/success/warning/error-*` for banners |
+| Status | five meanings, each a background + text pair used only for badges: danger (Late, Error), warning (Paused, In review), info (AI draft ready, Invited, In progress, Scheduled), success (Published, Running, Active, Graded), neutral (Draft, Not started, Submitted, Returned, Archived, Completed, Dropped, Locked) |
+| Badge | `--badge-h` 22, `--badge-px` 8, `--badge-fs` 12, `--badge-fw` 500, `--badge-r` 4; no border, shadow or icon |
+| Feedback | `--fb-info/success/warning/error-*` for banners |
+| Avatars | one circle in four sizes `--av-xs` 24, `--av-sm` 28, `--av-md` 32 (every row), `--av-xl` 48; muted palette `--av-bg-1…6`, `--av-shirt-1…4`. Each original colour maps to one token, so every person keeps their own drawing |
 | Type | `--fs-12` to `--fs-28` with matching `--lh-*`, weights `--fw-regular/medium/semibold`. Page title 28, section title 16, metric 28, body 14, meta 12 to 13 |
 | Space | `--sp-1` to `--sp-12`, 4 px steps (4, 8, 12, 16, 20, 24, 32, 40, 48) |
 | Radius | `--r-xs` 4 tags and counters, `--r-sm` 6 buttons, inputs and chips, `--r-md`/`--r-lg` 8 cards and panels, `--r-xl` 10 large containers only |
-| Controls and icons | `--h-sm` 32, `--h-md` 40, `--h-lg` 44, icons 16 / 18 / 20 |
+| Controls and icons | `--h-sm` 32, `--h-md` 40, `--h-lg` 44. One outline icon set: sizes snap to 12 / 16 / 18 / 20 / 24, stroke 1.75 (2.25 at 12 px) |
 | Elevation | `--shadow-popover`, `--shadow-overlay`, `--shadow-sheet`; cards have none |
 | States | `--state-hover`, `--state-pressed`, `--focus-ring` |
 
@@ -130,7 +133,7 @@ The dark bar is case-study chrome, not part of the LMS. It is one 44 px row with
 
 ## Accessibility
 
-Text and status tags meet WCAG AA: status tags 12.6:1 and up, primary button 6.6:1, secondary text 4.97:1 on white and 4.68:1 on the canvas, cobalt on the selected tint 5.95:1, toolbar labels 5.4:1 on dark. Focus states are visible, hit areas are at least 32 px, and motion respects `prefers-reduced-motion`.
+Text and status tags meet WCAG AA: status badges 5.4:1 and up (text on its own background), primary button 6.6:1, secondary text 4.97:1 on white and 4.68:1 on the canvas, cobalt on the selected tint 5.95:1, toolbar labels 5.4:1 on dark. Focus states are visible, hit areas are at least 32 px, and motion respects `prefers-reduced-motion`.
 
 ## Stack
 
