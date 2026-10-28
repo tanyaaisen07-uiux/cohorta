@@ -18,9 +18,9 @@
   /* Status: five meanings, used only for status badges. Background + text pair, AA on its own background. */
   --st-danger-bg:#FEE4E2; --st-danger-fg:#B42318;    /* overdue, failed */
   --st-warning-bg:#F9E8CF; --st-warning-fg:#854D0E;  /* needs a decision: paused, in review */
-  --st-info-bg:#E8EEFF; --st-info-fg:#3446A8;        /* in motion: AI draft waiting, invited, scheduled */
+  --st-info-bg:#E8EEFF; --st-info-fg:#3446A8;        /* in motion: AI draft waiting, invited, scheduled, returned */
   --st-success-bg:#E3F2E8; --st-success-fg:#1D6B3A;  /* live or done: published, running, graded */
-  --st-neutral-bg:#F2F4F7; --st-neutral-fg:#475467;  /* no action needed: draft, submitted, returned, archived */
+  --st-neutral-bg:#F2F4F7; --st-neutral-fg:#475467;  /* no action needed: draft, submitted, archived */
   --s-error:#D92D20;                                 /* error and risk numbers, not a badge */
   --surface-disabled:#EEF0F3;
 
@@ -138,7 +138,7 @@ a:focus-visible,.linkbtn:focus-visible{border-radius:var(--r-xs)}
 .crumbs a:hover{color:var(--ink)}
 
 /* Buttons: one component, sizes sm 32 / md 40 / lg 44 */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2);min-height:var(--h-md);padding:0 var(--sp-4);border-radius:var(--r-sm);border:1px solid var(--line-2);background:var(--surface);font-weight:var(--fw-medium);cursor:pointer;color:var(--ink);white-space:nowrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2);min-height:var(--h-md);padding:0 var(--sp-4);border-radius:var(--r-sm);border:1px solid var(--line-2);background:var(--surface);font-weight:var(--fw-semibold);cursor:pointer;color:var(--ink);white-space:nowrap}
 .btn svg{flex:none}
 .btn:hover{background:var(--state-hover);border-color:var(--line-dashed)}
 .btn.primary{background:var(--cobalt);border-color:var(--cobalt);color:var(--white)}
@@ -164,7 +164,7 @@ a:focus-visible,.linkbtn:focus-visible{border-radius:var(--r-xs)}
 
 /* Cards: white surface, 1 px line, 8 px radius, no shadow */
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--sp-5)}
-.card h2{font-family:var(--font-brand);font-weight:var(--fw-semibold);font-size:var(--fs-16);line-height:var(--lh-16);margin:0 0 var(--sp-3)}
+.card h2{font-family:var(--font-brand);font-weight:var(--fw-semibold);font-size:var(--fs-18);line-height:var(--lh-18);letter-spacing:-.005em;margin:0 0 var(--sp-3)}
 .card h3{font-size:var(--fs-14);line-height:var(--lh-14);font-weight:var(--fw-semibold);margin:0 0 var(--sp-2)}
 .grid{display:grid;gap:var(--sp-4)}
 .g-4{grid-template-columns:repeat(4,minmax(0,1fr))} .g-3{grid-template-columns:repeat(3,minmax(0,1fr))} .g-2{grid-template-columns:repeat(2,minmax(0,1fr))}
