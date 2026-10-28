@@ -71,13 +71,13 @@
   const lockup = () => `<a href="#/${S.role}/home" class="brand">${symbol(22)}${wordmark(19)}</a>`;
 
   /* Status → meaning. Five families, one colour each: danger (overdue, failed), warning (needs a decision),
-     info (in motion, AI draft waiting), success (live or done well), neutral (no action needed). */
+     info (in motion, AI draft waiting, sent back to the student), success (live or done well), neutral (no action needed). */
   const STATUS = {
     'Late': 'danger', 'Error': 'danger',
     'Paused': 'warning', 'In review': 'warning',
-    'AI draft ready': 'info', 'Invited': 'info', 'In progress': 'info', 'Scheduled': 'info',
+    'AI draft ready': 'info', 'Invited': 'info', 'In progress': 'info', 'Scheduled': 'info', 'Returned': 'info',
     'Graded': 'success', 'Published': 'success', 'Running': 'success', 'Active': 'success',
-    'Draft': 'neutral', 'Not started': 'neutral', 'Submitted': 'neutral', 'Returned': 'neutral', 'Archived': 'neutral', 'Completed': 'neutral', 'Dropped': 'neutral', 'Locked': 'neutral'
+    'Draft': 'neutral', 'Not started': 'neutral', 'Submitted': 'neutral', 'Archived': 'neutral', 'Completed': 'neutral', 'Dropped': 'neutral', 'Locked': 'neutral'
   };
   const tagClass = s => 'st-' + (STATUS[s] || 'neutral');
   const tag = s => `<span class="tag ${tagClass(s)}">${esc(s)}</span>`;
@@ -95,7 +95,7 @@
   };
   const AV_BG = ['#C9CDFF', '#FFE2C2', '#E3F2E8', '#FDE3E1', '#FFF1C2', '#E6E8FF'], AV_HAIR = ['short', 'side', 'bob', 'long', 'bun', 'curly', 'buzz'], AV_HC = ['#111111', '#2B2118', '#4A2C1C', '#7A4B2A', '#B58B57', '#C9A06A', '#A0522D'], AV_SHIRT = ['#2A3BFF', '#0B0D17', '#FF6B3D', '#3A3D4A'];
   const hashOf = t => { let h = 2166136261; for (const ch of String(t)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
-  const avParams = name => AV_PEOPLE[name] || (h => [AV_BG[h % 6], 'abcde'[(h >> 3) % 5], AV_HAIR[(h >> 6) % 7], AV_HC[(h >> 9) % 7], AV_SHIRT[(h >> 12) % 4]])(hashOf(name));
+  const avParams = name => AV_PEOPLE[name] || (h => [AV_BG[h % 6], 'abcde'[(h >>> 3) % 5], AV_HAIR[(h >>> 6) % 7], AV_HC[(h >>> 9) % 7], AV_SHIRT[(h >>> 12) % 4]])(hashOf(name));
   // Muted avatar palette. Each original colour maps to one token, so every person keeps their own drawing.
   const AV_TOKEN = { '#C9CDFF': 'var(--av-bg-1)', '#FFE2C2': 'var(--av-bg-2)', '#E3F2E8': 'var(--av-bg-3)', '#FDE3E1': 'var(--av-bg-4)', '#FFF1C2': 'var(--av-bg-5)', '#E6E8FF': 'var(--av-bg-6)',
     '#2A3BFF': 'var(--av-shirt-1)', '#0B0D17': 'var(--av-shirt-2)', '#FF6B3D': 'var(--av-shirt-3)', '#3A3D4A': 'var(--av-shirt-4)' };

@@ -51,7 +51,7 @@ Motion appears only where it explains an action or a state: the review panel sli
 
 ## Visual layer
 
-White sidebar, a cool off-white canvas (`#F7F8FA`) and white surfaces separated by a 1 px line (`#E5E7EB`), not a shadow. Text is `#191D27`, secondary text `#667085`. Cobalt is an accent, not a surface: the primary action, the current page in the sidebar, focus, links and selected filters and tabs. The one card on each home that says what to do next sits on a faint blue tint (`#F0F2FF`) and its primary button carries the colour. Red is kept for errors, late work and real risk. Status badges are 22 px, 4 px radius, with five meanings and no more: red only for late or failed work, amber for something that needs a decision, blue for work in motion, green for live or graded, grey for everything that needs no action. Lists of people share one row component: avatar, name (14 px medium) and one line of context (12 px), the status in its own column so badges line up, then the action. Shadows are kept only for things that float above the page: toasts, popovers, the bulk bar, the slide-over review panel and bottom sheets.
+White sidebar, a cool off-white canvas (`#F7F8FA`) and white surfaces separated by a 1 px line (`#E5E7EB`), not a shadow. Text is `#191D27`, secondary text `#667085`. Cobalt is an accent, not a surface: the primary action, the current page in the sidebar, focus, links and selected filters and tabs. The one card on each home that says what to do next sits on a faint blue tint (`#F0F2FF`) and its primary button carries the colour. Red is kept for errors, late work and real risk. Status badges are 22 px, 4 px radius, with five meanings and no more: red only for late or failed work, amber for something that needs a decision, blue for work in motion or sent back to the student, green for live or graded, grey for everything that needs no action. Lists of people share one row component: avatar, name (14 px medium) and one line of context (12 px), the status in its own column so badges line up, then the action. Shadows are kept only for things that float above the page: toasts, popovers, the bulk bar, the slide-over review panel and bottom sheets.
 
 People are drawn as illustrated, faceless avatars generated from their names, so long-data names get a stable drawing too. For instructors on screens 1400 px and wider the quick review is a column next to the grading queue: any row opens in one click and the queue is never dimmed. Below 1400 px, and always for a teaching assistant, it slides over the queue; on a phone review is a separate step. Release has three visible states: locked until a decision on the AI draft, ready with a preview of what the student will see, and released with a few seconds to undo.
 
@@ -114,11 +114,11 @@ Every Figma container says how it grows, so a longer label, a translation or an 
 | Group | Tokens |
 |---|---|
 | Colour | brand `--cobalt` (hover, pressed), neutrals `--ink`, `--text-2`, `--text-3`, `--line`, `--line-2`, `--subtle`, surfaces `--canvas`, `--surface`, `--surface-tint`, `--surface-hover`, `--surface-table-head` |
-| Status | five meanings, each a background + text pair used only for badges: danger (Late, Error), warning (Paused, In review), info (AI draft ready, Invited, In progress, Scheduled), success (Published, Running, Active, Graded), neutral (Draft, Not started, Submitted, Returned, Archived, Completed, Dropped, Locked) |
+| Status | five meanings, each a background + text pair used only for badges: danger (Late, Error), warning (Paused, In review), info (AI draft ready, Invited, In progress, Scheduled, Returned), success (Published, Running, Active, Graded), neutral (Draft, Not started, Submitted, Archived, Completed, Dropped, Locked) |
 | Badge | `--badge-h` 22, `--badge-px` 8, `--badge-fs` 12, `--badge-fw` 500, `--badge-r` 4; no border, shadow or icon |
 | Feedback | `--fb-info/success/warning/error-*` for banners |
 | Avatars | one circle in four sizes `--av-xs` 24, `--av-sm` 28, `--av-md` 32 (every row), `--av-xl` 48; muted palette `--av-bg-1…6`, `--av-shirt-1…4`. Each original colour maps to one token, so every person keeps their own drawing |
-| Type | `--fs-12` to `--fs-28` with matching `--lh-*`, weights `--fw-regular/medium/semibold`. Page title 28, section title 16, metric 28, body 14, meta 12 to 13 |
+| Type | `--fs-12` to `--fs-28` with matching `--lh-*`, weights `--fw-regular/medium/semibold`. Page title 28, card title 18, metric 28, body 14, meta 12 to 13 |
 | Space | `--sp-1` to `--sp-12`, 4 px steps (4, 8, 12, 16, 20, 24, 32, 40, 48) |
 | Radius | `--r-xs` 4 tags and counters, `--r-sm` 6 buttons, inputs and chips, `--r-md`/`--r-lg` 8 cards and panels, `--r-xl` 10 large containers only |
 | Controls and icons | `--h-sm` 32, `--h-md` 40, `--h-lg` 44. One outline icon set: sizes snap to 12 / 16 / 18 / 20 / 24, stroke 1.75 (2.25 at 12 px) |
@@ -126,6 +126,10 @@ Every Figma container says how it grows, so a longer label, a translation or an 
 | States | `--state-hover`, `--state-pressed`, `--focus-ring` |
 
 Repeated layout tweaks that used to be inline styles in the markup are utility classes (`u-grow`, `u-meta`, `u-strong`, …); what stays inline is dynamic (progress widths, map positions, skeleton sizes).
+
+## Figma sync
+
+The Figma file uses the same tokens: Color and Layout variables carry the values above and their code syntax points at these CSS properties (`status/danger/bg` is `var(--st-danger-bg)`, `radius/sm` is `var(--r-sm)`). Status tag, Button and Filter chip were updated in place, so every screen kept its instances. Each person in the demo data has an `Avatar/<name>` component drawn by the same `avatarSVG()` the app uses; rows use them at 32 px, initials stay as the fallback.
 
 ## Prototype toolbar
 
