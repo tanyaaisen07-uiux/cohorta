@@ -157,7 +157,7 @@
   }
   function demoBar() {
     const seg = (key, opts) => `<div class="seg" role="group">${opts.map(([v, l]) => `<button type="button" data-act="${key}" data-v="${v}" aria-pressed="${S[key] === v}">${l}</button>`).join('')}</div>`;
-    return `<div class="demo" role="region" aria-label="Demo controls"><b>Cohorta demo</b><span class="show-m dhint">Demo controls · sample data</span><span class="dgrp"><span class="dlab">View as</span>${seg('role', [['student', 'Student'], ['instructor', 'Instructor'], ['ta', 'TA'], ['admin', 'Admin']])}</span>
+    return `<div class="demo" role="region" aria-label="Demo controls"><b>Cohorta demo</b><span class="show-m dhint">Demo controls · sample data</span><a class="dsite" href="#/">Product site</a><span class="dgrp"><span class="dlab">View as</span>${seg('role', [['student', 'Student'], ['instructor', 'Instructor'], ['ta', 'TA'], ['admin', 'Admin']])}</span>
       <span class="dgrp"><span class="dlab">State</span>${seg('demo', [['normal', 'Normal'], ['empty', 'Empty'], ['loading', 'Loading'], ['error', 'Error'], ['denied', 'No access'], ['long', 'Long data']])}</span>
       <span class="spacer"></span><span class="hide-m">Self-initiated case study · sample data · UX/UI by Tania Aisen</span></div>`;
   }
@@ -165,7 +165,7 @@
   /* ---------- shared states ---------- */
   const head = (title, sub = '', actions = '', crumbs = '') => `<div class="page-head"><div>${crumbs ? `<div class="crumbs">${crumbs}</div>` : ''}<h1>${title}</h1>${sub ? `<div class="sub">${sub}</div>` : ''}</div>${actions ? `<div class="actions">${actions}</div>` : ''}</div>`;
   const emptyState = (title, text, action = '', icon = 'inbox') => `<div class="card empty"><div class="ico">${ic(icon, 22)}</div><h3>${title}</h3><p>${text}</p>${action}</div>`;
-  const studentSkeleton = () => `<div class="card sk-hero"><div class="skel" style="width:48px;height:48px;border-radius:12px"></div><div class="skel" style="height:12px;width:40%;margin-top:14px"></div><div class="skel" style="height:22px;width:70%;margin-top:10px"></div><div class="skel" style="height:44px;width:100%;margin-top:16px;border-radius:12px"></div></div><div class="card">${'<div style="display:flex;gap:12px;align-items:center;margin:10px 0"><div class="skel" style="width:36px;height:36px;border-radius:12px"></div><div style="flex:1"><div class="skel" style="height:12px;width:55%"></div><div class="skel" style="height:10px;width:35%;margin-top:8px"></div></div></div>'.repeat(4)}</div>`;
+  const studentSkeleton = () => `<div class="card sk-hero"><div class="skel" style="width:48px;height:48px;border-radius:var(--r-md)"></div><div class="skel" style="height:12px;width:40%;margin-top:14px"></div><div class="skel" style="height:22px;width:70%;margin-top:10px"></div><div class="skel" style="height:44px;width:100%;margin-top:16px;border-radius:var(--r-md)"></div></div><div class="card">${'<div style="display:flex;gap:12px;align-items:center;margin:10px 0"><div class="skel" style="width:36px;height:36px;border-radius:var(--r-md)"></div><div style="flex:1"><div class="skel" style="height:12px;width:55%"></div><div class="skel" style="height:10px;width:35%;margin-top:8px"></div></div></div>'.repeat(4)}</div>`;
   const skeleton = () => `<div class="grid g-4" style="margin-bottom:16px">${'<div class="card"><div class="skel" style="height:14px;width:60%"></div><div class="skel" style="height:30px;width:40%;margin-top:12px"></div></div>'.repeat(4)}</div>
     <div class="tablebox" style="padding:12px" aria-busy="true" aria-label="Loading">${'<div style="display:flex;gap:16px;padding:12px 4px"><div class="skel" style="width:28px;height:28px;border-radius:50%"></div><div class="skel" style="height:14px;flex:2;margin-top:7px"></div><div class="skel" style="height:14px;flex:1;margin-top:7px"></div><div class="skel" style="height:14px;flex:1;margin-top:7px"></div></div>'.repeat(8)}</div>`;
   const errorBanner = (what) => `<div class="banner error" role="alert">${ic('alert', 20)}<div class="grow"><b>We couldn't load ${what}.</b>Check your connection and try again. Your last changes are saved.</div><button class="btn sm" data-act="demo" data-v="normal">Try again</button></div>`;
@@ -885,7 +885,16 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
     admin: { home: aHome, catalogue: aCatalogue, enrolments: aEnrol, users: aUsers },
     student: { home: sHome, lesson: sLesson, assignment: sAssignment, grades: sGrades }
   };
+  /* Public site (landing, sign-up, log-in) lives in landing.js and shares the icons and logo. */
+  const SITE = window.CohortaSite ? window.CohortaSite({ ic, symbol, wordmark, esc }) : null;
+  const PUBLIC = { '': 'landing', signup: 'signup', login: 'login' };
+  function renderPublic() {
+    $('#app').innerHTML = S.site === 'landing' ? SITE.landing() : SITE.auth(S.site);
+    document.title = SITE.title(S.site);
+    if (S.site !== 'landing') { const f = document.querySelector('.s-form input'); if (f && matchMedia('(min-width:721px)').matches) f.focus(); }
+  }
   function render() {
+    if (S.page === 'public') return renderPublic();
     const view = (VIEWS[S.role][S.page] || VIEWS[S.role].home)();
     const m = mobileChrome();
     const staffNote = S.role !== 'student' ? '<div class="banner info mtop-note" style="display:none"></div>' : '';
@@ -906,11 +915,17 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
     if (document.querySelector('[data-mapvp]')) { fitMap(false); if (S.mapCenter) { centerOn(S.mapCenter); S.mapCenter = null; } }
   }
   // Crossing 1400 px switches the quick review between a column and an overlay.
-  let lastDock = null; window.addEventListener('resize', () => { const d = dockOn(); if (lastDock !== null && d !== lastDock) render(); lastDock = d; });
+  let lastDock = null; window.addEventListener('resize', () => { if (S.page === 'public') return; const d = dockOn(); if (lastDock !== null && d !== lastDock) render(); lastDock = d; });
   let current = '#/instructor/home';
   function route(h, replace) {
     if (h) current = h;
     const parts = current.replace(/^#\/?/, '').split('/');
+    if (SITE && parts[0] in PUBLIC && !VIEWS[parts[0]]) {
+      S.page = 'public'; S.site = PUBLIC[parts[0]]; S.panel = null; S.modal = null;
+      render(); window.scrollTo(0, 0);
+      try { if (location.protocol !== 'about:' && history.pushState && location.hash !== current) history[replace ? 'replaceState' : 'pushState'](null, '', current); } catch (e) {}
+      return;
+    }
     if (VIEWS[parts[0]]) { if (S.role !== parts[0]) { S.sel.clear(); S.eSel.clear(); } S.role = parts[0]; }
     S.page = parts[1] && VIEWS[S.role][parts[1]] ? parts[1] : 'home'; S.param = parts[2] || null; S.gtab = 'doc';
     // A role without a dashboard lands on its first page, so the nav always shows where you are.
@@ -920,7 +935,7 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
     // Each page gets its own history entry, so the browser Back button walks back through the demo.
     try { if (location.protocol !== 'about:' && history.pushState && location.hash !== current) history[replace ? 'replaceState' : 'pushState'](null, '', current); } catch (e) {}
   }
-  const ROUTE_RE = /^#\/(student|instructor|ta|admin)\//;
+  const ROUTE_RE = /^#\/((student|instructor|ta|admin)\/|(signup|login)$|$)/;
   function fromURL() { if (ROUTE_RE.test(location.hash) && location.hash !== current) route(location.hash, true); }
   window.addEventListener('popstate', fromURL); window.addEventListener('hashchange', fromURL);
   /* Toast lives outside #app: page re-renders never replay its entrance,
@@ -1244,7 +1259,8 @@ nina.berg@mail.com</textarea><span class="help">Each person gets an invite and c
     if (e.ctrlKey || e.metaKey) zoomAt(st.k * Math.exp(-e.deltaY * .01), e.clientX - r.left, e.clientY - r.top); else { st.x -= e.deltaX; st.y -= e.deltaY; applyMap(); }
   }, { passive: false });
   document.addEventListener('keyup', e => { if (e.key === ' ' && S.space) { S.space = false; const vp = document.querySelector('[data-mapvp]'); if (vp) vp.classList.remove('space'); } });
-  let start = '#/instructor/home';
+  // An empty address opens the product site; any app route opens the demo directly.
+  let start = SITE ? '#/' : '#/instructor/home';
   try { if (ROUTE_RE.test(location.hash)) start = location.hash; } catch (e) {}
   route(start, true);
 })();

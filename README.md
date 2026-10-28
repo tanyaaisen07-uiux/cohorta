@@ -2,7 +2,8 @@
 
 A role-based LMS for cohort-based online schools. UX/UI and front-end by **Tania Aisen**.
 
-**Live demo:** https://tanyaaisen07-uiux.github.io/cohorta
+**Product site:** https://tanyaaisen07-uiux.github.io/cohorta
+**Live demo:** https://tanyaaisen07-uiux.github.io/cohorta/#/instructor/home
 **Figma:** https://www.figma.com/design/J4J6upc1wrEXRMm6xLjisE
 
 ## Project type
@@ -50,7 +51,30 @@ Motion appears only where it explains an action or a state: the review panel sli
 
 ## Visual layer
 
-The original white sidebar with the cobalt logo, content on a light canvas, and white cards with a barely visible shadow. People are drawn as illustrated, faceless avatars generated from their names, so long-data names get a stable drawing too. For instructors on screens 1400 px and wider the quick review is a column next to the grading queue: any row opens in one click and the queue is never dimmed. Below 1400 px, and always for a teaching assistant, it slides over the queue; on a phone review is a separate step. Release has three visible states: locked until a decision on the AI draft, ready with a preview of what the student will see, and released with a few seconds to undo.
+White sidebar, an off-white canvas (`#F7F7F5`) and white surfaces separated by a 1 px line, not a shadow. Cobalt is an accent, not a surface: it marks the primary action, the current page in the sidebar, focus, links and selected filters and tabs. The "what to do next" card on each home is a white card whose primary button carries the colour; there are no large blue blocks. Radii are 4 px for tags and counters, 6 px for buttons, inputs and chips, 8 px for cards, panels and modals; nothing is pill-shaped except avatars and progress dots. Shadows are kept only for things that float above the page: toasts, the bulk bar, the slide-over review panel and the course map toolbar.
+
+People are drawn as illustrated, faceless avatars generated from their names, so long-data names get a stable drawing too. For instructors on screens 1400 px and wider the quick review is a column next to the grading queue: any row opens in one click and the queue is never dimmed. Below 1400 px, and always for a teaching assistant, it slides over the queue; on a phone review is a separate step. Release has three visible states: locked until a decision on the AI draft, ready with a preview of what the student will see, and released with a few seconds to undo.
+
+## Product site
+
+`#/` opens a public landing page for Cohorta; every app route (`#/student/…`, `#/instructor/…`, `#/ta/…`, `#/admin/…`) still opens the demo directly, and the demo bar has a link back to the site.
+
+- **Sections:** header with Log in and Try for free, hero with the real grading queue, what Cohorta covers, a role switcher (student, instructor, course builder, admin) with a link into each view, how AI-drafted grades are released, versions and the audit log, a closing call to action and a footer.
+- **Only what the product does.** Every capability on the page is in the demo. There are no customer logos, testimonials, statistics or pricing, because none exist.
+- **Screenshots are the product.** Images in `/site` are captured from this demo at 2x (Playwright, Geist loaded, demo bar hidden) and saved as WebP, so the page shows the current interface. Recapture them after a visible UI change.
+- Files: `landing.js` (markup and behaviour), `site.css` (styles on top of the product tokens), `site/` (images).
+
+## Try for free: sign-up and log-in
+
+**Try for free** (header, hero, closing section) opens `#/signup`; **Log in** opens `#/login`.
+
+- Fields are validated when you leave them and again on submit, with the error under the field and focus on the first problem.
+- **The demo has no backend, so nothing is faked.** With no API configured the form says that sign-up isn't connected, that nothing was sent or stored, and offers the demo instead.
+- The request, loading, success and error states are already built. Set `window.COHORTA_API` to a base URL to turn them on:
+  - `POST {API}/trials` with `{ name, email, org, password }` → `201` shows "Check your inbox"; `409` says the account exists and links to log-in; any other status shows the server message.
+  - `POST {API}/sessions` with `{ email, password }` → `200` redirects to `body.redirect` (default instructor home); `401` says the email or password is wrong.
+  - A network failure keeps the form filled in and asks to try again.
+- **Still needed on the server:** account and workspace creation, email confirmation, password hashing and rate limiting, a session cookie (`credentials: 'include'` is sent), and real auth guards on app routes. The demo routes are open by design.
 
 ## Responsive experience across roles
 
@@ -85,7 +109,7 @@ Every Figma container says how it grows, so a longer label, a translation or an 
 
 ## Design tokens
 
-Every colour, spacing and radius in Figma and in `styles.css` comes from a named token, and each token has one meaning. Semantic tokens cover feedback (info, success, warning, error), surface states (tint, hover, table head, highlight), text on dark, placeholder, muted icons, dashed lines, two scrims (40% for a modal, 20% for a side panel), skeletons, the course map and the collaborator's presence. Status colours are used only for status tags and status metrics, never borrowed for another meaning. Figma names map to CSS custom properties: `surface/tint` is `--surface-tint`, `feedback/error-bg` is `--fb-error-bg`.
+Every colour, spacing and radius in Figma and in `styles.css` comes from a named token, and each token has one meaning. Radii: `--r-xs` 4 px, `--r-sm` 6 px, `--r-md` and `--r-lg` 8 px. Semantic tokens cover feedback (info, success, warning, error), surface states (tint, hover, table head, highlight), text on dark, placeholder, muted icons, dashed lines, two scrims (40% for a modal, 20% for a side panel), skeletons, the course map and the collaborator's presence. Status colours are used only for status tags and status metrics, never borrowed for another meaning. Figma names map to CSS custom properties: `surface/tint` is `--surface-tint`, `feedback/error-bg` is `--fb-error-bg`.
 
 ## Accessibility
 
@@ -93,7 +117,7 @@ Text and status tags meet WCAG AA (status tags 12.6 to 17.2:1, primary button 6.
 
 ## Stack
 
-Plain HTML, CSS and JavaScript, no build step. Type: Geist. Brand assets are in `/brand`.
+Plain HTML, CSS and JavaScript, no build step and no new dependencies. Type: Geist. Brand assets are in `/brand`; landing screenshots in `/site`.
 
 ## Contact
 
