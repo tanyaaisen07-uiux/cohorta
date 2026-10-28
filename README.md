@@ -2,7 +2,8 @@
 
 A role-based LMS for cohort-based online schools. UX/UI and front-end by **Tania Aisen**.
 
-**Live demo:** https://tanyaaisen07-uiux.github.io/cohorta
+**Product site:** https://tanyaaisen07-uiux.github.io/cohorta
+**Live demo:** https://tanyaaisen07-uiux.github.io/cohorta/#/instructor/home
 **Figma:** https://www.figma.com/design/J4J6upc1wrEXRMm6xLjisE
 
 ## Project type
@@ -50,7 +51,30 @@ Motion appears only where it explains an action or a state: the review panel sli
 
 ## Visual layer
 
-The original white sidebar with the cobalt logo, content on a light canvas, and white cards with a barely visible shadow. People are drawn as illustrated, faceless avatars generated from their names, so long-data names get a stable drawing too. For instructors on screens 1400 px and wider the quick review is a column next to the grading queue: any row opens in one click and the queue is never dimmed. Below 1400 px, and always for a teaching assistant, it slides over the queue; on a phone review is a separate step. Release has three visible states: locked until a decision on the AI draft, ready with a preview of what the student will see, and released with a few seconds to undo.
+White sidebar, a cool off-white canvas (`#F7F8FA`) and white surfaces separated by a 1 px line (`#E5E7EB`), not a shadow. Text is `#191D27`, secondary text `#667085`. Cobalt is an accent, not a surface: the primary action, the current page in the sidebar, focus, links and selected filters and tabs. The one card on each home that says what to do next sits on a faint blue tint (`#F0F2FF`) and its primary button carries the colour. Red is kept for errors, late work and real risk. Status badges are 22 px, 4 px radius, with five meanings and no more: red only for late or failed work, amber for something that needs a decision, blue for work in motion, green for live or graded, grey for everything that needs no action. Lists of people share one row component: avatar, name (14 px medium) and one line of context (12 px), the status in its own column so badges line up, then the action. Shadows are kept only for things that float above the page: toasts, popovers, the bulk bar, the slide-over review panel and bottom sheets.
+
+People are drawn as illustrated, faceless avatars generated from their names, so long-data names get a stable drawing too. For instructors on screens 1400 px and wider the quick review is a column next to the grading queue: any row opens in one click and the queue is never dimmed. Below 1400 px, and always for a teaching assistant, it slides over the queue; on a phone review is a separate step. Release has three visible states: locked until a decision on the AI draft, ready with a preview of what the student will see, and released with a few seconds to undo.
+
+## Product site
+
+`#/` opens a public landing page for Cohorta; every app route (`#/student/…`, `#/instructor/…`, `#/ta/…`, `#/admin/…`) still opens the demo directly, and the demo bar has a link back to the site.
+
+- **Sections:** header with Log in and Try for free, hero with the real grading queue, what Cohorta covers, a role switcher (student, instructor, course builder, admin) with a link into each view, how AI-drafted grades are released, versions and the audit log, a closing call to action and a footer.
+- **Only what the product does.** Every capability on the page is in the demo. There are no customer logos, testimonials, statistics or pricing, because none exist.
+- **Screenshots are the product.** Images in `/site` are captured from this demo at 2x (Playwright, Geist loaded, demo bar hidden) and saved as WebP, so the page shows the current interface. Recapture them after a visible UI change.
+- Files: `landing.js` (markup and behaviour), `site.css` (styles on top of the product tokens), `site/` (images).
+
+## Try for free: sign-up and log-in
+
+**Try for free** (header, hero, closing section) opens `#/signup`; **Log in** opens `#/login`.
+
+- Fields are validated when you leave them and again on submit, with the error under the field and focus on the first problem.
+- **The demo has no backend, so nothing is faked.** With no API configured the form says that sign-up isn't connected, that nothing was sent or stored, and offers the demo instead.
+- The request, loading, success and error states are already built. Set `window.COHORTA_API` to a base URL to turn them on:
+  - `POST {API}/trials` with `{ name, email, org, password }` → `201` shows "Check your inbox"; `409` says the account exists and links to log-in; any other status shows the server message.
+  - `POST {API}/sessions` with `{ email, password }` → `200` redirects to `body.redirect` (default instructor home); `401` says the email or password is wrong.
+  - A network failure keeps the form filled in and asks to try again.
+- **Still needed on the server:** account and workspace creation, email confirmation, password hashing and rate limiting, a session cookie (`credentials: 'include'` is sent), and real auth guards on app routes. The demo routes are open by design.
 
 ## Responsive experience across roles
 
@@ -85,15 +109,35 @@ Every Figma container says how it grows, so a longer label, a translation or an 
 
 ## Design tokens
 
-Every colour, spacing and radius in Figma and in `styles.css` comes from a named token, and each token has one meaning. Semantic tokens cover feedback (info, success, warning, error), surface states (tint, hover, table head, highlight), text on dark, placeholder, muted icons, dashed lines, two scrims (40% for a modal, 20% for a side panel), skeletons, the course map and the collaborator's presence. Status colours are used only for status tags and status metrics, never borrowed for another meaning. Figma names map to CSS custom properties: `surface/tint` is `--surface-tint`, `feedback/error-bg` is `--fb-error-bg`.
+`styles.css` opens with one token layer used by the whole app and the product site; components use tokens only, and each token has one meaning. Figma names map to CSS custom properties: `surface/tint` is `--surface-tint`, `feedback/error-bg` is `--fb-error-bg`.
+
+| Group | Tokens |
+|---|---|
+| Colour | brand `--cobalt` (hover, pressed), neutrals `--ink`, `--text-2`, `--text-3`, `--line`, `--line-2`, `--subtle`, surfaces `--canvas`, `--surface`, `--surface-tint`, `--surface-hover`, `--surface-table-head` |
+| Status | five meanings, each a background + text pair used only for badges: danger (Late, Error), warning (Paused, In review), info (AI draft ready, Invited, In progress, Scheduled), success (Published, Running, Active, Graded), neutral (Draft, Not started, Submitted, Returned, Archived, Completed, Dropped, Locked) |
+| Badge | `--badge-h` 22, `--badge-px` 8, `--badge-fs` 12, `--badge-fw` 500, `--badge-r` 4; no border, shadow or icon |
+| Feedback | `--fb-info/success/warning/error-*` for banners |
+| Avatars | one circle in four sizes `--av-xs` 24, `--av-sm` 28, `--av-md` 32 (every row), `--av-xl` 48; muted palette `--av-bg-1…6`, `--av-shirt-1…4`. Each original colour maps to one token, so every person keeps their own drawing |
+| Type | `--fs-12` to `--fs-28` with matching `--lh-*`, weights `--fw-regular/medium/semibold`. Page title 28, section title 16, metric 28, body 14, meta 12 to 13 |
+| Space | `--sp-1` to `--sp-12`, 4 px steps (4, 8, 12, 16, 20, 24, 32, 40, 48) |
+| Radius | `--r-xs` 4 tags and counters, `--r-sm` 6 buttons, inputs and chips, `--r-md`/`--r-lg` 8 cards and panels, `--r-xl` 10 large containers only |
+| Controls and icons | `--h-sm` 32, `--h-md` 40, `--h-lg` 44. One outline icon set: sizes snap to 12 / 16 / 18 / 20 / 24, stroke 1.75 (2.25 at 12 px) |
+| Elevation | `--shadow-popover`, `--shadow-overlay`, `--shadow-sheet`; cards have none |
+| States | `--state-hover`, `--state-pressed`, `--focus-ring` |
+
+Repeated layout tweaks that used to be inline styles in the markup are utility classes (`u-grow`, `u-meta`, `u-strong`, …); what stays inline is dynamic (progress widths, map positions, skeleton sizes).
+
+## Prototype toolbar
+
+The dark bar is case-study chrome, not part of the LMS. It is one 44 px row with two labelled segmented controls, role (Student, Instructor, TA, Admin) and state (Normal, Empty, Loading, Error, No access, Long data), divided by a thin rule. The selected item is a lighter segment with a thin underline, not a white pill. The case-study note shows only from 1280 px; below that the row scrolls sideways instead of wrapping, so the sidebar and panels always start 44 px down. On a phone it turns into three short static rows above the app.
 
 ## Accessibility
 
-Text and status tags meet WCAG AA (status tags 12.6 to 17.2:1, primary button 6.6:1, secondary text 6.2:1). Focus states are visible, hit areas are at least 32 px, and motion respects `prefers-reduced-motion`.
+Text and status tags meet WCAG AA: status badges 5.4:1 and up (text on its own background), primary button 6.6:1, secondary text 4.97:1 on white and 4.68:1 on the canvas, cobalt on the selected tint 5.95:1, toolbar labels 5.4:1 on dark. Focus states are visible, hit areas are at least 32 px, and motion respects `prefers-reduced-motion`.
 
 ## Stack
 
-Plain HTML, CSS and JavaScript, no build step. Type: Geist. Brand assets are in `/brand`.
+Plain HTML, CSS and JavaScript, no build step and no new dependencies. Type: Geist. Brand assets are in `/brand`; landing screenshots in `/site`.
 
 ## Contact
 
